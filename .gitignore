@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# defensive: never allow large archives or credentials into this repo
+*.zip
+*.tar
+*.tar.gz
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json

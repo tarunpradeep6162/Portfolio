@@ -25,7 +25,7 @@ export function ReliabilitySpine({
       */}
       <ol className="flex flex-wrap items-start justify-center gap-x-6 gap-y-8 lg:flex-nowrap lg:justify-between">
         {spineStages.map((stage, index) => (
-          <li key={stage.id} className="flex items-start gap-6 lg:contents">
+          <li key={stage.id} data-reveal className="flex items-start gap-6 lg:contents">
             <SpineNode stage={stage} active={activeStages?.includes(stage.id)} />
             {index < spineStages.length - 1 && (
               <span

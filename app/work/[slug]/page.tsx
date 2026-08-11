@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { ArchitectureDiagram } from "@/components/work/ArchitectureDiagram";
 import { ProjectCoverArt, getCoverArtVariant } from "@/components/work/ProjectCoverArt";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { projects } from "@/content/projects";
 import type { FlagshipProject } from "@/content/types";
 
@@ -88,14 +89,16 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
 
       <Section field="manual" className="pt-0">
         <h2 className="font-display text-heading font-semibold text-[var(--ink)]">Implementation decisions</h2>
-        <ul className="mt-4 flex flex-col gap-2">
-          {project.implementationDecisions.map((decision) => (
-            <li key={decision} className="flex gap-3 text-[var(--ink-muted)]">
-              <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
-              {decision}
-            </li>
-          ))}
-        </ul>
+        <ScrollReveal>
+          <ul className="mt-4 flex flex-col gap-2">
+            {project.implementationDecisions.map((decision) => (
+              <li key={decision} data-reveal className="flex gap-3 text-[var(--ink-muted)]">
+                <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
+                {decision}
+              </li>
+            ))}
+          </ul>
+        </ScrollReveal>
       </Section>
 
       <Section field="manual" className="pt-0">

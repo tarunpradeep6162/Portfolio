@@ -10,6 +10,7 @@ import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { Button } from "@/components/ui/Button";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -39,11 +40,13 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Four systems, end to end.
         </h2>
-        <div className="mt-12 grid gap-x-8 gap-y-16 sm:grid-cols-2">
+        <ScrollReveal className="mt-12 grid gap-x-8 gap-y-16 sm:grid-cols-2">
           {flagships.map((project) => (
-            <ProjectCard key={project.slug} project={project} />
+            <div key={project.slug} data-reveal>
+              <ProjectCard project={project} />
+            </div>
           ))}
-        </div>
+        </ScrollReveal>
       </Section>
 
       {/* Reliability Spine walkthrough */}
@@ -55,9 +58,9 @@ export default function Home() {
         <p className="mt-4 max-w-[60ch] text-[var(--ink-muted)]">
           Every project above sits somewhere on this chain. Select a stage to see what it means in practice.
         </p>
-        <div className="mt-16">
+        <ScrollReveal className="mt-16">
           <ReliabilitySpine />
-        </div>
+        </ScrollReveal>
       </Section>
 
       {/* Capabilities */}
@@ -66,9 +69,9 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Domains, not scores.
         </h2>
-        <div className="mt-12 grid gap-10 sm:grid-cols-2">
+        <ScrollReveal className="mt-12 grid gap-10 sm:grid-cols-2">
           {skillDomains.map((domain) => (
-            <div key={domain.domain}>
+            <div key={domain.domain} data-reveal>
               <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-[var(--accent-secondary)]">
                 {domain.domain}
               </h3>
@@ -79,7 +82,7 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
       </Section>
 
       {/* Experience */}
@@ -88,17 +91,17 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Reverse chronological.
         </h2>
-        <div className="mt-12">
+        <ScrollReveal className="mt-12">
           <ExperienceTimeline roles={experience} />
-        </div>
+        </ScrollReveal>
       </Section>
 
       {/* Education and selected certifications */}
       <Section field="manual" id="credentials" className="pt-0">
         <Eyebrow>Education &amp; certifications</Eyebrow>
-        <div className="mt-8">
+        <ScrollReveal className="mt-8">
           <CertificationList items={certifications} />
-        </div>
+        </ScrollReveal>
         <div className="mt-6">
           <Link href="/about" className="font-mono text-sm text-[var(--accent-secondary)] hover:text-[var(--accent)]">
             Full education history &rarr;
@@ -112,9 +115,9 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Smaller builds, same discipline.
         </h2>
-        <div className="mt-10">
+        <ScrollReveal className="mt-10">
           <LabProjectList projects={labProjects} />
-        </div>
+        </ScrollReveal>
       </Section>
 
       {/* Contact */}

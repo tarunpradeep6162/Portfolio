@@ -4,7 +4,7 @@ export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
   return (
     <ol className="flex flex-col gap-10">
       {roles.map((role) => (
-        <li key={`${role.org}-${role.dates}`} className="border-t border-[var(--line)] pt-6">
+        <li key={`${role.org}-${role.dates}`} data-reveal className="border-t border-[var(--line)] pt-6">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h3 className="font-display text-lg font-semibold text-[var(--ink)]">{role.role}</h3>
             <p className="font-mono text-xs text-[var(--ink-muted)]">{role.dates}</p>

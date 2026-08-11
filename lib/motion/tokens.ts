@@ -5,6 +5,7 @@
  */
 export const motion = {
   heroEntranceMs: 900, // within the spec's 700-1200ms window
+  sectionRevealMs: 600,
   ease: {
     // CSS custom property version (globals.css --ease-spine) - cubic-bezier() accepts this directly.
     cssSpine: "cubic-bezier(0.16, 1, 0.3, 1)",
@@ -14,5 +15,6 @@ export const motion = {
   },
   stagger: {
     hero: 0.08,
+    section: 0.06,
   },
 } as const;

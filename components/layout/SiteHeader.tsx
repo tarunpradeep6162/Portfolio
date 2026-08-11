@@ -15,7 +15,7 @@ export function SiteHeader() {
       <Container className="flex h-full items-center justify-between">
         <Link href="/" className="font-display text-lg font-semibold tracking-tight text-[var(--ink)]">
           TP
-          <span className="sr-only">Tarun Pradeep B — home</span>
+          <span className="sr-only">Tarun Pradeep B - home</span>
         </Link>
 
         <nav aria-label="Primary" className="hidden sm:block">

@@ -9,7 +9,7 @@ export function NeedsInput({ note }: { note: string }) {
       role="note"
       className="rounded-sm border border-dashed border-[var(--line)] bg-[var(--surface-raised)]/40 px-4 py-3 font-mono text-xs text-[var(--ink-muted)]"
     >
-      <span className="font-semibold text-[var(--accent-secondary)]">Needs input — </span>
+      <span className="font-semibold text-[var(--accent-secondary)]">Needs input: </span>
       {note}
     </div>
   );

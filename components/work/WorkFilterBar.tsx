@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import type { Project, ProjectCategory } from "@/content/types";
 import { ProjectCard } from "./ProjectCard";
+import { LabProjectList } from "./LabProjectList";
 import { cn } from "@/lib/cn";
 
 const categories: ProjectCategory[] = ["Cloud", "DevOps", "Systems", "Creative Engineering"];
@@ -14,6 +15,9 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
     () => (active === "All" ? projects : projects.filter((p) => p.categories.includes(active))),
     [active, projects],
   );
+
+  const flagships = filtered.filter((p) => p.kind === "flagship");
+  const labs = filtered.filter((p) => p.kind === "lab");
 
   return (
     <div>
@@ -36,11 +40,25 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
         ))}
       </div>
 
-      <div className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
-        ))}
-      </div>
+      {flagships.length > 0 && (
+        <div className="mt-10">
+          <h2 className="font-mono text-xs uppercase tracking-wide text-[var(--ink-muted)]">Case studies</h2>
+          <div className="mt-6 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {flagships.map((project) => (
+              <ProjectCard key={project.slug} project={project} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {labs.length > 0 && (
+        <div className={flagships.length > 0 ? "mt-20" : "mt-10"}>
+          <h2 className="font-mono text-xs uppercase tracking-wide text-[var(--ink-muted)]">Engineering lab</h2>
+          <div className="mt-6">
+            <LabProjectList projects={labs} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

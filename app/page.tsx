@@ -4,6 +4,7 @@ import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { ProjectCard } from "@/components/work/ProjectCard";
+import { LabProjectList } from "@/components/work/LabProjectList";
 import { ReliabilitySpine } from "@/components/spine/ReliabilitySpine";
 import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
@@ -111,19 +112,9 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Smaller builds, same discipline.
         </h2>
-        <ul className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-          {labProjects.map((project) => (
-            <li key={project.slug} className="border-t border-[var(--line)] pt-4">
-              <h3 className="font-display text-sm font-semibold text-[var(--ink)]">{project.title}</h3>
-              <p className="mt-2 text-sm text-[var(--ink-muted)]">{project.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {project.toolsAndServices.slice(0, 4).map((tool) => (
-                  <Badge key={tool}>{tool}</Badge>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-10">
+          <LabProjectList projects={labProjects} />
+        </div>
       </Section>
 
       {/* Contact */}

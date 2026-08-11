@@ -7,8 +7,10 @@ function mockMatchMedia(matches: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
     matches,
     media: query,
-    addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => listeners.add(cb),
-    removeEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) => listeners.delete(cb),
+    addEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) =>
+      listeners.add(cb),
+    removeEventListener: (_: string, cb: (e: MediaQueryListEvent) => void) =>
+      listeners.delete(cb),
   }));
   return listeners;
 }

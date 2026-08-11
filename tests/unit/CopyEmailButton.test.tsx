@@ -18,7 +18,9 @@ describe("CopyEmailButton", () => {
     render(<CopyEmailButton email="tarunpradeep2003@gmail.com" />);
     fireEvent.click(screen.getByRole("button"));
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("tarunpradeep2003@gmail.com");
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        "tarunpradeep2003@gmail.com",
+      );
     });
   });
 

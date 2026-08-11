@@ -1,33 +1,14 @@
 import type { Metadata } from "next";
-import { Archivo_Black, Public_Sans, Space_Mono } from "next/font/google";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { DeploymentFlightpath } from "@/components/flightpath/DeploymentFlightpath";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
+import "@fontsource-variable/syne";
+import "@fontsource-variable/manrope";
+import "@fontsource/ibm-plex-mono/latin-400.css";
+import "@fontsource/ibm-plex-mono/latin-700.css";
 import "./globals.css";
-
-const archivoBlack = Archivo_Black({
-  variable: "--font-archivo-black",
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap",
-});
-
-const publicSans = Public_Sans({
-  variable: "--font-public-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
-const spaceMono = Space_Mono({
-  variable: "--font-space-mono",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -52,18 +33,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      data-field="control"
-      className={`${archivoBlack.variable} ${publicSans.variable} ${spaceMono.variable} h-full`}
-    >
+    <html lang="en" data-field="control" className="h-full">
       <body className="flex min-h-full flex-col font-body antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
         <SkipLink />
-        <DeploymentFlightpath />
         <SiteHeader />
         <main id="main-content" className="flex-1">
           {children}

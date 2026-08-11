@@ -34,6 +34,5 @@ export const about = {
 
 export const resumeFile: Field<{ href: string }> = {
   status: "needs-input",
-  note:
-    "No resume PDF has been supplied yet, and the only version referenced elsewhere lists an outdated employer timeline. Request the current résumé by email in the meantime.",
+  note: "No resume PDF has been supplied yet, and the only version referenced elsewhere lists an outdated employer timeline. Request the current résumé by email in the meantime.",
 };

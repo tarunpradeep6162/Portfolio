@@ -6,17 +6,24 @@ import type { Certification } from "@/content/types";
 export function CertificationList({ items }: { items: Certification[] }) {
   return (
     <ul className="flex flex-col">
-      {items.map((cert) => (
+      {items.map((cert, index) => (
         <li
           key={cert.name}
           data-reveal
-          className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-[var(--line)] py-3 last:border-b"
+          className="grid grid-cols-[2rem_1fr] gap-3 border-t border-[var(--line)] py-4 last:border-b sm:grid-cols-[2.5rem_1fr_auto] sm:items-baseline"
         >
-          <p className="font-display text-sm font-semibold text-[var(--ink)]">{cert.name}</p>
+          <span className="font-mono text-[9px] text-[var(--accent-secondary)]">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <p className="font-display text-sm font-semibold tracking-[-0.02em] text-[var(--ink)]">
+            {cert.name}
+          </p>
           {/* No issuer link/credential ID supplied yet for some entries: the
               control is simply omitted rather than announced (CONTENT_GAPS.md tracks it). */}
           {cert.completed && (
-            <p className="font-mono text-xs text-[var(--ink-muted)]">Completed {cert.completed}</p>
+            <p className="col-start-2 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--ink-muted)] sm:col-start-auto">
+              Completed {cert.completed}
+            </p>
           )}
         </li>
       ))}

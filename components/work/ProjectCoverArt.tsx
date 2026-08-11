@@ -1,242 +1,522 @@
-/**
- * Code-generated architectural cover art, replacing the "Needs project
- * screenshot" placeholder (spec §5: "Do not publicly render 'Needs project
- * screenshot' ... create original code-based architectural cover art using
- * SVG"). Built entirely from each project's own real `flow` string - no
- * fabricated browser screenshots, no invented metrics. Four distinct
- * compositions (one per variant) so flagship projects don't read as
- * identical cards with different labels.
- */
-
 import { cn } from "@/lib/cn";
 
-const ACCENT = "#ff6b45";
-const PACKET = "#2f7cff";
-const LINE = "#2c313a";
-const INK = "#f1f0e8";
-const MUTED = "#8797a5";
+const LIME = "#d8ff4f";
+const BLUE = "#748cff";
+const CORAL = "#ff6847";
+const INK = "#f8f8f3";
+const MUTED = "#8996a3";
+const LINE = "#26303a";
+const BG = "#080d12";
 
 export type CoverArtVariant = "pipeline" | "hub-spoke" | "tiered" | "flow";
 
 function parseSteps(flow: string): string[] {
-  return flow.split("->").map((s) => s.trim());
+  return flow.split("->").map((step) => step.trim());
 }
 
-/** Horizontal CI/CD-style pipeline - Project Aurora (7-step container flow). */
-function PipelineArt({ steps }: { steps: string[] }) {
-  const width = 1200;
-  const height = 520;
-  const boxH = 64;
-  const fontSize = 12;
-  const charWidth = fontSize * 0.64;
-  const hPad = 14;
-  const minBoxW = 96;
-  const boxWidths = steps.map((step) => Math.max(minBoxW, step.length * charWidth + hPad * 2));
-  const totalBoxW = boxWidths.reduce((a, b) => a + b, 0);
-  const gap = (width - 80 - totalBoxW) / (steps.length - 1);
-  const y = height / 2 - boxH / 2;
-
-  const positions: number[] = [];
-  let cursor = 40;
-  boxWidths.forEach((w) => {
-    positions.push(cursor);
-    cursor += w + gap;
-  });
-
+function ArtGrid() {
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Deployment pipeline: ${steps.join(" then ")}`}>
-      <rect width={width} height={height} fill="#0b1116" />
-      {/* faint grid, cartography texture */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <line key={`v${i}`} x1={(i + 1) * (width / 13)} y1={0} x2={(i + 1) * (width / 13)} y2={height} stroke={LINE} strokeWidth={1} opacity={0.3} />
+    <g stroke={LINE} strokeWidth="1" opacity="0.5">
+      {Array.from({ length: 12 }).map((_, index) => (
+        <line
+          key={`v-${index}`}
+          x1={index * 100}
+          y1="0"
+          x2={index * 100}
+          y2="700"
+        />
       ))}
-      <line x1={40} y1={y + boxH / 2} x2={width - 40} y2={y + boxH / 2} stroke={MUTED} strokeWidth={1.5} opacity={0.4} />
-      {steps.map((step, i) => {
-        const x = positions[i];
-        const boxW = boxWidths[i];
-        const isEdge = i === 0 || i === steps.length - 1;
-        return (
-          <g key={step}>
-            {i > 0 && (
-              <path
-                d={`M ${positions[i - 1] + boxWidths[i - 1]} ${y + boxH / 2} L ${x} ${y + boxH / 2}`}
-                stroke={ACCENT}
-                strokeWidth={2}
-                markerEnd="url(#arrow)"
-              />
-            )}
-            <rect
-              x={x}
-              y={y}
-              width={boxW}
-              height={boxH}
-              rx={2}
-              fill={isEdge ? "#152029" : "#0f1620"}
-              stroke={i % 2 === 0 ? ACCENT : PACKET}
-              strokeWidth={1.5}
-            />
-            <text x={x + boxW / 2} y={y + boxH / 2 + 5} textAnchor="middle" fill={INK} fontSize={fontSize} fontFamily="var(--font-mono)">
-              {step}
-            </text>
-          </g>
-        );
-      })}
-      <defs>
-        <marker id="arrow" markerWidth={8} markerHeight={8} refX={6} refY={4} orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" fill={ACCENT} />
-        </marker>
-      </defs>
+      {Array.from({ length: 7 }).map((_, index) => (
+        <line
+          key={`h-${index}`}
+          x1="0"
+          y1={index * 100}
+          x2="1200"
+          y2={index * 100}
+        />
+      ))}
+    </g>
+  );
+}
+
+function ArtChrome({ code, title }: { code: string; title: string }) {
+  return (
+    <g fontFamily="var(--font-mono)" fontSize="10" letterSpacing="2">
+      <text x="48" y="48" fill={LIME}>
+        {code}
+      </text>
+      <text x="1152" y="48" textAnchor="end" fill={MUTED}>
+        {title}
+      </text>
+      <text x="48" y="660" fill={MUTED}>
+        INFRASTRUCTURE ATLAS / VERIFIED FLOW
+      </text>
+      <text x="1152" y="660" textAnchor="end" fill={MUTED}>
+        TARUN PRADEEP / V4
+      </text>
+    </g>
+  );
+}
+
+function PipelineArt({ steps }: { steps: string[] }) {
+  const points = steps.map((_, index) => ({
+    x: 92 + index * 165,
+    y: index % 2 === 0 ? 238 : 410,
+  }));
+  const route = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  return (
+    <svg
+      viewBox="0 0 1200 700"
+      className="h-full w-full"
+      role="img"
+      aria-label={`Deployment pipeline: ${steps.join(" then ")}`}
+    >
+      <rect width="1200" height="700" fill={BG} />
+      <ArtGrid />
+      <ArtChrome code="ARCH / 01" title="CONTAINER DELIVERY" />
+      <text
+        x="600"
+        y="382"
+        textAnchor="middle"
+        fill={INK}
+        opacity="0.025"
+        fontFamily="var(--font-display)"
+        fontWeight="800"
+        fontSize="270"
+      >
+        SHIP
+      </text>
+      <path
+        d={route}
+        fill="none"
+        stroke={CORAL}
+        strokeOpacity="0.18"
+        strokeWidth="18"
+      />
+      <path
+        d={route}
+        fill="none"
+        stroke={CORAL}
+        strokeWidth="3"
+        className="cover-flow"
+      />
+      {points.map((point, index) => (
+        <g key={`${steps[index]}-${index}`}>
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="27"
+            fill={BG}
+            stroke={index % 2 === 0 ? CORAL : BLUE}
+            strokeWidth="2"
+          />
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="6"
+            fill={
+              index === points.length - 1
+                ? LIME
+                : index % 2 === 0
+                  ? CORAL
+                  : BLUE
+            }
+          />
+          <text
+            x={point.x}
+            y={point.y + (index % 2 === 0 ? -46 : 54)}
+            textAnchor="middle"
+            fill={INK}
+            fontFamily="var(--font-mono)"
+            fontSize="12"
+          >
+            {steps[index]}
+          </text>
+          <text
+            x={point.x}
+            y={point.y + 4}
+            textAnchor="middle"
+            fill={MUTED}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+          >
+            {String(index + 1).padStart(2, "0")}
+          </text>
+        </g>
+      ))}
     </svg>
   );
 }
 
-/** Two-host orchestration relationship - Jenkins controller/agent. */
 function HubSpokeArt({ steps }: { steps: string[] }) {
-  const width = 1200;
-  const height = 520;
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Orchestration flow: ${steps.join(" then ")}`}>
-      <rect width={width} height={height} fill="#0b1116" />
-      {/* Controller host */}
-      <rect x={140} y={120} width={280} height={180} rx={2} fill="#152029" stroke={ACCENT} strokeWidth={1.5} />
-      <text x={280} y={100} textAnchor="middle" fill={ACCENT} fontSize={12} fontFamily="var(--font-mono)" letterSpacing={2}>
-        CONTROLLER
-      </text>
-      <text x={280} y={218} textAnchor="middle" fill={INK} fontSize={16} fontFamily="var(--font-mono)">
-        Jenkins (Ubuntu)
+    <svg
+      viewBox="0 0 1200 700"
+      className="h-full w-full"
+      role="img"
+      aria-label={`Orchestration flow: ${steps.join(" then ")}`}
+    >
+      <rect width="1200" height="700" fill={BG} />
+      <ArtGrid />
+      <ArtChrome code="ARCH / 02" title="DISTRIBUTED EXECUTION" />
+      <circle
+        cx="600"
+        cy="338"
+        r="238"
+        fill="none"
+        stroke={BLUE}
+        strokeOpacity="0.16"
+        strokeDasharray="3 12"
+      />
+      <circle
+        cx="600"
+        cy="338"
+        r="168"
+        fill="none"
+        stroke={CORAL}
+        strokeOpacity="0.12"
+      />
+
+      <g>
+        <rect
+          x="112"
+          y="180"
+          width="330"
+          height="285"
+          fill="#0d151d"
+          stroke={CORAL}
+          strokeWidth="2"
+        />
+        <text
+          x="140"
+          y="218"
+          fill={CORAL}
+          fontFamily="var(--font-mono)"
+          fontSize="10"
+          letterSpacing="2"
+        >
+          CONTROLLER / 01
+        </text>
+        <text
+          x="140"
+          y="336"
+          fill={INK}
+          fontFamily="var(--font-display)"
+          fontWeight="700"
+          fontSize="32"
+        >
+          Jenkins
+        </text>
+        <text
+          x="140"
+          y="368"
+          fill={MUTED}
+          fontFamily="var(--font-mono)"
+          fontSize="12"
+        >
+          Ubuntu / orchestration
+        </text>
+      </g>
+      <g>
+        <rect
+          x="758"
+          y="180"
+          width="330"
+          height="285"
+          fill="#0d151d"
+          stroke={BLUE}
+          strokeWidth="2"
+        />
+        <text
+          x="786"
+          y="218"
+          fill={BLUE}
+          fontFamily="var(--font-mono)"
+          fontSize="10"
+          letterSpacing="2"
+        >
+          BUILD AGENT / 02
+        </text>
+        <text
+          x="786"
+          y="336"
+          fill={INK}
+          fontFamily="var(--font-display)"
+          fontWeight="700"
+          fontSize="32"
+        >
+          Linux
+        </text>
+        <text
+          x="786"
+          y="368"
+          fill={MUTED}
+          fontFamily="var(--font-mono)"
+          fontSize="12"
+        >
+          SSH / execution
+        </text>
+      </g>
+
+      <path
+        d="M442 322 C 520 280, 680 280, 758 322"
+        fill="none"
+        stroke={LIME}
+        strokeWidth="3"
+        className="cover-flow"
+      />
+      <text
+        x="600"
+        y="276"
+        textAnchor="middle"
+        fill={LIME}
+        fontFamily="var(--font-mono)"
+        fontSize="10"
+        letterSpacing="2"
+      >
+        SECURE SSH CHANNEL
       </text>
 
-      {/* SSH connection */}
-      <line x1={420} y1={210} x2={780} y2={210} stroke={PACKET} strokeWidth={2} strokeDasharray="6 4" />
-      <text x={600} y={190} textAnchor="middle" fill={PACKET} fontSize={12} fontFamily="var(--font-mono)">
-        SSH
-      </text>
-
-      {/* Agent host */}
-      <rect x={780} y={120} width={280} height={180} rx={2} fill="#0f1620" stroke={PACKET} strokeWidth={1.5} />
-      <text x={920} y={100} textAnchor="middle" fill={PACKET} fontSize={12} fontFamily="var(--font-mono)" letterSpacing={2}>
-        BUILD AGENT
-      </text>
-      <text x={920} y={218} textAnchor="middle" fill={INK} fontSize={16} fontFamily="var(--font-mono)">
-        Linux (executor)
-      </text>
-
-      {/* Flow steps below, as the actual pipeline stages */}
-      {steps.map((step, i) => {
-        const x = 200 + i * 300;
-        return (
-          <g key={step}>
-            <rect x={x} y={360} width={220} height={56} rx={2} fill="#0f1620" stroke={LINE} strokeWidth={1.5} />
-            <text x={x + 110} y={393} textAnchor="middle" fill={INK} fontSize={13} fontFamily="var(--font-mono)">
-              {step}
-            </text>
-            {i < steps.length - 1 && (
-              <path d={`M ${x + 220} 388 L ${x + 300} 388`} stroke={ACCENT} strokeWidth={2} markerEnd="url(#arrow2)" />
-            )}
-          </g>
-        );
-      })}
-      <defs>
-        <marker id="arrow2" markerWidth={8} markerHeight={8} refX={6} refY={4} orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" fill={ACCENT} />
-        </marker>
-      </defs>
+      {steps.map((step, index) => (
+        <g key={step}>
+          <rect
+            x={300 + index * 210}
+            y="520"
+            width="180"
+            height="54"
+            fill="#101821"
+            stroke={index === 1 ? LIME : LINE}
+          />
+          <text
+            x={390 + index * 210}
+            y="553"
+            textAnchor="middle"
+            fill={INK}
+            fontFamily="var(--font-mono)"
+            fontSize="11"
+          >
+            {step}
+          </text>
+        </g>
+      ))}
     </svg>
   );
 }
 
-/** Layered VPC tiers - Secure AWS Production Architecture. */
 function TieredArt({ steps }: { steps: string[] }) {
-  const width = 1200;
-  const height = 520;
+  const colors = [CORAL, BLUE, BLUE, LIME];
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Architecture tiers: ${steps.join(" then ")}`}>
-      <rect width={width} height={height} fill="#0b1116" />
-      <rect x={80} y={40} width={width - 160} height={height - 80} rx={2} fill="none" stroke={LINE} strokeWidth={1.5} strokeDasharray="4 4" />
-      <text x={100} y={30} fill={MUTED} fontSize={11} fontFamily="var(--font-mono)" letterSpacing={2}>
+    <svg
+      viewBox="0 0 1200 700"
+      className="h-full w-full"
+      role="img"
+      aria-label={`Architecture tiers: ${steps.join(" then ")}`}
+    >
+      <rect width="1200" height="700" fill={BG} />
+      <ArtGrid />
+      <ArtChrome code="ARCH / 03" title="PRODUCTION CONTROL PLANE" />
+      <text
+        x="94"
+        y="350"
+        fill={INK}
+        opacity="0.035"
+        fontFamily="var(--font-display)"
+        fontWeight="800"
+        fontSize="230"
+      >
         VPC
       </text>
-      {steps.map((step, i) => {
-        const y = 60 + i * 105;
+      <path
+        d="M440 126 L1080 126 L1012 574 L372 574 Z"
+        fill="#0d151d"
+        stroke={LINE}
+        strokeWidth="2"
+      />
+      {steps.map((step, index) => {
+        const y = 170 + index * 96;
+        const inset = index * 32;
         return (
           <g key={step}>
-            <rect x={110} y={y} width={width - 220} height={80} rx={2} fill={i % 2 === 0 ? "#152029" : "#0f1620"} stroke={i === 0 ? ACCENT : PACKET} strokeWidth={1.5} />
-            <text x={130} y={y + 28} fill={i === 0 ? ACCENT : PACKET} fontSize={11} fontFamily="var(--font-mono)" letterSpacing={1.5}>
-              {`TIER ${String(i + 1).padStart(2, "0")}`}
+            <path
+              d={`M ${472 + inset} ${y} L ${1028 - inset} ${y} L ${1016 - inset} ${y + 62} L ${460 + inset} ${y + 62} Z`}
+              fill="#111b25"
+              stroke={colors[index]}
+              strokeWidth="2"
+            />
+            <text
+              x={492 + inset}
+              y={y + 25}
+              fill={colors[index]}
+              fontFamily="var(--font-mono)"
+              fontSize="9"
+              letterSpacing="2"
+            >
+              TIER {String(index + 1).padStart(2, "0")}
             </text>
-            <text x={130} y={y + 54} fill={INK} fontSize={16} fontFamily="var(--font-mono)">
+            <text
+              x={492 + inset}
+              y={y + 48}
+              fill={INK}
+              fontFamily="var(--font-display)"
+              fontWeight="600"
+              fontSize="17"
+            >
               {step}
             </text>
-            {i < steps.length - 1 && (
-              <path d={`M ${width / 2} ${y + 80} L ${width / 2} ${y + 105}`} stroke={MUTED} strokeWidth={1.5} markerEnd="url(#arrow3)" />
-            )}
           </g>
         );
       })}
-      <defs>
-        <marker id="arrow3" markerWidth={8} markerHeight={8} refX={4} refY={6} orient="auto">
-          <path d="M0,0 L4,8 L8,0 Z" fill={MUTED} />
-        </marker>
-      </defs>
+      <g
+        fill={MUTED}
+        fontFamily="var(--font-mono)"
+        fontSize="10"
+        letterSpacing="1.5"
+      >
+        <text x="96" y="476">
+          PUBLIC ENTRY
+        </text>
+        <text x="96" y="500">
+          PRIVATE COMPUTE
+        </text>
+        <text x="96" y="524">
+          OBSERVABILITY
+        </text>
+        <text x="96" y="548">
+          RECOVERY
+        </text>
+      </g>
     </svg>
   );
 }
 
-/** Compact request-flow diagram - Node.js auth + RDS. */
 function FlowArt({ steps }: { steps: string[] }) {
-  const width = 1200;
-  const height = 520;
-  const cy = height / 2;
-  const fontSize = 13;
-  const charWidth = fontSize * 0.62;
-  const hPad = 24;
-  const gap = 54;
-  const boxWidths = steps.map((step) => Math.max(130, step.length * charWidth + hPad * 2));
-
-  const positions: number[] = [];
-  let cursor = 190;
-  boxWidths.forEach((w) => {
-    positions.push(cursor);
-    cursor += w + gap;
-  });
-  const totalWidth = cursor - gap;
-  const offset = Math.max(0, (width - totalWidth) / 2 - positions[0] + 190);
+  const positions = [
+    { x: 600, y: 146 },
+    { x: 890, y: 344 },
+    { x: 600, y: 542 },
+    { x: 310, y: 344 },
+  ];
+  const route = `${positions.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ")} Z`;
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Application flow: ${steps.join(" then ")}`}>
-      <rect width={width} height={height} fill="#0b1116" />
-      <circle cx={offset + 100} cy={cy} r={22} fill="none" stroke={PACKET} strokeWidth={2} />
-      <text x={offset + 100} y={cy + 45} textAnchor="middle" fill={PACKET} fontSize={11} fontFamily="var(--font-mono)">
-        client
+    <svg
+      viewBox="0 0 1200 700"
+      className="h-full w-full"
+      role="img"
+      aria-label={`Application flow: ${steps.join(" then ")}`}
+    >
+      <rect width="1200" height="700" fill={BG} />
+      <ArtGrid />
+      <ArtChrome code="ARCH / 04" title="APPLICATION RUNTIME" />
+      <circle
+        cx="600"
+        cy="344"
+        r="246"
+        fill="none"
+        stroke={LINE}
+        strokeWidth="2"
+      />
+      <circle
+        cx="600"
+        cy="344"
+        r="154"
+        fill="#0d151d"
+        stroke={BLUE}
+        strokeOpacity="0.45"
+        strokeDasharray="5 9"
+      />
+      <path
+        d={route}
+        fill="none"
+        stroke={CORAL}
+        strokeOpacity="0.2"
+        strokeWidth="20"
+      />
+      <path
+        d={route}
+        fill="none"
+        stroke={CORAL}
+        strokeWidth="3"
+        className="cover-flow"
+      />
+      <text
+        x="600"
+        y="331"
+        textAnchor="middle"
+        fill={MUTED}
+        fontFamily="var(--font-mono)"
+        fontSize="10"
+        letterSpacing="2"
+      >
+        AUTHENTICATION
       </text>
-      {steps.map((step, i) => {
-        const x = offset + positions[i];
-        const w = boxWidths[i];
-        const prevEnd = i === 0 ? offset + 122 : offset + positions[i - 1] + boxWidths[i - 1];
+      <text
+        x="600"
+        y="365"
+        textAnchor="middle"
+        fill={INK}
+        fontFamily="var(--font-display)"
+        fontWeight="700"
+        fontSize="28"
+      >
+        REQUEST LOOP
+      </text>
+      {steps.map((step, index) => {
+        const point = positions[index] ?? positions[positions.length - 1];
         return (
-          <g key={step}>
-            <path d={`M ${prevEnd} ${cy} L ${x} ${cy}`} stroke={ACCENT} strokeWidth={2} markerEnd="url(#arrow4)" />
-            <rect x={x} y={cy - 40} width={w} height={80} rx={2} fill="#152029" stroke={ACCENT} strokeWidth={1.5} />
-            <text x={x + w / 2} y={cy + 5} textAnchor="middle" fill={INK} fontSize={fontSize} fontFamily="var(--font-mono)">
+          <g key={`${step}-${index}`}>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="52"
+              fill="#101821"
+              stroke={
+                index === steps.length - 1
+                  ? LIME
+                  : index % 2 === 0
+                    ? CORAL
+                    : BLUE
+              }
+              strokeWidth="2"
+            />
+            <text
+              x={point.x}
+              y={point.y - 7}
+              textAnchor="middle"
+              fill={MUTED}
+              fontFamily="var(--font-mono)"
+              fontSize="8"
+            >
+              0{index + 1}
+            </text>
+            <text
+              x={point.x}
+              y={point.y + 14}
+              textAnchor="middle"
+              fill={INK}
+              fontFamily="var(--font-mono)"
+              fontSize="10"
+            >
               {step}
             </text>
           </g>
         );
       })}
-      <defs>
-        <marker id="arrow4" markerWidth={8} markerHeight={8} refX={6} refY={4} orient="auto">
-          <path d="M0,0 L8,4 L0,8 Z" fill={ACCENT} />
-        </marker>
-      </defs>
     </svg>
   );
 }
 
 export const COVER_ART_LEGEND: Record<CoverArtVariant, string> = {
-  pipeline: "Orange = build/deploy stage · Blue = network/runtime stage · read left to right",
-  "hub-spoke": "Orange border = controller host · Blue border = agent host · dashed line = SSH connection",
-  tiered: "Orange = public-facing tier · Blue = internal tier · read top to bottom",
-  flow: "Orange = application stage · Blue outline = client · read left to right",
+  pipeline:
+    "Coral traces the build and deployment route; blue marks runtime/network stages; read the numbered path from left to right.",
+  "hub-spoke":
+    "The coral controller orchestrates work over the lime SSH channel; the blue agent performs execution.",
+  tiered:
+    "The nested control plane reads top to bottom from public entry through internal services and recovery.",
+  flow: "The request loop moves clockwise through the application's verified deployment stages.",
 };
 
 export function ProjectCoverArt({
@@ -249,9 +529,20 @@ export function ProjectCoverArt({
   bordered?: boolean;
 }) {
   const steps = parseSteps(flow);
-  const Component = { pipeline: PipelineArt, "hub-spoke": HubSpokeArt, tiered: TieredArt, flow: FlowArt }[variant];
+  const Component = {
+    pipeline: PipelineArt,
+    "hub-spoke": HubSpokeArt,
+    tiered: TieredArt,
+    flow: FlowArt,
+  }[variant];
+
   return (
-    <div className={cn("w-full overflow-hidden rounded-none", bordered && "border border-[var(--line)]")}>
+    <div
+      className={cn(
+        "project-card-art aspect-[12/7] w-full overflow-hidden bg-[var(--color-control-black)] transition-transform duration-700 ease-[var(--ease-spine)]",
+        bordered && "border border-[var(--line)]",
+      )}
+    >
       <Component steps={steps} />
     </div>
   );

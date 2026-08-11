@@ -1,95 +1,195 @@
 @import "tailwindcss";
 
-/*
- * Design tokens for the Reliability Spine identity.
- * Named per the spec (§5) so component code reads as engineering vocabulary,
- * not arbitrary hex values. Two field states ("control" = dark hero/topology,
- * "manual" = light case-study/documentation) swap the semantic mapping below;
- * the raw brand colors themselves never change.
- */
 @theme {
-  /* Raw brand palette (spec §5) */
-  --color-control-black: #071015;
-  --color-blueprint-navy: #102735;
-  --color-cloud-linen: #f1f0e8;
-  --color-systems-ink: #172026;
-  --color-signal-tangerine: #ff6b45;
-  --color-packet-blue: #2f7cff;
-  --color-telemetry-steel: #8797a5;
+  --color-control-black: #06090d;
+  --color-control-raised: #0d1218;
+  --color-blueprint-navy: #111d2a;
+  --color-cloud-linen: #eeefe8;
+  --color-cloud-white: #f8f8f3;
+  --color-systems-ink: #111820;
+  --color-signal-lime: #d8ff4f;
+  --color-packet-blue: #748cff;
+  --color-signal-coral: #ff6847;
+  --color-telemetry-steel: #8996a3;
 
-  --font-display: var(--font-archivo-black), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-space-mono), ui-monospace, "SF Mono", monospace;
+  --font-display: "Syne Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Fluid type scale (clamp-based, spec §5 requirement). --text-name is the
-     dominant "TARUN PRADEEP" hero treatment - large enough to be the visual
-     anchor of the page on capable viewports, without ever forcing horizontal
-     scroll (clamped against 90vw at the low end via the hero component itself). */
-  --text-name: clamp(3.5rem, 1rem + 12vw, 11rem);
-  --text-hero: clamp(2rem, 1.3rem + 3vw, 3.75rem);
-  /* Widened from the v2 scale (was 1.75-2.5rem / 1.375-1.75rem, a ratio too
-     close for text-display and text-heading to read as separate tiers when
-     both carry the same font-semibold weight - award-polish-v3 audit). */
-  --text-display: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
-  --text-heading: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --text-name: clamp(3.8rem, 1.55rem + 7.6vw, 9.25rem);
+  --text-hero: clamp(2.5rem, 1.45rem + 4vw, 5.25rem);
+  --text-display: clamp(2.25rem, 1.55rem + 2.8vw, 4.75rem);
+  --text-heading: clamp(1.45rem, 1.18rem + 0.9vw, 2.15rem);
+  --text-lead: clamp(1.05rem, 0.98rem + 0.35vw, 1.3rem);
 
   --ease-spine: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/*
- * Semantic tokens: what components actually consume.
- * Default (root) mapping is the "control" field, since the hero opens there.
- * Section wrappers set data-field="manual" to flip into the light
- * "field manual" register for case-study/documentation content (spec §4).
- */
 :root {
   --surface: var(--color-control-black);
-  --surface-raised: var(--color-blueprint-navy);
+  --surface-raised: var(--color-control-raised);
   --ink: var(--color-cloud-linen);
   --ink-muted: var(--color-telemetry-steel);
-  --line: color-mix(in srgb, var(--color-telemetry-steel) 28%, transparent);
-  --accent: var(--color-signal-tangerine);
+  --line: color-mix(in srgb, var(--color-telemetry-steel) 24%, transparent);
+  --accent: var(--color-signal-lime);
   --accent-secondary: var(--color-packet-blue);
-  --focus-ring: var(--color-packet-blue);
+  --signal-warm: var(--color-signal-coral);
+  --focus-ring: var(--color-signal-lime);
 }
 
 [data-field="manual"] {
   --surface: var(--color-cloud-linen);
-  --surface-raised: #ffffff;
+  --surface-raised: var(--color-cloud-white);
   --ink: var(--color-systems-ink);
-  --ink-muted: color-mix(in srgb, var(--color-systems-ink) 55%, var(--color-telemetry-steel));
-  --line: color-mix(in srgb, var(--color-systems-ink) 14%, transparent);
-  --accent: var(--color-signal-tangerine);
-  --accent-secondary: var(--color-packet-blue);
-  --focus-ring: var(--color-packet-blue);
+  --ink-muted: color-mix(
+    in srgb,
+    var(--color-systems-ink) 66%,
+    var(--color-telemetry-steel)
+  );
+  --line: color-mix(in srgb, var(--color-systems-ink) 17%, transparent);
+  --accent: #456000;
+  --accent-secondary: #3456df;
+  --signal-warm: #c83d22;
+  --focus-ring: #3456df;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 html {
   color-scheme: dark;
-}
-[data-field="manual"] {
-  color-scheme: light;
+  background: var(--color-control-black);
 }
 
 body {
+  min-width: 320px;
+  overflow-x: clip;
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  content: "";
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.75'/%3E%3C/svg%3E");
 }
 
 ::selection {
-  background: var(--accent);
+  background: var(--color-signal-lime);
   color: var(--color-control-black);
 }
 
 :focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline-offset: 4px;
   border-radius: 2px;
 }
 
-/* Reduced motion: collapse everything to instant, no exceptions (spec §6, §14) */
+.control-grid {
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-telemetry-steel) 7%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-telemetry-steel) 7%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 64px 64px;
+}
+
+.manual-grid {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-systems-ink) 5%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: min(12.5vw, 180px) 100%;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.observatory-orbit {
+  transform-origin: center;
+  animation: orbit-spin 48s linear infinite;
+}
+
+.observatory-orbit-reverse {
+  transform-origin: center;
+  animation: orbit-spin 64s linear infinite reverse;
+}
+
+.observatory-trace {
+  stroke-dasharray: 10 14;
+  animation: trace-flow 6s linear infinite;
+}
+
+.observatory-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: node-pulse 3.2s ease-in-out infinite;
+}
+
+.cover-flow {
+  stroke-dasharray: 9 11;
+  animation: trace-flow 8s linear infinite;
+}
+
+.project-card:hover .project-card-art,
+.project-card:focus-visible .project-card-art {
+  transform: scale(1.015);
+}
+
+.project-card:hover .project-card-arrow,
+.project-card:focus-visible .project-card-arrow {
+  transform: translate(4px, -4px);
+}
+
+.route-orbit {
+  animation: orbit-spin 40s linear infinite;
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes trace-flow {
+  to {
+    stroke-dashoffset: -92;
+  }
+}
+
+@keyframes node-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.16);
+  }
+}
+
+@media (max-width: 639px) {
+  .control-grid {
+    background-size: 40px 40px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -98,5 +198,23 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body,
+  [data-field] {
+    color: #111820 !important;
+    background: #fff !important;
+  }
+
+  main {
+    display: block;
   }
 }

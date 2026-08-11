@@ -1,31 +1,64 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Section } from "@/components/ui/Section";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Badge } from "@/components/ui/Badge";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { Container } from "@/components/ui/Container";
+import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
+import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArchitectureDiagram } from "@/components/work/ArchitectureDiagram";
-import { ProjectCoverArt, getCoverArtVariant, COVER_ART_LEGEND } from "@/components/work/ProjectCoverArt";
-import { ScrollReveal } from "@/components/shared/ScrollReveal";
-import { cn } from "@/lib/cn";
+import {
+  ProjectCoverArt,
+  getCoverArtVariant,
+  COVER_ART_LEGEND,
+} from "@/components/work/ProjectCoverArt";
 import { projects } from "@/content/projects";
 import type { FlagshipProject } from "@/content/types";
 
 function getFlagship(slug: string): FlagshipProject | undefined {
-  const project = projects.find((p) => p.slug === slug);
+  const project = projects.find((item) => item.slug === slug);
   return project?.kind === "flagship" ? project : undefined;
 }
 
 export function generateStaticParams() {
-  return projects.filter((p) => p.kind === "flagship").map((p) => ({ slug: p.slug }));
+  return projects
+    .filter((project) => project.kind === "flagship")
+    .map((project) => ({ slug: project.slug }));
 }
 
-export async function generateMetadata(props: PageProps<"/work/[slug]">): Promise<Metadata> {
+export async function generateMetadata(
+  props: PageProps<"/work/[slug]">,
+): Promise<Metadata> {
   const { slug } = await props.params;
   const project = getFlagship(slug);
   if (!project) return {};
   return { title: project.title, description: project.summary };
+}
+
+function Chapter({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-4 border-t border-[var(--line)] py-10 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:py-14">
+      <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
+        {number}
+      </span>
+      <div>
+        <h2 className="font-display text-heading font-semibold tracking-[-0.045em] text-[var(--ink)]">
+          {title}
+        </h2>
+        <div className="mt-5 text-base leading-7 text-[var(--ink-muted)]">
+          {children}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
@@ -33,131 +66,170 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
   const project = getFlagship(slug);
   if (!project) notFound();
 
-  const flagshipIndex = projects.filter((p) => p.kind === "flagship").findIndex((p) => p.slug === project.slug);
-  const reverseColumns = flagshipIndex % 2 === 1;
-  const related = projects.filter((p) => p.kind === "flagship" && p.slug !== project.slug).slice(0, 2);
+  const flagships = projects.filter((item) => item.kind === "flagship");
+  const projectIndex = flagships.findIndex(
+    (item) => item.slug === project.slug,
+  );
+  const nextProject = flagships[(projectIndex + 1) % flagships.length];
+  const variant = getCoverArtVariant(project.slug);
 
   return (
     <article>
-      <Section field="manual" className="pt-16 pb-10">
-        <Eyebrow>Case study</Eyebrow>
-        <h1 className="mt-3 max-w-3xl font-display text-display font-semibold text-[var(--ink)]">
-          {project.title}
-        </h1>
-        {project.labelNote && <p className="mt-3 font-mono text-xs text-[var(--accent-secondary)]">{project.labelNote}</p>}
-        <div className="mt-4 flex flex-wrap gap-2">
-          {project.categories.map((c) => (
-            <Badge key={c}>{c}</Badge>
-          ))}
-        </div>
-        <h2 className="sr-only">The problem</h2>
-        <p className="mt-6 max-w-[60ch] text-[var(--ink-muted)]">{project.context}</p>
-      </Section>
-
-      {/* Full-bleed moment: cover art runs edge to edge, outside the measured
-          text column, instead of sitting inside the same max-w-7xl frame as
-          every other block on the page. */}
-      <div data-field="manual" className="w-full bg-[var(--surface)]">
-        {project.screenshot.status === "ready" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={project.screenshot.value.src}
-            alt={project.screenshot.value.alt}
-            className="aspect-[21/9] w-full object-cover"
-          />
-        ) : (
-          <ProjectCoverArt flow={project.flow} variant={getCoverArtVariant(project.slug)} bordered={false} />
-        )}
-      </div>
-
-      <Section field="manual" className="pt-10">
-        <h2 className="font-display text-heading font-semibold text-[var(--ink)]">The architecture</h2>
-        {project.screenshot.status !== "ready" && (
-          <p className="mt-2 font-mono text-[11px] uppercase tracking-wide text-[var(--ink-muted)]">
-            {COVER_ART_LEGEND[getCoverArtVariant(project.slug)]}
-          </p>
-        )}
-        <p className="mt-3 max-w-[60ch] text-sm text-[var(--ink-muted)]">
-          Each stage below is a real step in this project&rsquo;s delivery path &mdash; see{" "}
-          <Link href="/#spine" className="underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]">
-            how it fits the wider Reliability Spine
+      <header className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20 lg:py-24">
+        <Container>
+          <Link
+            href="/work"
+            className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)] transition-colors hover:text-[var(--color-signal-lime)]"
+          >
+            <ArrowLeft size={13} aria-hidden /> Work index
           </Link>
-          .
-        </p>
-        <div className="mt-6">
-          <ArchitectureDiagram flow={project.flow} />
-        </div>
-      </Section>
+          <div className="mt-10 grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <Eyebrow>
+                Case study / {String(projectIndex + 1).padStart(2, "0")}
+              </Eyebrow>
+              <h1 className="mt-6 font-display text-[clamp(2.6rem,1.65rem+3.2vw,5.4rem)] font-semibold leading-[0.93] tracking-[-0.065em] text-[var(--ink)]">
+                {project.title}
+              </h1>
+              <p className="mt-6 max-w-[54ch] text-lead leading-8 text-[var(--ink-muted)]">
+                {project.summary}
+              </p>
+              <p className="mt-7 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--accent)]">
+                {project.categories.join(" / ")}
+              </p>
+              {project.labelNote && (
+                <p className="mt-4 max-w-[60ch] text-xs leading-5 text-[var(--ink-muted)]">
+                  {project.labelNote}
+                </p>
+              )}
+            </div>
 
-      <Section field="manual" className="pt-0">
-        <div className={cn("grid gap-10 sm:grid-cols-2", reverseColumns && "sm:[&>*:first-child]:order-2")}>
-          <div>
-            <h2 className="font-display text-heading font-semibold text-[var(--ink)]">What I owned</h2>
-            <p className="mt-3 text-[var(--ink-muted)]">{project.responsibility}</p>
-          </div>
-          <div>
-            <h2 className="font-display text-heading font-semibold text-[var(--ink)]">Tools and services</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {project.toolsAndServices.map((tool) => (
-                <Badge key={tool}>{tool}</Badge>
-              ))}
+            <div className="shadow-[0_32px_100px_rgba(0,0,0,0.35)]">
+              {project.screenshot.status === "ready" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={project.screenshot.value.src}
+                  alt={project.screenshot.value.alt}
+                  className="aspect-[12/7] w-full object-cover"
+                />
+              ) : (
+                <ProjectCoverArt
+                  flow={project.flow}
+                  variant={variant}
+                  bordered={false}
+                />
+              )}
             </div>
           </div>
-        </div>
-      </Section>
+        </Container>
+      </header>
 
-      <Section field="manual" className="pt-0">
-        <h2 className="font-display text-heading font-semibold text-[var(--ink)]">How it was built</h2>
-        <ScrollReveal>
-          <ul className="mt-4 flex flex-col gap-2">
-            {project.implementationDecisions.map((decision) => (
-              <li key={decision} data-reveal className="flex gap-3 text-[var(--ink-muted)]">
-                <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[var(--accent)]" />
-                {decision}
-              </li>
-            ))}
-          </ul>
-        </ScrollReveal>
-      </Section>
+      <div
+        data-field="manual"
+        className="manual-grid bg-[var(--surface)] text-[var(--ink)]"
+      >
+        <Container className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[0.36fr_0.64fr] lg:gap-20 lg:py-28">
+          <aside>
+            <div className="border-t border-[var(--line)] pt-5 lg:sticky lg:top-28">
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--accent-secondary)]">
+                Project record
+              </p>
+              <dl className="mt-6 space-y-6">
+                <div>
+                  <dt className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                    Responsibility
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-[var(--ink)]">
+                    {project.responsibility}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                    Stack
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-[var(--ink)]">
+                    {project.toolsAndServices.join(" · ")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+                    Protocol mapping
+                  </dt>
+                  <dd className="mt-2 font-mono text-[10px] uppercase leading-5 tracking-[0.08em] text-[var(--accent-secondary)]">
+                    {project.spineStages.join(" → ")}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
 
-      <Section field="manual" className="pt-0">
-        <div className={cn("grid gap-10 sm:grid-cols-2", reverseColumns && "sm:[&>*:first-child]:order-2")}>
           <div>
-            <h2 className="font-display text-heading font-semibold text-[var(--ink)]">The hard part</h2>
-            <p className="mt-3 text-[var(--ink-muted)]">{project.challengeAndResolution}</p>
+            <Chapter number="01" title="The constraint">
+              <p>{project.context}</p>
+            </Chapter>
+
+            <Chapter number="02" title="The architecture">
+              {project.screenshot.status !== "ready" && (
+                <p className="mb-6 max-w-[64ch] font-mono text-[9px] uppercase leading-5 tracking-[0.08em]">
+                  {COVER_ART_LEGEND[variant]}
+                </p>
+              )}
+              <ArchitectureDiagram flow={project.flow} />
+            </Chapter>
+
+            <Chapter number="03" title="The engineering decisions">
+              <ul className="border-t border-[var(--line)]">
+                {project.implementationDecisions.map((decision, index) => (
+                  <li
+                    key={decision}
+                    className="grid grid-cols-[2.5rem_1fr] gap-3 border-b border-[var(--line)] py-4"
+                  >
+                    <span className="font-mono text-[9px] text-[var(--accent-secondary)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span>{decision}</span>
+                  </li>
+                ))}
+              </ul>
+            </Chapter>
+
+            <Chapter number="04" title="The hard part">
+              <p>{project.challengeAndResolution}</p>
+            </Chapter>
+
+            <Chapter number="05" title="What shipped">
+              <p className="font-display text-[clamp(1.55rem,1.25rem+1vw,2.3rem)] font-semibold leading-[1.18] tracking-[-0.04em] text-[var(--ink)]">
+                {project.outcome}
+              </p>
+              {project.links.length > 0 && (
+                <div className="mt-8 flex flex-wrap gap-5 font-mono text-[10px] uppercase tracking-[0.1em]">
+                  {project.links.map((link) => (
+                    <ExternalLink key={link.href} href={link.href}>
+                      {link.label}
+                    </ExternalLink>
+                  ))}
+                </div>
+              )}
+            </Chapter>
           </div>
+        </Container>
+      </div>
+
+      <section className="border-t border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20">
+        <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
-            <h2 className="font-display text-heading font-semibold text-[var(--ink)]">What shipped</h2>
-            <p className="mt-3 text-[var(--ink-muted)]">{project.outcome}</p>
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--color-telemetry-steel)]">
+              Next system
+            </p>
+            <h2 className="mt-4 max-w-[22ch] font-display text-heading font-semibold leading-tight tracking-[-0.045em] text-[var(--color-cloud-linen)]">
+              {nextProject.title}
+            </h2>
           </div>
-        </div>
-      </Section>
-
-      {project.links.length > 0 && (
-        <Section field="manual" className="pt-0">
-          <h2 className="font-display text-heading font-semibold text-[var(--ink)]">Links</h2>
-          <ul className="mt-3 flex flex-col gap-2">
-            {project.links.map((link) => (
-              <li key={link.href}>
-                <ExternalLink href={link.href}>{link.label}</ExternalLink>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section field="manual">
-        <h2 className="font-display text-heading font-semibold text-[var(--ink)]">More case studies</h2>
-        <ul className="mt-4 flex flex-wrap gap-6">
-          {related.map((p) => (
-            <li key={p.slug}>
-              <Link href={`/work/${p.slug}`} className="font-mono text-sm text-[var(--accent-secondary)] hover:text-[var(--accent)]">
-                {p.title} &rarr;
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </Section>
+          <Button href={`/work/${nextProject.slug}`} variant="secondary">
+            Read next case <ArrowUpRight size={15} aria-hidden />
+          </Button>
+        </Container>
+      </section>
     </article>
   );
 }

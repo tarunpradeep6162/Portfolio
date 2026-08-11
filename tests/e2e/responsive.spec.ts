@@ -16,24 +16,36 @@ const breakpoints = [
 ];
 
 for (const bp of breakpoints) {
-  test(`no horizontal overflow on home at ${bp.name} (${bp.width}px)`, async ({ page }) => {
+  test(`no horizontal overflow on home at ${bp.name} (${bp.width}px)`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: bp.width, height: bp.height });
     await page.goto("/");
     await page.waitForTimeout(500);
     const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
     );
-    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(false);
+    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(
+      false,
+    );
   });
 
-  test(`no horizontal overflow on a case-study page at ${bp.name} (${bp.width}px)`, async ({ page }) => {
+  test(`no horizontal overflow on a case-study page at ${bp.name} (${bp.width}px)`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: bp.width, height: bp.height });
     await page.goto("/work/project-aurora");
     await page.waitForTimeout(500);
     const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
     );
-    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(false);
+    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(
+      false,
+    );
   });
 }
 
@@ -45,7 +57,9 @@ test("navigation stays on a single line at desktop width", async ({ page }) => {
   expect(box?.height).toBeLessThan(40);
 });
 
-test("header height stays within the 80px cap at desktop width", async ({ page }) => {
+test("header height stays within the 80px cap at desktop width", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const header = page.locator("header");

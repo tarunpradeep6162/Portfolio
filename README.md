@@ -2,8 +2,11 @@
 
 Cloud Engineer / DevOps portfolio built around the **Reliability Spine**
 (`Commit → Build → Test → Container → Network → Cloud → Observe → Recover`) —
-a real piece of information architecture, not decoration. Next.js App Router,
-TypeScript, Tailwind v4, GSAP, React Three Fiber for the hero signature.
+a real piece of information architecture, not decoration. V4 uses Next.js App
+Router, TypeScript, Tailwind v4, restrained GSAP entrances, and code-generated
+SVG systems artwork. The Infrastructure Observatory replaces the previous
+WebGL hero, keeping the signature visual visible while removing the Three.js
+runtime cost.
 
 ## Local development
 
@@ -18,7 +21,7 @@ Opens at `http://localhost:3000`.
 
 ```bash
 npm run verify     # lint + typecheck + unit tests + production build, chained
-npm run test:e2e   # Playwright, against a production build (auto-builds + starts on :3100)
+npm run test:e2e   # Playwright, starts the existing production build on :3100
 ```
 
 Individually: `npm run lint`, `npm run typecheck`, `npm run test` (Vitest), `npm run test:watch`.
@@ -35,9 +38,23 @@ npm run start -- -p 3200
 - `app/` — routes (`/`, `/work`, `/work/[slug]`, `/about`, `/resume`, `/contact`), plus `sitemap.ts`, `robots.ts`, `icon.tsx`, `opengraph-image.tsx`, `not-found.tsx`.
 - `components/` — organized by domain (`hero/`, `spine/`, `work/`, `about/`, `contact/`, `layout/`, `ui/`, `shared/`).
 - `content/` — all site copy and data as typed TypeScript, not hardcoded in components. See **Editing content** below.
-- `lib/` — motion tokens/hooks, Three.js helpers, SEO metadata builder.
+- `lib/` — motion tokens/hooks and the SEO metadata builder.
 - `tests/unit/` — Vitest + React Testing Library. `tests/e2e/` — Playwright.
 - `scripts/` — standalone Playwright scripts for screenshotting routes/breakpoints outside the test suite (used during development, not part of `npm test`).
+
+The display, body, and mono fonts are self-hosted through Fontsource packages,
+so production builds do not depend on Google Fonts being reachable.
+
+To capture the complete V4 review set while the production server is running
+on port 3200:
+
+```bash
+node scripts/capture-v4.mjs
+```
+
+This writes viewport and full-page captures to
+`/home/tarun/screenshots/award-experience-v4` by default. Set
+`V4_SCREENSHOT_DIR` or `V4_BASE_URL` to override either location.
 
 ## Editing content
 

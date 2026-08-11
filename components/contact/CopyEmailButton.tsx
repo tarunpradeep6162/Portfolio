@@ -24,10 +24,14 @@ export function CopyEmailButton({ email }: { email: string }) {
         type="button"
         onClick={handleCopy}
         className={cn(
-          "inline-flex min-h-11 items-center gap-2 rounded-sm border border-[var(--line)] px-4 font-mono text-sm text-[var(--ink)] transition-colors hover:border-[var(--accent)]",
+          "inline-flex min-h-12 max-w-full items-center gap-2 border border-[var(--line)] px-4 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]",
         )}
       >
-        {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+        {copied ? (
+          <Check size={16} aria-hidden />
+        ) : (
+          <Copy size={16} aria-hidden />
+        )}
         {email}
       </button>
       <span role="status" aria-live="polite" className="sr-only">

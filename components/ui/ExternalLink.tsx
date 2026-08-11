@@ -14,7 +14,10 @@ export function ExternalLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn("underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]", className)}
+      className={cn(
+        "underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]",
+        className,
+      )}
     >
       {children}
     </a>

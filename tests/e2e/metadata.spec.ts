@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { site } from "@/content/site";
 
-test("home page has the correct title and meta description", async ({ page }) => {
+test("home page has the correct title and meta description", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page).toHaveTitle(site.title);
   const description = page.locator('meta[name="description"]');
@@ -15,13 +17,23 @@ test("a sub-page title uses the site template", async ({ page }) => {
 
 test("Open Graph tags are present on the home page", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", site.title);
-  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", site.name);
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    "content",
+    site.title,
+  );
+  await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute(
+    "content",
+    site.name,
+  );
 });
 
-test("Person JSON-LD structured data is present and valid JSON", async ({ page }) => {
+test("Person JSON-LD structured data is present and valid JSON", async ({
+  page,
+}) => {
   await page.goto("/");
-  const jsonLd = await page.locator('script[type="application/ld+json"]').textContent();
+  const jsonLd = await page
+    .locator('script[type="application/ld+json"]')
+    .textContent();
   expect(jsonLd).toBeTruthy();
   const parsed = JSON.parse(jsonLd ?? "{}");
   expect(parsed["@type"]).toBe("Person");

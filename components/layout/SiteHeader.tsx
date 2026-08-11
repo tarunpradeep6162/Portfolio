@@ -11,19 +11,38 @@ const links = [
 
 export function SiteHeader() {
   return (
-    <header className="relative z-40 h-16 border-b border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur">
+    <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/92 backdrop-blur-xl">
       <Container className="flex h-full items-center justify-between">
-        <Link href="/" className="font-display text-lg font-semibold tracking-tight text-[var(--ink)]">
-          TP
+        <Link
+          href="/"
+          className="group flex items-center gap-3 text-[var(--color-cloud-linen)]"
+        >
+          <span className="flex h-9 w-9 items-center justify-center border border-white/15 font-display text-sm font-bold transition-colors group-hover:border-[var(--color-signal-lime)] group-hover:text-[var(--color-signal-lime)]">
+            TP
+          </span>
+          <span className="hidden sm:block">
+            <span className="block font-display text-[11px] font-bold uppercase tracking-[0.13em]">
+              Tarun Pradeep
+            </span>
+            <span className="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
+              Cloud systems
+            </span>
+          </span>
           <span className="sr-only">Tarun Pradeep B - home</span>
         </Link>
 
         <nav aria-label="Primary" className="hidden sm:block">
-          <ul className="flex items-center gap-8 font-mono text-sm text-[var(--ink)]">
-            {links.map((link) => (
+          <ul className="flex items-center gap-7 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-cloud-linen)] lg:gap-10">
+            {links.map((link, index) => (
               <li key={link.href}>
-                <Link href={link.href} className="transition-colors hover:text-[var(--accent)]">
-                  {link.label}
+                <Link
+                  href={link.href}
+                  className="group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]"
+                >
+                  <span className="text-[8px] text-[var(--color-telemetry-steel)]">
+                    0{index + 1}
+                  </span>
+                  <span>{link.label}</span>
                 </Link>
               </li>
             ))}

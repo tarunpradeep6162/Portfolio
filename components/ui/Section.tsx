@@ -25,7 +25,11 @@ export function Section({
     <section
       id={id}
       data-field={field}
-      className={cn("py-16 sm:py-24", field && "bg-[var(--surface)] text-[var(--ink)]", className)}
+      className={cn(
+        "py-16 sm:py-24",
+        field && "bg-[var(--surface)] text-[var(--ink)]",
+        className,
+      )}
     >
       <Container className={containerClassName}>{children}</Container>
     </section>

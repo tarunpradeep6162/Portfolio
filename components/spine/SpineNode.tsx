@@ -1,26 +1,26 @@
 "use client";
 
 import { useId, useState } from "react";
+import { Plus } from "lucide-react";
 import type { SpineStage } from "@/content/types";
 import { cn } from "@/lib/cn";
 
-/**
- * A single spine stage. Reveals its description on focus or click - never
- * hover-only (spec §14 a11y requirement) - so keyboard and touch users get
- * the same information as mouse users.
- *
- * Uses useId() for the description's id rather than a static
- * `spine-desc-${stage.id}` string: ReliabilitySpine renders twice on the
- * home page (hero fallback + mid-page walkthrough), and a static id would
- * duplicate across both instances - invalid HTML, and an ambiguous target
- * for aria-controls / assistive tech.
- */
-export function SpineNode({ stage, active }: { stage: SpineStage; active?: boolean }) {
+export function SpineNode({
+  stage,
+  index,
+  active,
+  proofCount,
+}: {
+  stage: SpineStage;
+  index: number;
+  active?: boolean;
+  proofCount: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const descriptionId = useId();
 
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
+    <div className="group border-b border-[var(--line)]">
       <button
         type="button"
         data-spine-node
@@ -28,24 +28,41 @@ export function SpineNode({ stage, active }: { stage: SpineStage; active?: boole
         aria-controls={descriptionId}
         onFocus={() => setExpanded(true)}
         onBlur={() => setExpanded(false)}
-        onClick={() => setExpanded((v) => !v)}
-        className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-full border font-mono text-xs transition-colors",
-          active
-            ? "border-[var(--accent)] text-[var(--accent)]"
-            : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--accent-secondary)] hover:text-[var(--accent-secondary)]",
-        )}
+        onClick={() => setExpanded((value) => !value)}
+        className="grid w-full grid-cols-[3rem_1fr_auto] items-center gap-3 py-5 text-left sm:grid-cols-[4.5rem_1fr_auto] sm:py-6"
       >
-        {stage.label.slice(0, 2)}
+        <span className="font-mono text-[10px] tracking-[0.18em] text-[var(--ink-muted)]">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span>
+          <span
+            className={cn(
+              "block font-display text-xl font-semibold tracking-[-0.03em] transition-colors sm:text-2xl",
+              active
+                ? "text-[var(--accent)]"
+                : "text-[var(--ink)] group-hover:text-[var(--accent)]",
+            )}
+          >
+            {stage.label}
+          </span>
+          <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+            {proofCount} {proofCount === 1 ? "case study" : "case studies"}{" "}
+            mapped
+          </span>
+        </span>
+        <span className="flex h-10 w-10 items-center justify-center border border-[var(--line)] text-[var(--ink-muted)] transition-colors group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]">
+          <Plus
+            aria-hidden
+            size={15}
+            className={cn("transition-transform", expanded && "rotate-45")}
+          />
+        </span>
       </button>
-      <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--ink-muted)]">
-        {stage.label}
-      </span>
       <p
         id={descriptionId}
         className={cn(
-          "max-w-[14ch] text-[11px] leading-snug text-[var(--ink-muted)] transition-[max-height,opacity] duration-200 ease-[var(--ease-spine)]",
-          expanded ? "max-h-20 opacity-100" : "max-h-0 overflow-hidden opacity-0",
+          "ml-12 max-w-[58ch] overflow-hidden pr-12 text-sm leading-6 text-[var(--ink-muted)] transition-[max-height,opacity,padding] duration-300 ease-[var(--ease-spine)] sm:ml-[4.5rem]",
+          expanded ? "max-h-28 pb-6 opacity-100" : "max-h-0 pb-0 opacity-0",
         )}
       >
         {stage.description}

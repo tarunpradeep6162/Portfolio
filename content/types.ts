@@ -6,10 +6,11 @@
  * rather than a blank space or a fabricated value.
  */
 export type Field<T> =
-  | { status: "ready"; value: T }
-  | { status: "needs-input"; note: string };
+  { status: "ready"; value: T } | { status: "needs-input"; note: string };
 
-export function isReady<T>(field: Field<T>): field is { status: "ready"; value: T } {
+export function isReady<T>(
+  field: Field<T>,
+): field is { status: "ready"; value: T } {
   return field.status === "ready";
 }
 
@@ -29,7 +30,8 @@ export interface SpineStage {
   description: string;
 }
 
-export type ProjectCategory = "Cloud" | "DevOps" | "Systems" | "Creative Engineering";
+export type ProjectCategory =
+  "Cloud" | "DevOps" | "Systems" | "Creative Engineering";
 
 export interface ProjectLink {
   label: string;

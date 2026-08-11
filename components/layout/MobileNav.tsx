@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
@@ -14,6 +14,14 @@ const links = [
 export function MobileNav() {
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
+
   return (
     <div className="sm:hidden">
       <button
@@ -22,7 +30,7 @@ export function MobileNav() {
         aria-controls="mobile-nav-panel"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-11 items-center justify-center rounded-sm border border-[var(--line)] text-[var(--ink)]"
+        className="flex h-11 w-11 items-center justify-center border border-white/15 text-[var(--color-cloud-linen)] transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
       >
         {open ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
       </button>
@@ -31,21 +39,31 @@ export function MobileNav() {
         <nav
           id="mobile-nav-panel"
           aria-label="Mobile"
-          className="absolute inset-x-0 top-full border-t border-[var(--line)] bg-[var(--surface)] px-4 py-4"
+          className="absolute inset-x-0 top-full min-h-[calc(100svh-4.5rem)] border-t border-white/10 bg-[var(--color-control-black)] px-4 py-8"
         >
-          <ul className="flex flex-col gap-1">
-            {links.map((link) => (
+          <p className="mb-8 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
+            Navigate the system
+          </p>
+          <ul className="flex flex-col">
+            {links.map((link, index) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center font-mono text-sm text-[var(--ink)]"
+                  className="flex min-h-16 items-center justify-between border-b border-white/10 font-display text-2xl font-semibold text-[var(--color-cloud-linen)]"
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  <span className="font-mono text-[10px] text-[var(--color-signal-lime)]">
+                    0{index + 1}
+                  </span>
                 </Link>
               </li>
             ))}
           </ul>
+          <p className="mt-10 max-w-[28ch] text-sm leading-6 text-[var(--color-telemetry-steel)]">
+            Reliable infrastructure, automation, secure delivery, and
+            operational recovery.
+          </p>
         </nav>
       )}
     </div>

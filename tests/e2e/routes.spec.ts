@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-const routes = ["/", "/work", "/work/project-aurora", "/about", "/resume", "/contact"];
+const routes = [
+  "/",
+  "/work",
+  "/work/project-aurora",
+  "/about",
+  "/resume",
+  "/contact",
+];
 
 test.describe("all routes load without console errors", () => {
   for (const route of routes) {
@@ -14,7 +21,10 @@ test.describe("all routes load without console errors", () => {
       const response = await page.goto(route);
       expect(response?.status()).toBe(200);
       await expect(page.locator("h1")).toBeVisible();
-      expect(errors, `console errors on ${route}:\n${errors.join("\n")}`).toEqual([]);
+      expect(
+        errors,
+        `console errors on ${route}:\n${errors.join("\n")}`,
+      ).toEqual([]);
     });
   }
 });
@@ -45,13 +55,17 @@ test("browser back/forward works across route navigation", async ({ page }) => {
   await expect(page).toHaveURL("/work");
 });
 
-test("a nonexistent route renders the 404 page, not a crash", async ({ page }) => {
+test("a nonexistent route renders the 404 page, not a crash", async ({
+  page,
+}) => {
   const response = await page.goto("/this-route-does-not-exist");
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading")).toBeVisible();
 });
 
-test("a project case-study route resolves via generateStaticParams", async ({ page }) => {
+test("a project case-study route resolves via generateStaticParams", async ({
+  page,
+}) => {
   const response = await page.goto("/work/project-aurora");
   expect(response?.status()).toBe(200);
   await expect(page.locator("h1")).toContainText("Project Aurora");

@@ -25,12 +25,25 @@ export const projects: Project[] = [
       "Docker Compose for service networking, persistent volumes, and environment configuration.",
       "MySQL integration within the same Compose network.",
     ],
-    toolsAndServices: ["React", "Vite", "Docker", "Docker Compose", "Nginx", "MySQL", "AWS EC2"],
+    toolsAndServices: [
+      "React",
+      "Vite",
+      "Docker",
+      "Docker Compose",
+      "Nginx",
+      "MySQL",
+      "AWS EC2",
+    ],
     challengeAndResolution:
       "Tested application updates, downtime behaviour, and redeployment approaches to confirm the stack could be updated without ad hoc manual steps.",
     outcome:
       "A repeatable container-based deployment on EC2, verified end to end from build through redeployment.",
-    links: [{ label: "Repository", href: "https://github.com/tarunpradeep6162/ProjectAurora/" }],
+    links: [
+      {
+        label: "Repository",
+        href: "https://github.com/tarunpradeep6162/ProjectAurora/",
+      },
+    ],
     screenshot: {
       status: "needs-input",
       note: "No screenshot supplied yet for Project Aurora.",
@@ -85,7 +98,14 @@ export const projects: Project[] = [
       "RDS engine selection with Multi-AZ availability, read replicas, encryption, and a defined backup/restore strategy.",
       "CloudWatch metrics and logs with alarms routed to SNS.",
     ],
-    toolsAndServices: ["AWS IAM", "AWS VPC", "Application Load Balancer", "Amazon RDS", "CloudWatch", "SNS"],
+    toolsAndServices: [
+      "AWS IAM",
+      "AWS VPC",
+      "Application Load Balancer",
+      "Amazon RDS",
+      "CloudWatch",
+      "SNS",
+    ],
     challengeAndResolution:
       "Worked through RDS engine, Multi-AZ, and backup/restore tradeoffs, and validated that CloudWatch alarms actually fired to SNS as configured.",
     outcome:
@@ -95,7 +115,8 @@ export const projects: Project[] = [
       status: "needs-input",
       note: "No architecture diagram screenshot supplied yet.",
     },
-    labelNote: "Architecture / learning implementation, not used for a real production client.",
+    labelNote:
+      "Architecture / learning implementation, not used for a real production client.",
   },
   {
     kind: "flagship",
@@ -116,7 +137,15 @@ export const projects: Project[] = [
       "Environment variables for database and session configuration.",
       "PM2 for process management on the EC2 instance.",
     ],
-    toolsAndServices: ["Node.js", "Express", "MySQL", "Amazon RDS", "bcrypt", "PM2", "AWS EC2"],
+    toolsAndServices: [
+      "Node.js",
+      "Express",
+      "MySQL",
+      "Amazon RDS",
+      "bcrypt",
+      "PM2",
+      "AWS EC2",
+    ],
     challengeAndResolution:
       "Verified database connectivity, application response, registration, login, and stored records end to end after deployment.",
     outcome:
@@ -132,8 +161,17 @@ export const projects: Project[] = [
     slug: "serverless-employee-api",
     title: "Serverless Employee API",
     categories: ["Cloud"],
-    summary: "A serverless API built on Lambda, API Gateway, and DynamoDB, deployed via CodePipeline.",
-    toolsAndServices: ["AWS Lambda", "API Gateway", "DynamoDB", "IAM", "Python", "CodeCommit", "CodePipeline"],
+    summary:
+      "A serverless API built on Lambda, API Gateway, and DynamoDB, deployed via CodePipeline.",
+    toolsAndServices: [
+      "AWS Lambda",
+      "API Gateway",
+      "DynamoDB",
+      "IAM",
+      "Python",
+      "CodeCommit",
+      "CodePipeline",
+    ],
     links: { status: "needs-input", note: "No repository link supplied yet." },
   },
   {
@@ -163,7 +201,14 @@ export const projects: Project[] = [
     categories: ["Cloud", "Systems"],
     summary:
       "Public/private subnets, an Internet Gateway, a NAT Gateway, security groups, NACLs, and an S3 VPC endpoint.",
-    toolsAndServices: ["AWS VPC", "Internet Gateway", "NAT Gateway", "Security Groups", "NACLs", "S3 VPC Endpoint"],
+    toolsAndServices: [
+      "AWS VPC",
+      "Internet Gateway",
+      "NAT Gateway",
+      "Security Groups",
+      "NACLs",
+      "S3 VPC Endpoint",
+    ],
     links: { status: "needs-input", note: "No repository link supplied yet." },
   },
   {
@@ -171,8 +216,14 @@ export const projects: Project[] = [
     slug: "alb-auto-scaling-lab",
     title: "ALB and Auto Scaling Lab",
     categories: ["Cloud"],
-    summary: "Apache instances behind a target group with health checks, an ALB, and Auto Scaling.",
-    toolsAndServices: ["Apache", "Application Load Balancer", "Target Groups", "Auto Scaling"],
+    summary:
+      "Apache instances behind a target group with health checks, an ALB, and Auto Scaling.",
+    toolsAndServices: [
+      "Apache",
+      "Application Load Balancer",
+      "Target Groups",
+      "Auto Scaling",
+    ],
     links: { status: "needs-input", note: "No repository link supplied yet." },
   },
   {
@@ -180,7 +231,8 @@ export const projects: Project[] = [
     slug: "elastic-beanstalk-cicd",
     title: "Elastic Beanstalk CI/CD",
     categories: ["Cloud", "DevOps"],
-    summary: "A PHP environment deployed on Elastic Beanstalk, connected to a pipeline workflow.",
+    summary:
+      "A PHP environment deployed on Elastic Beanstalk, connected to a pipeline workflow.",
     toolsAndServices: ["AWS Elastic Beanstalk", "PHP", "CI/CD Pipeline"],
     links: { status: "needs-input", note: "No repository link supplied yet." },
   },
@@ -189,7 +241,8 @@ export const projects: Project[] = [
     slug: "kubernetes-fundamentals",
     title: "Kubernetes Fundamentals",
     categories: ["Cloud", "Systems"],
-    summary: "A kind cluster with a resolved Flannel networking issue, verified pods, and tested port forwarding.",
+    summary:
+      "A kind cluster with a resolved Flannel networking issue, verified pods, and tested port forwarding.",
     toolsAndServices: ["Kubernetes", "kind", "Flannel"],
     links: { status: "needs-input", note: "No repository link supplied yet." },
   },
@@ -200,11 +253,18 @@ export const projects: Project[] = [
     categories: ["Creative Engineering"],
     summary:
       "A React/Vite/Three.js/R3F experience with Framer Motion and GSAP, automated testing, and a Vercel deployment.",
-    toolsAndServices: ["React", "Vite", "Three.js", "React Three Fiber", "Framer Motion", "GSAP", "Vercel"],
+    toolsAndServices: [
+      "React",
+      "Vite",
+      "Three.js",
+      "React Three Fiber",
+      "Framer Motion",
+      "GSAP",
+      "Vercel",
+    ],
     links: {
       status: "needs-input",
-      note:
-        "Live URL withheld until confirmed that its personal content and access controls are appropriate for a professional portfolio.",
+      note: "Live URL withheld until confirmed that its personal content and access controls are appropriate for a professional portfolio.",
     },
   },
 ];

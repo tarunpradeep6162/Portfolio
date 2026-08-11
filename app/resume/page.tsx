@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Section } from "@/components/ui/Section";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { NeedsInput } from "@/components/shared/NeedsInput";
 import { Button } from "@/components/ui/Button";
 import { resumeFile, site } from "@/content/site";
 
@@ -24,9 +23,9 @@ export default function ResumePage() {
         </div>
       ) : (
         <div className="mt-8 flex max-w-[60ch] flex-col gap-6">
-          <NeedsInput note={resumeFile.note} />
           <p className="text-[var(--ink-muted)]">
-            In the meantime, request the current résumé directly and it will be sent by email.
+            Prefer a direct conversation? Request the current résumé by email and it&rsquo;ll be sent
+            straight over.
           </p>
           <div>
             <Button href={`mailto:${site.email}?subject=Résumé request`}>Request résumé by email</Button>

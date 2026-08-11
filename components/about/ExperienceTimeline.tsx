@@ -1,5 +1,4 @@
 import type { ExperienceRole } from "@/content/types";
-import { NeedsInput } from "@/components/shared/NeedsInput";
 
 export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
   return (
@@ -15,7 +14,7 @@ export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
             {role.location ? ` · ${role.location}` : ""}
           </p>
 
-          {role.achievements.status === "ready" ? (
+          {role.achievements.status === "ready" && (
             <ul className="mt-4 flex flex-col gap-2">
               {role.achievements.value.map((item) => (
                 <li key={item} className="flex gap-3 text-sm leading-relaxed text-[var(--ink-muted)]">
@@ -24,11 +23,9 @@ export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
                 </li>
               ))}
             </ul>
-          ) : (
-            <div className="mt-4">
-              <NeedsInput note={role.achievements.note} />
-            </div>
           )}
+          {/* No achievements supplied for this role yet: role/org/dates above
+              stand alone rather than announcing the gap (CONTENT_GAPS.md tracks it). */}
         </li>
       ))}
     </ol>

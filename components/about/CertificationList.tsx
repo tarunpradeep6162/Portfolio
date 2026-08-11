@@ -7,9 +7,8 @@ export function CertificationList({ items }: { items: Certification[] }) {
         <li key={cert.name} className="rounded-sm border border-[var(--line)] p-4">
           <p className="font-display text-sm font-semibold text-[var(--ink)]">{cert.name}</p>
           {cert.completed && <p className="mt-1 font-mono text-xs text-[var(--ink-muted)]">Completed {cert.completed}</p>}
-          {cert.issuerLink.status === "needs-input" && cert.credentialId.status === "needs-input" && (
-            <p className="mt-2 font-mono text-[11px] text-[var(--accent-secondary)]">Needs input: issuer link / credential ID</p>
-          )}
+          {/* No issuer link/credential ID supplied yet for some entries: the
+              control is simply omitted rather than announced (CONTENT_GAPS.md tracks it). */}
         </li>
       ))}
     </ul>

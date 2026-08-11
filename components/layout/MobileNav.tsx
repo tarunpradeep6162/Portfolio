@@ -53,7 +53,10 @@ export function MobileNav() {
                   className="flex min-h-16 items-center justify-between border-b border-white/10 font-display text-2xl font-semibold text-[var(--color-cloud-linen)]"
                 >
                   <span>{link.label}</span>
-                  <span className="font-mono text-[10px] text-[var(--color-signal-lime)]">
+                  <span
+                    aria-hidden
+                    className="font-mono text-[10px] text-[var(--color-signal-lime)]"
+                  >
                     0{index + 1}
                   </span>
                 </Link>

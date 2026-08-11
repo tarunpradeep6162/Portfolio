@@ -39,7 +39,10 @@ export function SiteHeader() {
                   href={link.href}
                   className="group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]"
                 >
-                  <span className="text-[8px] text-[var(--color-telemetry-steel)]">
+                  <span
+                    aria-hidden
+                    className="text-[8px] text-[var(--color-telemetry-steel)]"
+                  >
                     0{index + 1}
                   </span>
                   <span>{link.label}</span>

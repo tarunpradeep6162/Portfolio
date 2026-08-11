@@ -6,7 +6,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Badge } from "@/components/ui/Badge";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { ArchitectureDiagram } from "@/components/work/ArchitectureDiagram";
-import { NeedsScreenshot } from "@/components/work/NeedsScreenshot";
+import { ProjectCoverArt, getCoverArtVariant } from "@/components/work/ProjectCoverArt";
 import { projects } from "@/content/projects";
 import type { FlagshipProject } from "@/content/types";
 
@@ -58,7 +58,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
             className="aspect-[16/9] w-full rounded-sm object-cover"
           />
         ) : (
-          <NeedsScreenshot label={project.title} />
+          <ProjectCoverArt flow={project.flow} variant={getCoverArtVariant(project.slug)} />
         )}
       </Section>
 

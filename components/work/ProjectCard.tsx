@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Project } from "@/content/types";
 import { Badge } from "@/components/ui/Badge";
-import { NeedsScreenshot } from "./NeedsScreenshot";
+import { ProjectCoverArt, getCoverArtVariant } from "./ProjectCoverArt";
 
 export function ProjectCard({ project }: { project: Project }) {
   const href = project.kind === "flagship" ? `/work/${project.slug}` : undefined;
@@ -13,7 +13,7 @@ export function ProjectCard({ project }: { project: Project }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={project.screenshot.value.src} alt={project.screenshot.value.alt} className="aspect-[16/10] w-full rounded-sm object-cover" />
         ) : (
-          <NeedsScreenshot label={project.title} />
+          <ProjectCoverArt flow={project.flow} variant={getCoverArtVariant(project.slug)} />
         ))}
 
       <div className="mt-4 flex flex-wrap gap-2">

@@ -1,0 +1,54 @@
+import { test, expect } from "@playwright/test";
+
+/**
+ * Spec §15/§20: 320-375 small mobile, 390-430 modern mobile, 768 tablet,
+ * 1024 compact desktop, 1440 desktop, 1920 wide desktop. One parametrized
+ * spec sweeping all six rather than duplicating full browser projects per
+ * width (per the build plan - cheaper to run, same coverage).
+ */
+const breakpoints = [
+  { name: "small mobile", width: 360, height: 800 },
+  { name: "modern mobile", width: 414, height: 896 },
+  { name: "tablet", width: 768, height: 1024 },
+  { name: "compact desktop", width: 1024, height: 768 },
+  { name: "desktop", width: 1440, height: 900 },
+  { name: "wide desktop", width: 1920, height: 1080 },
+];
+
+for (const bp of breakpoints) {
+  test(`no horizontal overflow on home at ${bp.name} (${bp.width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width: bp.width, height: bp.height });
+    await page.goto("/");
+    await page.waitForTimeout(500);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(false);
+  });
+
+  test(`no horizontal overflow on a case-study page at ${bp.name} (${bp.width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width: bp.width, height: bp.height });
+    await page.goto("/work/project-aurora");
+    await page.waitForTimeout(500);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(overflow, `horizontal overflow detected at ${bp.width}px`).toBe(false);
+  });
+}
+
+test("navigation stays on a single line at desktop width", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  const box = await nav.boundingBox();
+  expect(box?.height).toBeLessThan(40);
+});
+
+test("header height stays within the 80px cap at desktop width", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const header = page.locator("header");
+  const box = await header.boundingBox();
+  expect(box?.height).toBeLessThanOrEqual(80);
+});

@@ -26,8 +26,8 @@ test.describe("external identity links", () => {
 
   test("the résumé page offers a mailto fallback since no PDF is supplied yet", async ({ page }) => {
     await page.goto("/resume");
-    await expect(page.getByText(/request the current résumé by email/i)).toBeVisible();
-    const requestLink = page.getByRole("link", { name: /request résumé/i });
+    await expect(page.getByText(/no pdf export yet/i)).toBeVisible();
+    const requestLink = page.getByRole("link", { name: /request a pdf by email/i });
     await expect(requestLink).toHaveAttribute("href", new RegExp(`mailto:${site.email}`));
   });
 

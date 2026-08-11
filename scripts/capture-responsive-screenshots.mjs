@@ -16,7 +16,7 @@ const overflowIssues = [];
 
 for (const vp of viewports) {
   const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-  await page.goto("http://localhost:3000/", { waitUntil: "load", timeout: 120000 });
+  await page.goto("http://localhost:3200/", { waitUntil: "load", timeout: 120000 });
   await page.waitForSelector("canvas", { timeout: 15000 }).catch(() => {});
   await page.waitForTimeout(500);
 

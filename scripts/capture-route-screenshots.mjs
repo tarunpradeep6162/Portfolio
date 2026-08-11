@@ -15,7 +15,7 @@ page.on("pageerror", (err) => consoleErrors.push(`pageerror: ${err.message}`));
 const routes = ["/", "/work", "/work/project-aurora", "/about", "/resume", "/contact"];
 
 for (const route of routes) {
-  await page.goto(`http://localhost:3000${route}`, { waitUntil: "load", timeout: 120000 });
+  await page.goto(`http://localhost:3200${route}`, { waitUntil: "load", timeout: 120000 });
   // Wait for the WebGL canvas specifically on the home page - it mounts asynchronously
   // (dynamic import + reduced-motion check + WebGL context creation), and this VM's CPU
   // makes that chain noticeably slower than normal. A fixed short timeout isn't reliable.

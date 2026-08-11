@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tarun Pradeep B — Portfolio
 
-## Getting Started
+Cloud Engineer / DevOps portfolio built around the **Reliability Spine**
+(`Commit → Build → Test → Container → Network → Cloud → Observe → Recover`) —
+a real piece of information architecture, not decoration. Next.js App Router,
+TypeScript, Tailwind v4, GSAP, React Three Fiber for the hero signature.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Opens at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run verify     # lint + typecheck + unit tests + production build, chained
+npm run test:e2e   # Playwright, against a production build (auto-builds + starts on :3100)
+```
 
-## Learn More
+Individually: `npm run lint`, `npm run typecheck`, `npm run test` (Vitest), `npm run test:watch`.
 
-To learn more about Next.js, take a look at the following resources:
+## Production preview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+npm run start -- -p 3200
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+- `app/` — routes (`/`, `/work`, `/work/[slug]`, `/about`, `/resume`, `/contact`), plus `sitemap.ts`, `robots.ts`, `icon.tsx`, `opengraph-image.tsx`, `not-found.tsx`.
+- `components/` — organized by domain (`hero/`, `spine/`, `work/`, `about/`, `contact/`, `layout/`, `ui/`, `shared/`).
+- `content/` — all site copy and data as typed TypeScript, not hardcoded in components. See **Editing content** below.
+- `lib/` — motion tokens/hooks, Three.js helpers, SEO metadata builder.
+- `tests/unit/` — Vitest + React Testing Library. `tests/e2e/` — Playwright.
+- `scripts/` — standalone Playwright scripts for screenshotting routes/breakpoints outside the test suite (used during development, not part of `npm test`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Editing content
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Everything factual lives in `content/*.ts` as typed data — never hunt through
+component files to change copy.
+
+**Adding or editing a project** — `content/projects.ts`. Flagship projects
+(`kind: "flagship"`) get a full case-study page at `/work/[slug]`; lab
+projects (`kind: "lab"`) are compact entries on the home page and `/work`
+index only. To add a flagship project, copy an existing entry's shape and
+give it a unique `slug` — the `/work/[slug]` route picks it up automatically
+via `generateStaticParams`, no route file changes needed.
+
+**Fields that are genuinely missing** — wrap the value as `{ status:
+"needs-input", note: "..." }` instead of leaving it blank or guessing. This
+renders as an explicit "Needs input" callout everywhere it's used (see
+`content/types.ts`'s `Field<T>` type and `components/shared/NeedsInput.tsx`).
+Once real data exists, replace it with `{ status: "ready", value: ... }`.
+
+**Project screenshots** — a flagship project's `screenshot` field is a
+`Field<{ src: string; alt: string }>`. Drop the image in `public/` and set
+`{ status: "ready", value: { src: "/your-image.jpg", alt: "..." } }`. Until
+then it renders the "Needs project screenshot" placeholder
+(`components/work/NeedsScreenshot.tsx`) — never a stock mockup.
+
+**Experience** — `content/experience.ts`. `achievements` is a `Field<string[]>`
+per role, for the same reason (the Stackly role currently has none supplied).
+
+**Education** — `content/education.ts`, plain array, no Field<> wrapping (all
+facts are known).
+
+**Certifications** — `content/certifications.ts`. `issuerLink` and
+`credentialId` are each `Field<string>` — most are currently `needs-input`.
+
+**Skills taxonomy** — `content/skills.ts`, grouped by engineering domain. No
+percentage bars or ratings by design (see the master build spec, §8).
+
+**Site-wide facts** (name, email, GitHub/LinkedIn URLs, hero copy, about
+narrative, résumé file) — `content/site.ts`. The `resumeFile` field is
+currently `needs-input`; once a corrected-timeline PDF exists, drop it in
+`public/` and set it to `{ status: "ready", value: { href: "/resume.pdf" } }`
+— the `/resume` page and the hero's secondary CTA both pick it up automatically.
+
+**Reliability Spine stages** — `content/spine.ts`. Each flagship project's
+`spineStages` array (in `content/projects.ts`) references stage ids from
+here; keep them in sync if a stage id ever changes.
+
+## Deployment
+
+Not yet deployed — no Vercel credentials are configured in this environment.
+Once you have a Vercel account linked:
+
+```bash
+npx vercel login
+npx vercel        # preview deploy
+npx vercel --prod # production deploy
+```
+
+Before deploying, update `content/site.ts`'s `url` field to the real
+production domain (it's a placeholder right now) — this feeds the sitemap,
+canonical metadata, and Open Graph tags.

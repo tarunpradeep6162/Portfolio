@@ -87,3 +87,29 @@ Infrastructure Atlas, spec §3) instead of three redundant appearances.
 Replace the two biggest visible failures first — the empty screenshot boxes
 and the public "Needs input" text — since those are the most damaging to
 first impression and the easiest to fix outright.
+
+## Typography decision (Step 3-4)
+
+Tested three pairings, rendered side by side at `/font-test` (screenshot:
+`/home/tarun/screenshots/visual-rebuild-v2/font-test.png`):
+
+- **A — Big Shoulders / IBM Plex Sans / IBM Plex Mono.** Extremely condensed
+  industrial-signage feel. Thematically strong (blueprint/nameplate), but
+  the condensation risks feeling cramped at the huge "TARUN PRADEEP" hero
+  scale the brief calls for.
+- **B — Space Grotesk / Source Serif 4 / JetBrains Mono.** Rejected. Space
+  Grotesk has become a common "safe distinctive" choice across dev/SaaS
+  sites in the last couple of years - closer to the cliché this rebuild is
+  trying to move away from than a genuine differentiator.
+- **C — Archivo Black / Public Sans / Space Mono. Selected.** Archivo Black
+  has real authority at large display sizes without cramping. Public Sans
+  is USWDS's own typeface - literally built for government/civic-infrastructure
+  clarity and trust, which fits Tarun's reliability-and-security narrative
+  more specifically than a generic tech-startup face. Space Mono gives data
+  labels and the spine's stage names a geometric, technical character.
+  Neither face is one of the AI-generation defaults (no Inter, no Fraunces/
+  Instrument Serif, no Space Grotesk-as-safe-choice).
+
+Applied across `app/layout.tsx` and `app/globals.css` (`--font-display`,
+`--font-body`, `--font-mono` tokens), replacing the previous Bricolage
+Grotesque / IBM Plex Sans / IBM Plex Mono system.

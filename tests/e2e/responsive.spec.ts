@@ -54,7 +54,11 @@ test("navigation stays on a single line at desktop width", async ({ page }) => {
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Primary" });
   const box = await nav.boundingBox();
-  expect(box?.height).toBeLessThan(40);
+  // A wrapped (two-line) nav would be roughly double this height (~78px+);
+  // 60px comfortably separates that from V4's genuine single-line height
+  // (~39px, taller than V3's nav due to more generous link padding) without
+  // sitting only 1px from the real value like the old 40px threshold did.
+  expect(box?.height).toBeLessThan(60);
 });
 
 test("header height stays within the 80px cap at desktop width", async ({

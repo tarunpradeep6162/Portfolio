@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 const links = [
   { href: "/work", label: "Work" },
@@ -13,6 +15,7 @@ const links = [
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -45,23 +48,34 @@ export function MobileNav() {
             Navigate the system
           </p>
           <ul className="flex flex-col">
-            {links.map((link, index) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-16 items-center justify-between border-b border-white/10 font-display text-2xl font-semibold text-[var(--color-cloud-linen)]"
-                >
-                  <span>{link.label}</span>
-                  <span
-                    aria-hidden
-                    className="font-mono text-[10px] text-[var(--color-signal-lime)]"
+            {links.map((link, index) => {
+              const active =
+                pathname === link.href ||
+                (link.href !== "/" && pathname?.startsWith(`${link.href}/`));
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex min-h-16 items-center justify-between border-b border-white/10 font-display text-2xl font-semibold",
+                      active
+                        ? "text-[var(--color-signal-lime)]"
+                        : "text-[var(--color-cloud-linen)]",
+                    )}
                   >
-                    0{index + 1}
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    <span>{link.label}</span>
+                    <span
+                      aria-hidden
+                      className="font-mono text-[10px] text-[var(--color-signal-lime)]"
+                    >
+                      0{index + 1}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           <p className="mt-10 max-w-[28ch] text-sm leading-6 text-[var(--color-telemetry-steel)]">
             Reliable infrastructure, automation, secure delivery, and

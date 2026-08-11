@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { cn } from "@/lib/cn";
 
 const links = [
   { href: "/work", label: "Work" },
@@ -10,6 +14,8 @@ const links = [
 ];
 
 export function SiteHeader() {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/92 backdrop-blur-xl">
       <Container className="flex h-full items-center justify-between">
@@ -33,22 +39,38 @@ export function SiteHeader() {
 
         <nav aria-label="Primary" className="hidden sm:block">
           <ul className="flex items-center gap-7 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-cloud-linen)] lg:gap-10">
-            {links.map((link, index) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]"
-                >
-                  <span
-                    aria-hidden
-                    className="text-[8px] text-[var(--color-telemetry-steel)]"
+            {links.map((link, index) => {
+              const active =
+                pathname === link.href ||
+                (link.href !== "/" && pathname?.startsWith(`${link.href}/`));
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]",
+                      active
+                        ? "text-[var(--color-signal-lime)]"
+                        : "text-[var(--color-cloud-linen)]",
+                    )}
                   >
-                    0{index + 1}
-                  </span>
-                  <span>{link.label}</span>
-                </Link>
-              </li>
-            ))}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "text-[8px]",
+                        active
+                          ? "text-[var(--color-signal-lime)]"
+                          : "text-[var(--color-telemetry-steel)]",
+                      )}
+                    >
+                      0{index + 1}
+                    </span>
+                    <span>{link.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { HeroCopyReveal } from "./HeroCopyReveal";
 import { HeroSpineLoader } from "./HeroSpineLoader";
-import { HeroSpineFallback } from "./HeroSpineFallback";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-20 pt-20 sm:pt-28">
-      {/* Ambient WebGL topology behind the whole hero; HeroSpineFallback below is the
-          always-in-DOM accessible baseline, not gated on the canvas mounting. */}
+    <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden pb-16 pt-28">
+      {/* Ambient WebGL topology, decorative only (aria-hidden): the accessible,
+          described version of this same information is the Reliability Spine
+          walkthrough further down the page, not a duplicate copy in here. */}
       <div aria-hidden className="absolute inset-0 -z-10">
         <HeroSpineLoader />
       </div>
@@ -22,10 +22,15 @@ export function Hero() {
           </p>
           <h1
             data-reveal
-            className="mt-4 max-w-3xl font-display text-hero font-semibold leading-[1.05] text-[var(--ink)]"
+            className="mt-6 font-display text-name font-bold uppercase leading-[0.84] tracking-tight text-[var(--ink)]"
           >
-            {hero.primaryLine}
+            Tarun
+            <br />
+            Pradeep
           </h1>
+          <p data-reveal className="mt-8 max-w-2xl font-display text-hero font-semibold leading-[1.1] text-[var(--ink)]">
+            {hero.primaryLine}
+          </p>
           <p data-reveal className="mt-6 max-w-[60ch] text-lead text-[var(--ink-muted)]">
             {hero.supportingCopy}
           </p>
@@ -40,13 +45,6 @@ export function Hero() {
           <div data-reveal className="mt-8 flex gap-6 font-mono text-xs text-[var(--ink-muted)]">
             <ExternalLink href={site.github}>GitHub</ExternalLink>
             <ExternalLink href={site.linkedin}>LinkedIn</ExternalLink>
-          </div>
-
-          <div data-reveal className="mt-20 border-t border-[var(--line)] pt-10">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-              Commit &rarr; Recover
-            </p>
-            <HeroSpineFallback />
           </div>
         </HeroCopyReveal>
       </Container>

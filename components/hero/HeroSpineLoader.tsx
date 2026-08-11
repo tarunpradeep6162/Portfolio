@@ -9,9 +9,9 @@ import { useReducedMotion } from "@/lib/motion/useReducedMotion";
  * Server Component's own `dynamic()` call, so that call has to live here
  * instead of in Hero.tsx). Gates on prefers-reduced-motion before even
  * requesting the WebGL bundle: reduced-motion users never pay for the
- * download, and HeroSpineFallback (rendered by the caller, always in the
- * DOM) is their entire experience of this content - not degraded, just the
- * baseline.
+ * download. The canvas is purely decorative (aria-hidden) - the accessible,
+ * described version of this content is the Reliability Spine walkthrough
+ * further down the page, so nothing is lost when this renders null.
  */
 const HeroSpineCanvas = dynamic(() => import("./HeroSpineCanvas"), { ssr: false });
 

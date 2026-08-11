@@ -24,7 +24,12 @@ export const hero = {
 
 export const about = {
   narrative:
-    "I build and support the systems behind dependable digital services. My path began in systems engineering and IT operations, where I learned to diagnose hardware, networks, access controls, Windows infrastructure, and production issues under pressure. I now apply that operational foundation to cloud infrastructure and DevOps - designing AWS environments, containerising applications, building CI/CD workflows, managing Linux systems, and turning manual deployments into repeatable processes. I care about reliability, security, clear documentation, and understanding why a system works, not merely getting it to run once.",
+    "I build and support the systems behind dependable digital services. My path began in systems engineering and IT operations, where I learned to diagnose hardware, networks, access controls, Windows infrastructure, and production issues under pressure. I now apply that operational foundation to cloud infrastructure and DevOps - designing AWS environments, containerising applications, building CI/CD workflows, managing Linux systems, and turning manual deployments into repeatable processes.",
+  // Same closing line as the narrative above, split out as its own field so
+  // it can be set at pull-quote scale on the About page instead of ending
+  // the paragraph at body size - not a new fact, just a presentational split.
+  philosophy:
+    "I care about reliability, security, clear documentation, and understanding why a system works, not merely getting it to run once.",
 } as const;
 
 export const resumeFile: Field<{ href: string }> = {

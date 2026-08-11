@@ -8,6 +8,8 @@
  * identical cards with different labels.
  */
 
+import { cn } from "@/lib/cn";
+
 const ACCENT = "#ff6b45";
 const PACKET = "#2f7cff";
 const LINE = "#2c313a";
@@ -230,11 +232,26 @@ function FlowArt({ steps }: { steps: string[] }) {
   );
 }
 
-export function ProjectCoverArt({ flow, variant }: { flow: string; variant: CoverArtVariant }) {
+export const COVER_ART_LEGEND: Record<CoverArtVariant, string> = {
+  pipeline: "Orange = build/deploy stage · Blue = network/runtime stage · read left to right",
+  "hub-spoke": "Orange border = controller host · Blue border = agent host · dashed line = SSH connection",
+  tiered: "Orange = public-facing tier · Blue = internal tier · read top to bottom",
+  flow: "Orange = application stage · Blue outline = client · read left to right",
+};
+
+export function ProjectCoverArt({
+  flow,
+  variant,
+  bordered = true,
+}: {
+  flow: string;
+  variant: CoverArtVariant;
+  bordered?: boolean;
+}) {
   const steps = parseSteps(flow);
   const Component = { pipeline: PipelineArt, "hub-spoke": HubSpokeArt, tiered: TieredArt, flow: FlowArt }[variant];
   return (
-    <div className="w-full overflow-hidden rounded-none border border-[var(--line)]">
+    <div className={cn("w-full overflow-hidden rounded-none", bordered && "border border-[var(--line)]")}>
       <Component steps={steps} />
     </div>
   );

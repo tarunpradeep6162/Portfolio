@@ -69,17 +69,13 @@ export default function Home() {
         <h2 className="mt-3 max-w-2xl font-display text-display font-semibold text-[var(--ink)]">
           Domains, not scores.
         </h2>
-        <ScrollReveal className="mt-12 grid gap-10 sm:grid-cols-2">
+        <ScrollReveal className="mt-12 grid gap-x-12 gap-y-8 sm:grid-cols-2">
           {skillDomains.map((domain) => (
-            <div key={domain.domain} data-reveal>
-              <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-[var(--accent-secondary)]">
+            <div key={domain.domain} data-reveal className="border-t border-[var(--line)] pt-4">
+              <h3 className="font-mono text-xs font-semibold uppercase tracking-wide text-[var(--accent-secondary)]">
                 {domain.domain}
               </h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {domain.items.map((item) => (
-                  <Badge key={item}>{item}</Badge>
-                ))}
-              </div>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--ink-muted)]">{domain.items.join(" · ")}</p>
             </div>
           ))}
         </ScrollReveal>

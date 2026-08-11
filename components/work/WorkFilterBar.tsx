@@ -46,7 +46,7 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
           <h2 className="font-mono text-xs uppercase tracking-wide text-[var(--ink-muted)]">Case studies</h2>
           <ScrollReveal
             key={`flagships-${active}`}
-            className="mt-6 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3"
+            className="mt-6 grid gap-x-8 gap-y-12 sm:grid-cols-2"
           >
             {flagships.map((project) => (
               <div key={project.slug} data-reveal>

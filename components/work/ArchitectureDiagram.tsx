@@ -27,6 +27,9 @@ export function ArchitectureDiagram({ flow }: { flow: string }) {
           </div>
         ))}
       </div>
+      <figcaption className="mt-3 font-mono text-[11px] uppercase tracking-wide text-[var(--ink-muted)]">
+        {steps.length} stages &middot; read left to right &middot; step {steps.length} is the current state
+      </figcaption>
     </figure>
   );
 }

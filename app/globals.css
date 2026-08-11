@@ -27,8 +27,11 @@
      scroll (clamped against 90vw at the low end via the hero component itself). */
   --text-name: clamp(3.5rem, 1rem + 12vw, 11rem);
   --text-hero: clamp(2rem, 1.3rem + 3vw, 3.75rem);
-  --text-display: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
-  --text-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  /* Widened from the v2 scale (was 1.75-2.5rem / 1.375-1.75rem, a ratio too
+     close for text-display and text-heading to read as separate tiers when
+     both carry the same font-semibold weight - award-polish-v3 audit). */
+  --text-display: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  --text-heading: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
   --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
 
   --ease-spine: cubic-bezier(0.16, 1, 0.3, 1);

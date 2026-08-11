@@ -3,6 +3,7 @@ import { Archivo_Black, Public_Sans, Space_Mono } from "next/font/google";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
+import { DeploymentFlightpath } from "@/components/flightpath/DeploymentFlightpath";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "./globals.css";
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
         <SkipLink />
+        <DeploymentFlightpath />
         <SiteHeader />
         <main id="main-content" className="flex-1">
           {children}

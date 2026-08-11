@@ -52,16 +52,19 @@ give it a unique `slug` — the `/work/[slug]` route picks it up automatically
 via `generateStaticParams`, no route file changes needed.
 
 **Fields that are genuinely missing** — wrap the value as `{ status:
-"needs-input", note: "..." }` instead of leaving it blank or guessing. This
-renders as an explicit "Needs input" callout everywhere it's used (see
-`content/types.ts`'s `Field<T>` type and `components/shared/NeedsInput.tsx`).
-Once real data exists, replace it with `{ status: "ready", value: ... }`.
+"needs-input", note: "..." }` instead of leaving it blank or guessing (see
+`content/types.ts`'s `Field<T>` type). Nothing renders a public "Needs
+input" callout — components simply omit the unavailable control instead of
+announcing the gap, and the gap itself is tracked in `CONTENT_GAPS.md`.
+Once real data exists, replace it with `{ status: "ready", value: ... }`
+and remove the corresponding line from `CONTENT_GAPS.md`.
 
 **Project screenshots** — a flagship project's `screenshot` field is a
 `Field<{ src: string; alt: string }>`. Drop the image in `public/` and set
 `{ status: "ready", value: { src: "/your-image.jpg", alt: "..." } }`. Until
-then it renders the "Needs project screenshot" placeholder
-(`components/work/NeedsScreenshot.tsx`) — never a stock mockup.
+then it renders code-generated architecture cover art
+(`components/work/ProjectCoverArt.tsx`, built from the project's own real
+`flow` string) — never a stock mockup.
 
 **Experience** — `content/experience.ts`. `achievements` is a `Field<string[]>`
 per role, for the same reason (the Stackly role currently has none supplied).

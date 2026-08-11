@@ -24,6 +24,15 @@ export default function AboutPage() {
         <p className="mt-6 max-w-[68ch] leading-relaxed text-[var(--ink-muted)]">{about.narrative}</p>
       </Section>
 
+      {/* Second scale-contrast moment on the site (after the hero): the
+          closing line of the real narrative above, set large rather than
+          ending the paragraph at body size. */}
+      <Section field="manual" className="pt-0">
+        <p className="max-w-4xl font-display text-hero font-semibold leading-[1.15] text-[var(--ink)]">
+          &ldquo;{about.philosophy}&rdquo;
+        </p>
+      </Section>
+
       <Section field="manual" className="pt-0">
         <h2 className="font-display text-heading font-semibold text-[var(--ink)]">Experience</h2>
         <div className="mt-8">

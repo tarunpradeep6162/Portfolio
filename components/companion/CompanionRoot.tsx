@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
+import { CompanionPortrait } from "./CompanionPortrait";
 
 const CompanionExperience = dynamic(
   () => import("./CompanionExperience").then((mod) => mod.CompanionExperience),
@@ -23,10 +24,25 @@ function CompanionLoadingSkeleton() {
       <div className="flex items-center gap-2">
         <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-signal-lime)] motion-reduce:animate-none" />
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)]">
-          RC-01 booting…
+          RC-01 initializing…
         </p>
       </div>
-      <div className="mt-3 h-40 animate-pulse rounded-xl bg-white/5 motion-reduce:animate-none sm:h-44" />
+      {/* A dimmed static portrait plus a scan line, never an empty box - the
+          3D bundle is still loading, but the boot sequence is already
+          visible rather than a blank rectangle. */}
+      <div className="relative mt-3 h-40 w-full overflow-hidden rounded-xl border border-white/10 sm:h-44">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 38%, #141d27 0%, #0a0f14 62%, #06090d 100%)",
+          }}
+        />
+        <div className="relative flex h-full items-center justify-center opacity-60">
+          <CompanionPortrait variant="sleep" className="h-28 w-28" />
+        </div>
+        <div className="absolute inset-x-0 top-0 h-px rc01-scan bg-[var(--color-signal-lime)]/70 motion-reduce:hidden" />
+      </div>
     </div>
   );
 }

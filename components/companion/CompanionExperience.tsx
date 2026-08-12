@@ -233,7 +233,23 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
       if (step.anchor) {
         setCompanionState("pointing");
-        window.setTimeout(() => playScript(script, "briefing"), reducedMotion ? 0 : 650);
+        const settleDelay = reducedMotion ? 0 : 650;
+        window.setTimeout(() => {
+          // Dispatched only once smooth-scroll has had time to settle, so
+          // the flash is actually visible on whichever real component the
+          // scroll landed on - not fired the instant scrolling starts,
+          // where it would fade out before the section is even in view.
+          // RC-01 "pointing" at the Reliability Spine should visibly affect
+          // the real Observatory/spine list, not just play an isolated arm
+          // gesture in its own panel (v5.0 audit: "robot does not clearly
+          // interact with real Observatory stages"). Both
+          // InfrastructureObservatory.tsx and ReliabilitySpine.tsx listen
+          // for this event; whichever is actually on screen reacts.
+          if (step.anchor === "spine") {
+            window.dispatchEvent(new CustomEvent("rc01:observatory-highlight"));
+          }
+          playScript(script, "briefing");
+        }, settleDelay);
       } else {
         playScript(script, "briefing");
       }
@@ -394,7 +410,12 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       ref={panelRef}
       role="region"
       aria-label="RC-01 Reliability Companion panel"
-      className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl border border-white/10 bg-[var(--color-control-black)]/97 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[23rem]"
+      // Capped well below the sticky header's 4.5rem height (see
+      // SiteHeader.tsx) plus margin, and capped absolutely so the panel
+      // never balloons into a second full-page surface on tall viewports -
+      // it scrolls internally instead (v5.0 audit: "tour panel can extend
+      // underneath or over the sticky navigation").
+      className="fixed inset-x-3 bottom-3 z-50 max-h-[min(calc(100vh-6.5rem),34rem)] overflow-y-auto rounded-lg border border-[var(--color-signal-lime)]/15 bg-[var(--color-control-black)]/96 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[22rem]"
     >
       <div aria-live="polite" className="sr-only">
         {announcement}

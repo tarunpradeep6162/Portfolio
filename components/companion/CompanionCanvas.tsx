@@ -72,7 +72,7 @@ export function CompanionCanvas({ state, quality, onError }: CompanionCanvasProp
           dpr={quality.dpr}
           frameloop={running ? "always" : "never"}
           gl={{ antialias: quality.antialias, alpha: true, powerPreference: "low-power" }}
-          camera={{ position: [0, 0.2, 3.1], fov: 32 }}
+          camera={{ position: [0, 0.05, 3.3], fov: 30 }}
           onCreated={({ gl }) => {
             gl.domElement.addEventListener(
               "webglcontextlost",

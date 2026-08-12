@@ -338,4 +338,47 @@ test.describe("RC-01 Reliability Companion", () => {
       expect(name.length).toBeGreaterThan(0);
     }
   });
+
+  test("v5.1: the panel never extends above the sticky header, even with a tour and captions open", async ({
+    page,
+  }) => {
+    await installFakeSpeech(page);
+    await page.goto("/");
+    await activate(page);
+    await page.getByRole("button", { name: /^tours$/i }).click();
+    await page.getByRole("button", { name: /engineering tour/i }).click();
+    await page.waitForTimeout(500);
+
+    const headerBottom = await page
+      .getByRole("banner")
+      .evaluate((el) => el.getBoundingClientRect().bottom);
+    const panelTop = await page
+      .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+      .evaluate((el) => el.getBoundingClientRect().top);
+
+    expect(panelTop).toBeGreaterThanOrEqual(headerBottom);
+  });
+
+  test("v5.1: the Reliability Spine Tour visibly highlights the real spine list, not just RC-01's own panel", async ({
+    page,
+  }) => {
+    await installFakeSpeech(page);
+    await page.goto("/");
+    await activate(page);
+    await page.getByRole("button", { name: /^tours$/i }).click();
+    await page.getByRole("button", { name: /reliability spine tour/i }).click();
+
+    // classList.contains is an exact token match - SpineNode's inactive
+    // branch also contains the *substring* "text-[var(--accent)]" as part
+    // of "group-hover:text-[var(--accent)]", so a substring check would
+    // give a false positive on every stage row regardless of this feature.
+    const sawAllEightHighlighted = await page.waitForFunction(
+      () =>
+        Array.from(document.querySelectorAll("ol > li span")).filter((el) =>
+          el.classList.contains("text-[var(--accent)]"),
+        ).length >= 8,
+      { timeout: 3000 },
+    );
+    expect(sawAllEightHighlighted).toBeTruthy();
+  });
 });

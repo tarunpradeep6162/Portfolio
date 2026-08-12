@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
+import { CompanionRoot } from "@/components/companion/CompanionRoot";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <Footer />
+        <CompanionRoot />
       </body>
     </html>
   );

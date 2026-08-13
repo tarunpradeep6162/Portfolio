@@ -51,6 +51,21 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# node:22-alpine ships its own global npm install (and npm's internal
+# dependencies - tar, ip-address, sigstore, picomatch, brace-expansion -
+# used by npm's registry/publish/provenance machinery) regardless of
+# whether this stage ever invokes npm. It doesn't: CMD runs `node
+# server.js` directly and HEALTHCHECK uses `node -e`. A real hosted
+# release-candidate Trivy image scan (workflow run 31720379298) flagged
+# CRITICAL/HIGH CVEs in exactly those npm-internal packages; none of them
+# are this app's own dependencies or present in .next/standalone's traced
+# node_modules (verified against package-lock.json and the standalone
+# output directly). Removing the base image's unused npm install drops
+# the vulnerable code from the shipped image without touching anything
+# the app uses at runtime.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+
 USER nextjs
 
 EXPOSE 3500

@@ -171,8 +171,14 @@ jobs:
         run: docker load --input /tmp/tarun-portfolio-image.tar
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        # Same pinned SHA as nightly.yml's already-proven-working Trivy step
+        # (v0.36.0) - the tag this step used before, @0.28.0, doesn't
+        # resolve to a real published version at all ("unable to find
+        # version '0.28.0'"), caught by this real hosted dispatch, not any
+        # local check (nothing local runs this action).
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          scan-type: image
           image-ref: tarun-portfolio:${{ needs.setup.outputs.sha }}
           severity: CRITICAL,HIGH
           # CRITICAL/HIGH with a known fix block; see docs/AUTOMATED_CI_CD.md

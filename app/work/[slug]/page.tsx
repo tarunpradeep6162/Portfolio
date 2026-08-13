@@ -9,6 +9,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArchitectureDiagram } from "@/components/work/ArchitectureDiagram";
 import { AtlasSection } from "@/components/atlas/AtlasSection";
 import { TimeMachine } from "@/components/atlas/TimeMachine";
+import { ProofMode } from "@/components/work/ProofMode";
 import {
   ProjectCoverArt,
   getCoverArtVariant,
@@ -215,6 +216,8 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                 </div>
               )}
             </Chapter>
+
+            <ProofMode project={project} />
           </div>
         </Container>
       </div>

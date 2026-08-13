@@ -1,0 +1,29 @@
+# CI-only compose stack for validating the Docker production image before a
+# release candidate is promoted. Not used for local dev (`npm run dev`
+# remains the local workflow) and never started with a bare `docker compose
+# up` - always invoked with an explicit `-p <unique-ci-project-name>` so it
+# cannot collide with anything else on the host, and never on port 3500
+# (the local/manual preview port) to avoid colliding with a developer's own
+# running preview.
+services:
+  candidate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tarun-portfolio:ci-candidate
+    environment:
+      - PORT=3600
+      - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+    ports:
+      - "3600:3600"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3600/').then(r=>{if(r.status!==200)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    # No privileged mode, no Docker socket mount, no persistent volumes -
+    # this container only ever needs to serve the built app over HTTP.
+    privileged: false
+    read_only: false

@@ -27,6 +27,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Removes the "X-Powered-By: Next.js" response header.
   poweredByHeader: false,
+  // Traced, minimal-file production output for the Docker image (Dockerfile
+  // copies .next/standalone + .next/static + public) - keeps the runtime
+  // image free of node_modules/dev tooling without changing `npm run dev`/
+  // `npm run start` behavior for local/Vercel use, both of which ignore
+  // this option.
+  output: "standalone",
   async headers() {
     return [
       {

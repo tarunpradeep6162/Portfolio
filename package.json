@@ -9,10 +9,12 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:ci": "vitest run --no-file-parallelism",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "audit:html": "node scripts/audit-static-html.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "ci:summary": "node scripts/ci/create-summary.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",

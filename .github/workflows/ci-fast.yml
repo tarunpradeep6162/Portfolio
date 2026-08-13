@@ -1,0 +1,109 @@
+name: Fast CI
+
+on:
+  push:
+    branches: [living-infrastructure-v6]
+  pull_request:
+    branches: [living-infrastructure-v6]
+
+concurrency:
+  group: fast-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history, not a shallow depth: detect-changes.mjs diffs
+          # against the pre-push commit (github.event.before) or the PR
+          # base SHA, either of which can be arbitrarily far back in a
+          # shallow clone - a partial fetch would make that diff silently
+          # incomplete rather than fail loudly, which is worse.
+          fetch-depth: 0
+
+      - name: Repository safety check (no secrets/large files staged)
+        run: |
+          if git ls-files | grep -E '^\.env($|\.)' ; then
+            echo "::error::.env file(s) tracked in repository" >&2
+            exit 1
+          fi
+          if git ls-files | grep -E '\.(pem|key)$|credentials\.json$'; then
+            echo "::error::credential-shaped file(s) tracked in repository" >&2
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Detect changed files
+        id: changes
+        # A plain push's ref already points at HEAD after checkout, so
+        # diffing against the branch name itself would always show zero
+        # changes - the real "what changed" base is the pre-push commit
+        # (github.event.before) for a push, or the PR's base SHA for a PR.
+        run: node scripts/ci/detect-changes.mjs "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (deterministic worker settings)
+        run: npm run test:ci
+
+      - name: Production build
+        if: steps.changes.outputs.build == 'true'
+        run: npm run build
+
+      - name: Check for merge-conflict markers
+        run: git diff --check
+
+      - name: Write CI summary (success)
+        if: success()
+        run: |
+          cat > /tmp/ci-status.json <<'EOF'
+          {
+            "commit": "${{ github.sha }}",
+            "workflow": "Fast CI",
+            "status": "passed",
+            "passedStages": ["lint", "typecheck", "unit", "build", "diff-check"]
+          }
+          EOF
+          node scripts/ci/create-summary.mjs /tmp/ci-status.json
+
+      - name: Write CI summary (failure)
+        if: failure()
+        run: |
+          cat > /tmp/ci-status.json <<'EOF'
+          {
+            "commit": "${{ github.sha }}",
+            "workflow": "Fast CI",
+            "status": "failed",
+            "failedStage": "see job log for the first red step above",
+            "targetedCommand": "npm run lint && npm run typecheck && npm run test:ci"
+          }
+          EOF
+          node scripts/ci/create-summary.mjs /tmp/ci-status.json
+
+      - name: Upload CI summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-summary
+          path: reports/ci-summary.md
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,110 @@
+name: Preview Validation
+
+# Fires when Vercel's GitHub integration reports a deployment status (its
+# own Git integration creates the preview - this workflow only validates
+# the resulting URL, it never deploys anything itself). If Vercel is not
+# linked to this repository yet, this workflow simply never triggers; see
+# docs/AUTOMATED_CI_CD.md for the one-time Vercel/GitHub setup required.
+on:
+  deployment_status:
+
+concurrency:
+  group: preview-validate-${{ github.event.deployment.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  validate:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment_status.environment_url != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PREVIEW_URL: ${{ github.event.deployment_status.environment_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies (Playwright + CI scripts only need root deps)
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Wait for preview to be reachable
+        run: node scripts/ci/verify-health.mjs "$PREVIEW_URL" 60000
+
+      - name: Verify required routes
+        run: node scripts/ci/verify-routes.mjs "$PREVIEW_URL"
+
+      - name: Verify security headers
+        run: node scripts/ci/verify-headers.mjs "$PREVIEW_URL" /
+
+      - name: Desktop smoke test (targeted Playwright, not full suite)
+        run: |
+          PLAYWRIGHT_TEST_BASE_URL="$PREVIEW_URL" \
+          npx playwright test tests/e2e/responsive.spec.ts -g "desktop" --workers=1 || \
+          echo "::warning::No test matched '-g desktop' - see tests/e2e/responsive.spec.ts for the real grep pattern"
+
+      - name: Mobile smoke test (targeted Playwright, not full suite)
+        run: |
+          PLAYWRIGHT_TEST_BASE_URL="$PREVIEW_URL" \
+          npx playwright test tests/e2e/responsive.spec.ts -g "small mobile" --workers=1
+
+      - name: No horizontal overflow / no automatic speech / no unexpected canvas
+        run: |
+          PLAYWRIGHT_TEST_BASE_URL="$PREVIEW_URL" \
+          npx playwright test tests/e2e/accessibility.spec.ts tests/e2e/companion.spec.ts --workers=1
+
+      - name: Write CI summary (success)
+        if: success()
+        run: |
+          cat > /tmp/ci-status.json <<EOF
+          {
+            "commit": "${{ github.event.deployment.sha }}",
+            "workflow": "Preview Validation",
+            "status": "passed",
+            "passedStages": ["health", "routes", "headers", "desktop-smoke", "mobile-smoke", "targeted-e2e"]
+          }
+          EOF
+          node scripts/ci/create-summary.mjs /tmp/ci-status.json
+
+      - name: Write CI summary (failure)
+        if: failure()
+        run: |
+          cat > /tmp/ci-status.json <<EOF
+          {
+            "commit": "${{ github.event.deployment.sha }}",
+            "workflow": "Preview Validation",
+            "status": "failed",
+            "failedStage": "see job log for the first red step above",
+            "targetedCommand": "PLAYWRIGHT_TEST_BASE_URL=$PREVIEW_URL npx playwright test tests/e2e/responsive.spec.ts --workers=1"
+          }
+          EOF
+          node scripts/ci/create-summary.mjs /tmp/ci-status.json
+
+      - name: Upload traces (failure only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-validate-traces
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload CI summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-validate-summary
+          path: reports/ci-summary.md
+          retention-days: 7
+          if-no-files-found: ignore

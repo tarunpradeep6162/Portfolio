@@ -56,3 +56,9 @@ credentials.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# CI-generated, per-run only - never committed. Screenshot/video capture
+# scripts (capture-v5-1.mjs and its V6 successor) write outside the repo by
+# existing convention (V5_1_SCREENSHOT_DIR/V6_SCREENSHOT_DIR default to
+# paths under /tmp or /home/tarun/screenshots/, never an in-repo directory).
+/reports/

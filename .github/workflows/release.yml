@@ -1,0 +1,269 @@
+name: Release
+
+# Fires only on the final version tag pattern, e.g. living-infrastructure-v6-final.
+# Candidate-first: build -> validate candidate -> promote, never a direct
+# "deploy to production and hope" path.
+on:
+  push:
+    tags:
+      - "living-infrastructure-v*-final"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Full validation (lint, typecheck, unit, build)
+        run: npm run verify
+
+      - name: HTML audit
+        run: npm run audit:html
+
+      - name: Full Playwright suite (single worker)
+        run: npm run test:e2e -- --workers=1
+
+      - name: git diff --check
+        run: git diff --check
+
+  docker-image:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build production image (tagged by commit SHA)
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        with:
+          context: .
+          push: false
+          tags: tarun-portfolio:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/tarun-portfolio-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/tarun-portfolio-image.tar
+          retention-days: 7
+
+  image-scan:
+    needs: docker-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load --input /tmp/tarun-portfolio-image.tar
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: tarun-portfolio:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          # CRITICAL/HIGH with a known fix block; see docs/AUTOMATED_CI_CD.md
+          # "Severity policy" for the documented exception process for
+          # anything flagged without an available fix.
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  candidate-runtime-check:
+    needs: docker-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load --input /tmp/tarun-portfolio-image.tar
+
+      - name: Run candidate container
+        run: |
+          docker run -d --name release-candidate -p 3600:3600 -e PORT=3600 \
+            tarun-portfolio:${{ github.sha }}
+
+      - name: Wait for candidate health
+        run: node scripts/ci/verify-health.mjs http://localhost:3600 60000
+
+      - name: Verify candidate routes
+        run: node scripts/ci/verify-routes.mjs http://localhost:3600
+
+      - name: Verify candidate headers
+        run: node scripts/ci/verify-headers.mjs http://localhost:3600 /
+
+      - name: Stop candidate container
+        if: always()
+        run: docker rm -f release-candidate || true
+
+  release-evidence:
+    needs: [validate, candidate-runtime-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start local candidate on release preview port
+        run: |
+          nohup npm run start -- -p 3500 > /tmp/release-server.log 2>&1 &
+          echo $! > /tmp/release-server.pid
+          node scripts/ci/verify-health.mjs http://localhost:3500 60000
+
+      - name: Performance budgets, reproduced twice
+        run: |
+          node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/release-perf-1.txt
+          node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/release-perf-2.txt
+
+      - name: Screenshot matrix
+        env:
+          # Matches the existing capture-v5-1.mjs convention (screenshots
+          # write outside the repo, not into a committed directory) - see
+          # V5_1_SCREENSHOT_DIR. Defined here so capture-v6.mjs, once built,
+          # has a stable env var name already wired into this workflow.
+          V6_SCREENSHOT_DIR: /tmp/v6-screenshots
+        run: |
+          if [ -f scripts/capture-v6.mjs ]; then
+            node scripts/capture-v6.mjs
+          else
+            echo "::warning::scripts/capture-v6.mjs not present yet - screenshot matrix skipped, not fabricated"
+          fi
+
+      - name: Interaction video
+        env:
+          V6_VIDEO_DIR: /tmp/v6-video
+        run: |
+          if [ -f scripts/record-v6-experience.mjs ]; then
+            node scripts/record-v6-experience.mjs
+          else
+            echo "::warning::scripts/record-v6-experience.mjs not present yet - interaction video skipped, not fabricated"
+          fi
+
+      - name: Stop local candidate
+        if: always()
+        run: node scripts/ci/cleanup.mjs --pid-file /tmp/release-server.pid
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence
+          path: |
+            /tmp/release-perf-1.txt
+            /tmp/release-perf-2.txt
+            /tmp/v6-screenshots/
+            /tmp/v6-video/
+            /tmp/release-server.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # Vercel's own Git integration is the deployment mechanism (see
+  # docs/AUTOMATED_CI_CD.md) - this job only verifies a production
+  # deployment took effect for this tag's commit, using a token supplied as
+  # a repository secret. It never runs if that secret isn't configured, and
+  # never invents a URL.
+  promote-and-smoke-test:
+    needs: [image-scan, release-evidence]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check for Vercel configuration
+        id: vercel-check
+        run: |
+          if [ -n "${{ secrets.VERCEL_PRODUCTION_URL }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VERCEL_PRODUCTION_URL secret not set - production promotion/smoke-test skipped, not fabricated. See docs/AUTOMATED_CI_CD.md for the one-time setup."
+          fi
+
+      - name: Post-promotion smoke test
+        if: steps.vercel-check.outputs.configured == 'true'
+        run: |
+          node scripts/ci/verify-health.mjs "${{ secrets.VERCEL_PRODUCTION_URL }}" 60000
+          node scripts/ci/verify-routes.mjs "${{ secrets.VERCEL_PRODUCTION_URL }}"
+          node scripts/ci/verify-headers.mjs "${{ secrets.VERCEL_PRODUCTION_URL }}" /
+
+      - name: Write release summary
+        if: always()
+        run: |
+          cat > /tmp/ci-status.json <<EOF
+          {
+            "commit": "${{ github.sha }}",
+            "workflow": "Release",
+            "status": "${{ job.status }}",
+            "passedStages": ["validate", "docker-image", "image-scan", "candidate-runtime-check", "release-evidence"]
+          }
+          EOF
+          node scripts/ci/create-summary.mjs /tmp/ci-status.json
+
+      - name: Upload release CI summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-summary
+          path: reports/ci-summary.md
+          retention-days: 30
+          if-no-files-found: ignore

@@ -25,10 +25,10 @@ jobs:
       PREVIEW_URL: ${{ github.event.deployment_status.environment_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "npm"
@@ -93,7 +93,7 @@ jobs:
 
       - name: Upload traces (failure only)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: preview-validate-traces
           path: test-results/
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload CI summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: preview-validate-summary
           path: reports/ci-summary.md

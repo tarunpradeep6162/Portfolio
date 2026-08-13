@@ -70,3 +70,32 @@ test("header height stays within the 80px cap at desktop width", async ({
   const box = await header.boundingBox();
   expect(box?.height).toBeLessThanOrEqual(80);
 });
+
+/**
+ * V6 additions (Atlas 3D view, Proof Mode) checked in their *expanded*
+ * state, not just their default-collapsed one already covered by the
+ * case-study sweep above - at the narrowest breakpoint only, since a
+ * mobile-first layout that doesn't overflow at 360px is the binding
+ * constraint every wider breakpoint already inherits.
+ */
+test("no horizontal overflow with Atlas's 3D view open at 360px", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/work/project-aurora");
+  await page.getByRole("button", { name: /enter 3d view/i }).click();
+  await expect(page.locator("canvas")).toHaveCount(1);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow, "horizontal overflow detected with Atlas 3D view open at 360px").toBe(false);
+});
+
+test("no horizontal overflow with Proof Mode expanded at 360px", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/work/project-aurora");
+  await page.getByRole("button", { name: /^proof mode$/i }).click();
+  await expect(page.getByText(/verified evidence/i)).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow, "horizontal overflow detected with Proof Mode expanded at 360px").toBe(false);
+});

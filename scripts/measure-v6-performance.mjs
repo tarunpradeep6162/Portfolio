@@ -133,13 +133,20 @@ if (nodeExists) {
   await firstNode.click();
   // Real settle: poll for the actual DOM consequence of the click, not a
   // fixed delay. aria-pressed flipping to "true" is the interaction's own
-  // completion signal.
+  // completion signal. A 5s ceiling is a pure safety net against an
+  // infinite rAF loop if the click ever fails to produce that DOM change
+  // (a real bug found in an earlier version of this script, which hung
+  // indefinitely with no timeout at all) - it never substitutes for the
+  // real condition above it, only bounds how long a broken run can hang.
   await firstNode
     .evaluate((el) => {
       return new Promise((resolve) => {
+        const deadline = Date.now() + 5000;
         const check = () => {
           if (el.getAttribute("aria-pressed") === "true") {
             resolve(true);
+          } else if (Date.now() > deadline) {
+            resolve(false);
           } else {
             requestAnimationFrame(check);
           }

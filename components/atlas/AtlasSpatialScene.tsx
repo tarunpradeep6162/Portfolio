@@ -30,7 +30,7 @@ function AtlasNode({
   onSelect: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const materialRef = useRef<THREE.MeshLambertMaterial>(null);
 
   // `active` is a prop, so this callback closure (recreated each render by
   // useFrame's own subscription) always sees its latest value - no ref
@@ -56,13 +56,17 @@ function AtlasNode({
         }}
       >
         <boxGeometry args={[0.62, 0.62, 0.62]} />
-        <meshStandardMaterial
+        {/* Lambert, not Standard: Atlas nodes are abstract diagram markers,
+            not RC-01's realistic chassis, so they don't need a PBR
+            roughness/metalness workflow - Lambert keeps the same emissive
+            glow behavior with a materially cheaper shader to compile,
+            identified as the likely long-task source on this measurement
+            VM's software-rendered (SwiftShader) WebGL context. */}
+        <meshLambertMaterial
           ref={materialRef}
           color={active ? "#d8ff4f" : "#232e3a"}
           emissive="#d8ff4f"
           emissiveIntensity={active ? 0.9 : 0.15}
-          roughness={0.5}
-          metalness={0.2}
         />
       </mesh>
       <mesh position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]}>

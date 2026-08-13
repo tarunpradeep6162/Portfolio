@@ -37,6 +37,7 @@ import { useCompanionSound } from "@/lib/companion/useCompanionSound";
 import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
+import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
 import { CompanionCanvas } from "./CompanionCanvas";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
@@ -63,6 +64,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const webglSupported = useWebGLSupport();
   const speech = useCompanionSpeech();
   const { preferences, update } = useCompanionPreferences();
+  const experienceDispatch = useExperienceDispatch();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -358,13 +360,29 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           case "stop":
             handleStop();
             break;
+          case "atlas":
+          case "proof":
+            setCompanionState("idle");
+            break;
+          case "recruiter":
+            experienceDispatch({ type: "VISITOR_PATH_SET", path: "recruiter" });
+            setCompanionState("idle");
+            break;
+          case "engineer":
+            experienceDispatch({ type: "VISITOR_PATH_SET", path: "engineer" });
+            setCompanionState("idle");
+            break;
+          case "explorer":
+            experienceDispatch({ type: "VISITOR_PATH_SET", path: "explorer" });
+            setCompanionState("idle");
+            break;
         }
       };
       window.setTimeout(run, 260);
 
       switch (command) {
         case "help":
-          return "Documented commands only: help, projects, spine, skills, resume, contact, mute, stop.";
+          return "Documented commands only: help, projects, spine, skills, resume, contact, mute, stop, atlas, proof, recruiter, engineer, explorer.";
         case "projects":
           return "Speaking flagship project summaries — see captions below.";
         case "spine":
@@ -379,11 +397,21 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           return preferences.muted ? "Unmuted." : "Muted. Captions continue regardless.";
         case "stop":
           return "Stopped current playback.";
+        case "atlas":
+          return "The Living Infrastructure Atlas and Architecture Time Machine live on each case-study page, under 'The architecture' — real nodes and stages derived from that project's own verified data, no invented ones.";
+        case "proof":
+          return "Proof Mode is the 'Proof Mode' disclosure near the bottom of each case-study page — verified evidence, the engineering explanation, and known limitations, kept explicitly separate.";
+        case "recruiter":
+          return "Visitor path set to Recruiter — fast, outcome-first framing. Reset any time from the /work index.";
+        case "engineer":
+          return "Visitor path set to Engineer — full implementation detail. Reset any time from the /work index.";
+        case "explorer":
+          return "Visitor path set to Explorer — a slower, guided walk. Reset any time from the /work index.";
         default:
           return "Unrecognized.";
       }
     },
-    [playScript, update, preferences.muted, handleStop, resetInactivityTimer],
+    [playScript, update, preferences.muted, handleStop, resetInactivityTimer, experienceDispatch],
   );
 
   const handleEscape = useCallback(() => {

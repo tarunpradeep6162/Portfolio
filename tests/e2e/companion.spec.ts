@@ -291,6 +291,53 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toBeVisible();
   });
 
+  test("command console: atlas and proof commands guide without claiming to control the page", async ({
+    page,
+  }) => {
+    await installFakeSpeech(page);
+    await page.goto("/");
+    await activate(page);
+    await page.getByRole("button", { name: /^console$/i }).click();
+    const input = page.getByLabel("RC-01 console command");
+
+    await input.fill("atlas");
+    await input.press("Enter");
+    await expect(page.getByText(/living infrastructure atlas.*architecture time machine/i)).toBeVisible();
+
+    await input.fill("proof");
+    await input.press("Enter");
+    await expect(page.getByText(/proof mode.*disclosure/i)).toBeVisible();
+  });
+
+  test("command console: recruiter/engineer/explorer commands set the visitor path via shared state", async ({
+    page,
+  }) => {
+    // More real steps than most console tests (activate, open console,
+    // type + wait for response, deactivate, then check a second
+    // component's state) - the default 30s occasionally isn't enough on
+    // this VM under load even when every step itself succeeds.
+    test.setTimeout(60000);
+    await installFakeSpeech(page);
+    await page.goto("/work");
+    await activate(page);
+    await page.getByRole("button", { name: /^console$/i }).click();
+    const input = page.getByLabel("RC-01 console command");
+
+    await input.fill("engineer");
+    await input.press("Enter");
+    await expect(page.getByText(/visitor path set to engineer/i)).toBeVisible();
+
+    // The console dispatches to the same shared ExperienceProvider state
+    // VisitorPathSelector reads - deactivating RC-01 and checking the
+    // selector directly confirms the two surfaces actually share state,
+    // not just that the console printed a plausible-sounding string.
+    await page.getByRole("button", { name: /deactivate rc-01/i }).click();
+    await expect(page.getByRole("button", { name: "Engineer", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   test("mobile viewport: companion fits without introducing horizontal overflow", async ({
     page,
   }) => {

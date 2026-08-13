@@ -247,6 +247,11 @@ export const consoleCommands = [
   "contact",
   "mute",
   "stop",
+  "atlas",
+  "proof",
+  "recruiter",
+  "engineer",
+  "explorer",
 ] as const;
 
 export type ConsoleCommand = (typeof consoleCommands)[number];

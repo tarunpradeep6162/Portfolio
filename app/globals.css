@@ -225,6 +225,17 @@ body::before {
   }
 }
 
+/* RC-01 desktop dock: reserves real page width instead of floating over
+   content (jury-refinement v5.1 - "opening it may intentionally resize or
+   recompose the hero" rather than overlay it). Below 1024px this is a
+   no-op; the companion uses the mobile sheet states instead. */
+@media (min-width: 1024px) {
+  body[data-rc01-docked="true"] {
+    padding-right: 22rem;
+    transition: padding-right 0.35s var(--ease-spine);
+  }
+}
+
 @media (max-width: 639px) {
   .control-grid {
     background-size: 40px 40px;

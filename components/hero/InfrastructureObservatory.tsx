@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { spineStages } from "@/content/spine";
+import { useObservatoryHighlightListener } from "@/lib/companion/observatoryHighlight";
+import type { SpineStageId } from "@/content/types";
 
 const nodes = [
   { x: 118, y: 520, tx: 58, ty: 554 },
@@ -24,28 +26,33 @@ const route = nodes
  * Ambient motion is cosmetic, CSS-only, and collapses under
  * prefers-reduced-motion.
  *
- * v5.1: listens for a "rc01:observatory-highlight" window CustomEvent so
- * RC-01's "pointing" gesture (see CompanionExperience.tsx's Reliability
- * Spine tour step) produces a real, visible reaction in this actual
- * Observatory - not just an isolated arm animation inside RC-01's own
- * panel. This is the only interactivity added; all real V4 markup, copy,
- * and the default (non-highlighted) rendering are unchanged.
+ * v5.1: listens for the typed observatoryHighlight event (see
+ * lib/companion/observatoryHighlight.ts) so RC-01's "pointing" gesture
+ * during the Reliability Spine Tour highlights the one real stage it is
+ * actually narrating, not all eight at once - and produces a real,
+ * visible reaction in this actual Observatory, not just an isolated arm
+ * animation inside RC-01's own panel. This is the only interactivity
+ * added; all real V4 markup, copy, and the default (non-highlighted)
+ * rendering are unchanged.
  */
 export function InfrastructureObservatory() {
-  const [highlighted, setHighlighted] = useState(false);
+  const [highlightedStageId, setHighlightedStageId] = useState<SpineStageId | "all" | null>(
+    null,
+  );
   const [highlightBurst, setHighlightBurst] = useState(0);
   const timerRef = useRef<number | null>(null);
 
+  const handleHighlight = useCallback((stageId: SpineStageId | "all") => {
+    setHighlightedStageId(stageId);
+    setHighlightBurst((n) => n + 1);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setHighlightedStageId(null), 1800);
+  }, []);
+
+  useObservatoryHighlightListener(handleHighlight);
+
   useEffect(() => {
-    function handleHighlight() {
-      setHighlighted(true);
-      setHighlightBurst((n) => n + 1);
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-      timerRef.current = window.setTimeout(() => setHighlighted(false), 1800);
-    }
-    window.addEventListener("rc01:observatory-highlight", handleHighlight);
     return () => {
-      window.removeEventListener("rc01:observatory-highlight", handleHighlight);
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
   }, []);
@@ -162,6 +169,8 @@ export function InfrastructureObservatory() {
           const stage = spineStages[index];
           const anchor =
             node.tx > node.x ? "start" : node.tx < node.x ? "end" : "middle";
+          const isHighlighted =
+            highlightedStageId === "all" || highlightedStageId === stage.id;
           return (
             <g key={stage.id}>
               <line
@@ -172,7 +181,7 @@ export function InfrastructureObservatory() {
                 stroke="#8996a3"
                 strokeOpacity="0.12"
               />
-              {highlighted && (
+              {isHighlighted && (
                 <circle
                   key={`ring-${highlightBurst}`}
                   cx={node.x}

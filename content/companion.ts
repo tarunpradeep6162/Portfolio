@@ -3,6 +3,7 @@ import { projects } from "./projects";
 import { skillDomains } from "./skills";
 import { site } from "./site";
 import { isReady } from "./types";
+import type { SpineStageId, ProjectCategory } from "./types";
 
 /**
  * Every word RC-01 can speak or caption is generated here from the same
@@ -81,6 +82,42 @@ export const scripts: Record<string, CompanionScript> = {
   },
 };
 
+/**
+ * One short script per real Reliability Spine stage, so the Reliability
+ * Spine Tour can highlight and narrate one stage at a time instead of
+ * flashing all eight together (v5.1 - "synchronise tour steps with
+ * individual Reliability Spine stages").
+ */
+export const spineStageScripts: Record<SpineStageId, CompanionScript> = Object.fromEntries(
+  spineStages.map((stage, index) => [
+    stage.id,
+    {
+      id: `spine:${stage.id}`,
+      title: `Stage ${index + 1} — ${stage.label}`,
+      lines: [`Stage ${index + 1}, ${stage.label}: ${stage.description}`],
+    },
+  ]),
+) as Record<SpineStageId, CompanionScript>;
+
+/**
+ * Category → accent color mapping for RC-01's visor during a project
+ * briefing (v5.1 - "project briefings must use project-specific accent
+ * states"). Falls back to the standard lime status color for categories
+ * without a dedicated accent.
+ */
+export const PROJECT_ACCENT_BY_CATEGORY: Partial<Record<ProjectCategory, string>> = {
+  Cloud: "#748cff",
+  DevOps: "#d8ff4f",
+  Systems: "#ff6847",
+  "Creative Engineering": "#748cff",
+};
+
+export function accentForProjectSlug(slug: string): string | null {
+  const project = flagships.find((item) => item.slug === slug);
+  if (!project) return null;
+  return PROJECT_ACCENT_BY_CATEGORY[project.categories[0]] ?? null;
+}
+
 export function projectBriefing(slug: string): CompanionScript | null {
   const project = flagships.find((item) => item.slug === slug);
   if (!project) return null;
@@ -107,6 +144,12 @@ export interface TourStep {
   scriptId: string;
   /** In-page anchor to scroll to on the home page, if present there. */
   anchor?: string;
+  /**
+   * The specific Reliability Spine stage this step is about, if any -
+   * drives which single stage the Observatory/spine list highlights and
+   * which direction RC-01's "pointing" gesture corresponds to.
+   */
+  stageId?: SpineStageId;
   /** Route to offer navigating to after this step (confirmed, never automatic). */
   suggestedRoute?: { href: string; label: string };
 }
@@ -165,8 +208,12 @@ export const tours: CompanionTour[] = [
   {
     id: "spine",
     label: "Reliability Spine Tour",
-    description: "The eight-stage delivery protocol in detail.",
-    steps: [{ scriptId: "spine", anchor: "spine" }],
+    description: "The eight-stage delivery protocol, one stage at a time.",
+    steps: spineStages.map((stage) => ({
+      scriptId: `spine:${stage.id}`,
+      anchor: "spine",
+      stageId: stage.id,
+    })),
   },
   {
     id: "contact",
@@ -186,6 +233,9 @@ export const tours: CompanionTour[] = [
 for (const project of flagships) {
   const briefing = projectBriefing(project.slug);
   if (briefing) scripts[briefing.id] = briefing;
+}
+for (const stage of spineStages) {
+  scripts[`spine:${stage.id}`] = spineStageScripts[stage.id];
 }
 
 export const consoleCommands = [

@@ -359,7 +359,7 @@ test.describe("RC-01 Reliability Companion", () => {
     expect(panelTop).toBeGreaterThanOrEqual(headerBottom);
   });
 
-  test("v5.1: the Reliability Spine Tour visibly highlights the real spine list, not just RC-01's own panel", async ({
+  test("v5.1: the Reliability Spine Tour highlights one real stage at a time, not all eight at once", async ({
     page,
   }) => {
     await installFakeSpeech(page);
@@ -372,13 +372,239 @@ test.describe("RC-01 Reliability Companion", () => {
     // branch also contains the *substring* "text-[var(--accent)]" as part
     // of "group-hover:text-[var(--accent)]", so a substring check would
     // give a false positive on every stage row regardless of this feature.
-    const sawAllEightHighlighted = await page.waitForFunction(
-      () =>
-        Array.from(document.querySelectorAll("ol > li span")).filter((el) =>
-          el.classList.contains("text-[var(--accent)]"),
-        ).length >= 8,
-      { timeout: 3000 },
+    // ReliabilitySpine auto-clears its highlight 1800ms after it is set, so
+    // a separate wait-then-query pair can race past the window entirely
+    // (observed: waitForFunction resolves, then a follow-up page.evaluate
+    // round-trip lands after the 1800ms timeout has already fired, reading
+    // back zero highlighted stages). waitForFunction's own return value is
+    // captured atomically inside the same browser-side evaluation, so there
+    // is no second round-trip to race against the timer.
+    // Playwright arguments must be JSON-serializable, so the index-finding
+    // logic is duplicated inline in each browser-side callback rather than
+    // passed in as a function reference (which cannot cross the CDP
+    // boundary) - the alternative to inlining is a second round-trip, which
+    // is exactly the race this rewrite exists to avoid.
+    const firstHandle = await page.waitForFunction(
+      () => {
+        const indices = Array.from(document.querySelectorAll("ol > li")).reduce<number[]>(
+          (acc, li, i) => {
+            // Each stage is a <button> containing nested spans - the accent
+            // label span is the second-level one, not the first span
+            // encountered (that's the "01" index number, which never carries
+            // the accent class), so every descendant span must be checked.
+            const isActive = Array.from(li.querySelectorAll("span")).some((span) =>
+              span.classList.contains("text-[var(--accent)]"),
+            );
+            if (isActive) acc.push(i);
+            return acc;
+          },
+          [],
+        );
+        return indices.length === 1 ? indices : null;
+      },
+      null,
+      { timeout: 5000 },
     );
-    expect(sawAllEightHighlighted).toBeTruthy();
+    const firstHighlighted = (await firstHandle.jsonValue()) as number[];
+    expect(firstHighlighted).toHaveLength(1);
+
+    await page.getByRole("button", { name: "Next" }).click();
+    const secondHandle = await page.waitForFunction(
+      (previousIndex) => {
+        const indices = Array.from(document.querySelectorAll("ol > li")).reduce<number[]>(
+          (acc, li, i) => {
+            const isActive = Array.from(li.querySelectorAll("span")).some((span) =>
+              span.classList.contains("text-[var(--accent)]"),
+            );
+            if (isActive) acc.push(i);
+            return acc;
+          },
+          [],
+        );
+        return indices.length === 1 && indices[0] !== previousIndex ? indices : null;
+      },
+      firstHighlighted[0],
+      { timeout: 5000 },
+    );
+    const secondHighlighted = (await secondHandle.jsonValue()) as number[];
+    expect(secondHighlighted).toHaveLength(1);
+    expect(secondHighlighted[0]).not.toBe(firstHighlighted[0]);
+  });
+
+  test.describe("v5.1: the desktop dock never covers key hero content", () => {
+    test.use({ viewport: { width: 1440, height: 1000 } });
+
+    function expectNoOverlap(content: { x: number; width: number }, dock: { x: number }) {
+      // The dock sits to the right of the reflowed content on desktop - a
+      // real non-overlap check is "content's right edge is left of the
+      // dock's left edge", not just "different elements exist."
+      expect(content.x + content.width).toBeLessThanOrEqual(dock.x);
+    }
+
+    test("does not cover the name (h1)", async ({ page }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(300);
+      const nameBox = await page.locator("h1").boundingBox();
+      const dockBox = await page
+        .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+        .boundingBox();
+      expect(nameBox).not.toBeNull();
+      expect(dockBox).not.toBeNull();
+      expectNoOverlap(nameBox!, dockBox!);
+    });
+
+    test("does not cover the hero statement", async ({ page }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(300);
+      const statementBox = await page
+        .getByText(/I engineer reliable paths/i)
+        .boundingBox();
+      const dockBox = await page
+        .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+        .boundingBox();
+      expect(statementBox).not.toBeNull();
+      expect(dockBox).not.toBeNull();
+      expectNoOverlap(statementBox!, dockBox!);
+    });
+
+    test("does not cover the primary CTA", async ({ page }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(300);
+      const ctaBox = await page
+        .getByRole("link", { name: /explore the systems/i })
+        .boundingBox();
+      const dockBox = await page
+        .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+        .boundingBox();
+      expect(ctaBox).not.toBeNull();
+      expect(dockBox).not.toBeNull();
+      expectNoOverlap(ctaBox!, dockBox!);
+    });
+
+    test("does not cover the Observatory core", async ({ page }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(300);
+      const observatoryBox = await page.locator("figure").first().boundingBox();
+      const dockBox = await page
+        .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+        .boundingBox();
+      expect(observatoryBox).not.toBeNull();
+      expect(dockBox).not.toBeNull();
+      expectNoOverlap(observatoryBox!, dockBox!);
+    });
+
+    test("dock spans from below the sticky header to the viewport bottom, no horizontal overflow", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(300);
+      const headerBottom = await page
+        .getByRole("banner")
+        .evaluate((el) => el.getBoundingClientRect().bottom);
+      const dockBox = await page
+        .getByRole("region", { name: /RC-01 Reliability Companion panel/i })
+        .boundingBox();
+      expect(dockBox).not.toBeNull();
+      expect(dockBox!.y).toBeGreaterThanOrEqual(headerBottom - 1);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflow).toBe(false);
+    });
+  });
+
+  test.describe("v5.1: mobile collapsed/medium/expanded states", () => {
+    test.use({ viewport: { width: 375, height: 812 } });
+
+    test("activation begins in the collapsed peek state, hero CTA still visible", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.waitForTimeout(400);
+      // Collapsed peek: the header-only state (reuses "minimised") - no
+      // canvas/portrait, no controls row, just the header and its note.
+      await expect(page.getByRole("button", { name: /^speak$/i })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /restore rc-01/i })).toBeVisible();
+      // The hero CTA must still be visible - collapsed must not hide it.
+      await expect(page.getByRole("link", { name: /explore the systems/i })).toBeVisible();
+    });
+
+    test("restoring from collapsed enters medium (canvas/controls visible, no tour/console)", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.getByRole("button", { name: /restore rc-01/i }).click();
+      await page.waitForTimeout(400);
+      await expect(page.getByRole("button", { name: /^speak$/i })).toBeVisible();
+      await expect(page.getByText("Choose a tour")).toHaveCount(0);
+      // Medium is not expanded - the mobile-only expand toggle should say
+      // "Expand", not "Collapse".
+      await expect(page.getByRole("button", { name: /^expand rc-01$/i })).toBeVisible();
+    });
+
+    test("opening Tours moves to expanded automatically, no horizontal overflow, Close/Minimise/Stop retained", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.getByRole("button", { name: /restore rc-01/i }).click();
+      await page.getByRole("button", { name: /^tours$/i }).click();
+      await page.waitForTimeout(400);
+      await expect(
+        page.getByRole("button", { name: /collapse rc-01 to medium size/i }),
+      ).toBeVisible();
+      await expect(page.getByText("Choose a tour")).toBeVisible();
+      // The three required controls remain reachable in the expanded state.
+      await expect(page.getByRole("button", { name: "Deactivate RC-01" })).toBeVisible();
+      await expect(page.getByRole("button", { name: /minimise rc-01/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Stop RC-01" })).toBeVisible();
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflow).toBe(false);
+    });
+
+    test("minimising from expanded returns to collapsed peek and resets the expand toggle", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.getByRole("button", { name: /restore rc-01/i }).click();
+      await page.getByRole("button", { name: /^tours$/i }).click();
+      await page.getByRole("button", { name: /minimise rc-01/i }).click();
+      await page.waitForTimeout(400);
+      await expect(page.getByRole("button", { name: /restore rc-01/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /^speak$/i })).toHaveCount(0);
+      // Restoring again should land back in medium, not still-expanded.
+      await page.getByRole("button", { name: /restore rc-01/i }).click();
+      await page.waitForTimeout(300);
+      await expect(page.getByRole("button", { name: /^expand rc-01$/i })).toBeVisible();
+    });
+
+    test("focus returns to the Activate button after deactivating from the expanded state", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await activate(page);
+      await page.getByRole("button", { name: /restore rc-01/i }).click();
+      await page.getByRole("button", { name: /^tours$/i }).click();
+      await page.getByRole("button", { name: "Deactivate RC-01" }).click();
+      await page.waitForTimeout(300);
+      // The Activate button's accessible name comes from its visible text
+      // content, not an aria-label (unlike the panel's other controls) - see
+      // the equivalent keyboard-Escape check above.
+      const focusedLabel = await page.evaluate(() => {
+        const el = document.activeElement;
+        return el?.getAttribute("aria-label") || el?.textContent || "";
+      });
+      expect(focusedLabel).toMatch(/activate rc-01/i);
+    });
   });
 });

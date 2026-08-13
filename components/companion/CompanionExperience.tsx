@@ -15,11 +15,16 @@ import {
   Compass,
   TerminalSquare,
   Bell,
+  Minus,
+  ChevronUp,
+  Maximize2,
+  Minimize2,
   X,
 } from "lucide-react";
 import {
   scripts,
   tours,
+  accentForProjectSlug,
   type CompanionScript,
   type CompanionTourId,
   type ConsoleCommand,
@@ -29,6 +34,7 @@ import { useCompanionPreferences } from "@/lib/companion/useCompanionPreferences
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useActiveSection } from "@/lib/companion/useActiveSection";
 import { useCompanionSound } from "@/lib/companion/useCompanionSound";
+import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
 import { CompanionCanvas } from "./CompanionCanvas";
@@ -69,6 +75,17 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const [canvasErrored, setCanvasErrored] = useState(false);
   const [announcement, setAnnouncement] = useState("RC-01 activated.");
   const [paused, setPaused] = useState(false);
+  // Collapsed peek is the required default state on activation below the
+  // desktop-dock breakpoint (1024px) - "minimised" already covers exactly
+  // that behavior (header-only, hero/CTA/Observatory left fully visible),
+  // so mobile reuses it as its starting state rather than inventing a
+  // parallel concept. Desktop always starts fully open (the dock).
+  const [minimised, setMinimised] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024,
+  );
+  // Mobile-only medium/expanded distinction (irrelevant on the desktop
+  // dock, which always shows full content once un-minimised).
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   const fallbackTimerRef = useRef<number | null>(null);
   const inactivityTimerRef = useRef<number | null>(null);
@@ -244,9 +261,13 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           // gesture in its own panel (v5.0 audit: "robot does not clearly
           // interact with real Observatory stages"). Both
           // InfrastructureObservatory.tsx and ReliabilitySpine.tsx listen
-          // for this event; whichever is actually on screen reacts.
+          // for this typed event; whichever is actually on screen reacts.
+          // v5.1: dispatches the one specific stage this step is about
+          // (step.stageId) rather than a generic "highlight everything"
+          // flash, so RC-01's pointing corresponds to the exact stage being
+          // narrated.
           if (step.anchor === "spine") {
-            window.dispatchEvent(new CustomEvent("rc01:observatory-highlight"));
+            dispatchObservatoryHighlight(step.stageId ?? "all");
           }
           playScript(script, "briefing");
         }, settleDelay);
@@ -396,9 +417,31 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
     closeButtonRef.current?.focus();
   }, []);
 
+  // Real docking, not just an overlay with a height cap: on desktop
+  // (>=1024px, matched by the [data-rc01-docked] rule in globals.css) this
+  // reserves body padding-right for the dock's own width, so the header,
+  // hero, and every other section actually reflow into a narrower content
+  // column instead of the panel floating on top of them. Below 1024px this
+  // is a no-op (mobile keeps the bottom-sheet treatment from Phase B) and
+  // nothing shifts.
+  useEffect(() => {
+    document.body.dataset.rc01Docked = "true";
+    return () => {
+      delete document.body.dataset.rc01Docked;
+    };
+  }, []);
+
   const show3D =
     webglSupported === true && !reducedMotion && !preferences.lowPowerMode && !canvasErrored;
   const qualityTier = resolveQualityTier(preferences.lowPowerMode);
+  // v5.1: project briefings use a project-specific accent color (by real
+  // category, see PROJECT_ACCENT_BY_CATEGORY) instead of the standard lime
+  // status color, so RC-01 visibly differentiates "narrating a project"
+  // from its other states.
+  const projectAccent =
+    companionState === "briefing" && currentScript?.id.startsWith("project:")
+      ? accentForProjectSlug(currentScript.id.slice("project:".length))
+      : null;
   const portraitVariant =
     companionState === "error" ? "error" : companionState === "sleep" ? "sleep" : "idle";
 
@@ -410,18 +453,33 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       ref={panelRef}
       role="region"
       aria-label="RC-01 Reliability Companion panel"
-      // Capped well below the sticky header's 4.5rem height (see
-      // SiteHeader.tsx) plus margin, and capped absolutely so the panel
-      // never balloons into a second full-page surface on tall viewports -
-      // it scrolls internally instead (v5.0 audit: "tour panel can extend
-      // underneath or over the sticky navigation").
-      className="fixed inset-x-3 bottom-3 z-50 max-h-[min(calc(100vh-6.5rem),34rem)] overflow-y-auto rounded-lg border border-[var(--color-signal-lime)]/15 bg-[var(--color-control-black)]/96 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[22rem]"
+      // Mobile (<1024px) has three explicit states: collapsed peek
+      // (minimised, header-only - the default on activation, leaves the
+      // hero/CTA/Observatory fully visible), medium (default once
+      // restored - a moderate bottom sheet), and expanded (mobileExpanded -
+      // near-full height with a safe-area-aware bottom inset, entered
+      // automatically when Tours/Console need the room, or manually).
+      // Desktop (>=1024px) ignores both mobile states entirely and is
+      // always the full docked panel from Phase A, running from just below
+      // the sticky header to the viewport bottom in the space the
+      // [data-rc01-docked] rule in globals.css reserves - structurally
+      // unable to cover the header, hero, CTA, or Observatory.
+      className={cn(
+        "fixed inset-x-3 bottom-3 z-50 flex flex-col overflow-hidden rounded-lg border border-[var(--color-signal-lime)]/15 bg-[var(--color-control-black)]/96 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[22rem]",
+        mobileExpanded
+          ? "max-h-[calc(100dvh-1.5rem)] pb-[env(safe-area-inset-bottom)]"
+          : "max-h-[min(calc(100vh-6.5rem),34rem)]",
+        "lg:inset-x-auto lg:top-[4.5rem] lg:right-0 lg:bottom-0 lg:left-auto lg:w-[22rem] lg:max-h-none lg:rounded-none lg:rounded-tl-lg lg:border-y-0 lg:border-r-0 lg:pb-0",
+      )}
     >
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>
 
-      <div className="flex items-start justify-between gap-3">
+      {/* Sticky header row: Minimise and Close/Deactivate must always be
+          reachable, even when the scrollable body below is mid-scroll or
+          hidden by Minimise. */}
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 p-4">
         <div>
           <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
             RC-01
@@ -440,6 +498,33 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             {companionState}
           </span>
           <button
+            type="button"
+            onClick={() => {
+              setMinimised((value) => !value);
+              setMobileExpanded(false);
+            }}
+            aria-pressed={minimised}
+            aria-label={minimised ? "Restore RC-01" : "Minimise RC-01"}
+            className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          >
+            {minimised ? <ChevronUp size={16} aria-hidden /> : <Minus size={16} aria-hidden />}
+          </button>
+          {!minimised && (
+            <button
+              type="button"
+              onClick={() => setMobileExpanded((value) => !value)}
+              aria-pressed={mobileExpanded}
+              aria-label={mobileExpanded ? "Collapse RC-01 to medium size" : "Expand RC-01"}
+              className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] lg:hidden"
+            >
+              {mobileExpanded ? (
+                <Minimize2 size={14} aria-hidden />
+              ) : (
+                <Maximize2 size={14} aria-hidden />
+              )}
+            </button>
+          )}
+          <button
             ref={closeButtonRef}
             type="button"
             onClick={() => {
@@ -454,6 +539,14 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         </div>
       </div>
 
+      {minimised && (
+        <p className="p-4 pt-0 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-telemetry-steel)] lg:pt-4">
+          Minimised — select Restore to reopen.
+        </p>
+      )}
+
+      {!minimised && (
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 pt-0">
       <div
         className="mt-3 h-40 w-full overflow-hidden rounded-xl border border-white/10 sm:h-44"
         style={{
@@ -465,6 +558,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           <CompanionCanvas
             state={companionState}
             quality={qualityPresets[qualityTier]}
+            accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}
           />
         ) : (
@@ -560,7 +654,10 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         </button>
         <button
           type="button"
-          onClick={() => setSubpanel(subpanel === "tours" ? "none" : "tours")}
+          onClick={() => {
+            setSubpanel(subpanel === "tours" ? "none" : "tours");
+            setMobileExpanded(true); // Tours need the room - move straight to expanded on mobile.
+          }}
           aria-pressed={subpanel === "tours"}
           className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
         >
@@ -568,7 +665,10 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         </button>
         <button
           type="button"
-          onClick={() => setSubpanel(subpanel === "console" ? "none" : "console")}
+          onClick={() => {
+            setSubpanel(subpanel === "console" ? "none" : "console");
+            setMobileExpanded(true);
+          }}
           aria-pressed={subpanel === "console"}
           className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
         >
@@ -663,6 +763,8 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           onUnknownCommand={handleUnknownCommand}
           onClose={closeSubpanel}
         />
+      )}
+      </div>
       )}
     </div>
   );

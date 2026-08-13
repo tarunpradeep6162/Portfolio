@@ -28,6 +28,8 @@ class CanvasErrorBoundary extends Component<
 interface CompanionCanvasProps {
   state: CompanionState;
   quality: QualitySettings;
+  /** Project-specific visor accent during a project briefing (v5.1), null otherwise. */
+  accentColor?: string | null;
   onError: () => void;
 }
 
@@ -39,7 +41,7 @@ interface CompanionCanvasProps {
  * to the parent, which swaps in the static CompanionPortrait - never a
  * blank canvas.
  */
-export function CompanionCanvas({ state, quality, onError }: CompanionCanvasProps) {
+export function CompanionCanvas({ state, quality, accentColor, onError }: CompanionCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
@@ -84,7 +86,11 @@ export function CompanionCanvas({ state, quality, onError }: CompanionCanvasProp
             );
           }}
         >
-          <RC01Model state={state} fullEmissiveDetail={quality.fullEmissiveDetail} />
+          <RC01Model
+            state={state}
+            fullEmissiveDetail={quality.fullEmissiveDetail}
+            accentColor={accentColor ?? undefined}
+          />
         </Canvas>
       </CanvasErrorBoundary>
     </div>

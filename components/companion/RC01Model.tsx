@@ -26,6 +26,8 @@ function damp(current: number, target: number, lambda: number, delta: number) {
 interface RC01ModelProps {
   state: CompanionState;
   fullEmissiveDetail: boolean;
+  /** Project-specific visor accent during a project briefing (v5.1). */
+  accentColor?: string;
 }
 
 /**
@@ -38,7 +40,7 @@ interface RC01ModelProps {
  * scaled down and the camera reframed (see CompanionCanvas.tsx) to fix the
  * v5.0 head/base cropping.
  */
-export function RC01Model({ state, fullEmissiveDetail }: RC01ModelProps) {
+export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelProps) {
   const rootRef = useRef<THREE.Group>(null);
   const torsoRef = useRef<THREE.Mesh>(null);
   const headRef = useRef<THREE.Group>(null);
@@ -152,6 +154,8 @@ export function RC01Model({ state, fullEmissiveDetail }: RC01ModelProps) {
         intensity = stateElapsed < 0.4 ? 2.4 : 1.1;
       } else if (state === "sleep") {
         intensity = 0.15;
+      } else if (state === "briefing" && accentColor) {
+        color = accentColor;
       }
       visorRef.current.emissiveIntensity = damp(
         visorRef.current.emissiveIntensity,

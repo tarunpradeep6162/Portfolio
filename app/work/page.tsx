@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { WorkFilterBar } from "@/components/work/WorkFilterBar";
+import { VisitorPathSelector } from "@/components/work/VisitorPathSelector";
 import { projects } from "@/content/projects";
 
 export const metadata: Metadata = {
@@ -60,7 +61,10 @@ export default function WorkPage() {
         className="manual-grid bg-[var(--surface)] py-16 text-[var(--ink)] sm:py-24 lg:py-28"
       >
         <Container>
-          <WorkFilterBar projects={projects} />
+          <VisitorPathSelector />
+          <div className="mt-8">
+            <WorkFilterBar projects={projects} />
+          </div>
         </Container>
       </section>
     </>

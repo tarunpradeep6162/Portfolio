@@ -17,7 +17,13 @@ test.describe("Living Infrastructure Atlas: node selection", () => {
 
     await gitNode.click();
     await expect(gitNode).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("status")).toContainText("Node 1 of 7: Git");
+    // Scoped to text starting with "Node" - Architecture Time Machine (added
+    // after this test was first written) also renders its own role="status"
+    // readout on the same page (always present, since it has a default
+    // active stage), so an unscoped getByRole("status") is ambiguous now.
+    await expect(page.getByRole("status").filter({ hasText: /^Node/ })).toContainText(
+      "Node 1 of 7: Git",
+    );
   });
 
   test("keyboard selection: Tab reaches a node and Enter selects it", async ({ page }) => {
@@ -28,7 +34,9 @@ test.describe("Living Infrastructure Atlas: node selection", () => {
 
     await page.keyboard.press("Enter");
     await expect(ec2Node).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("status")).toContainText("Node 7 of 7: EC2");
+    await expect(page.getByRole("status").filter({ hasText: /^Node/ })).toContainText(
+      "Node 7 of 7: EC2",
+    );
   });
 
   test("selecting the same node twice toggles it off", async ({ page }) => {
@@ -38,7 +46,7 @@ test.describe("Living Infrastructure Atlas: node selection", () => {
     await expect(node).toHaveAttribute("aria-pressed", "true");
     await node.click();
     await expect(node).toHaveAttribute("aria-pressed", "false");
-    await expect(page.getByRole("status")).toHaveCount(0);
+    await expect(page.getByRole("status").filter({ hasText: /^Node/ })).toHaveCount(0);
   });
 
   test("compound node labels render whole, not split on '/' or '('", async ({ page }) => {
@@ -75,7 +83,11 @@ test.describe("Living Infrastructure Atlas: intent-loaded 3D view and one-canvas
     await page.getByRole("button", { name: /enter 3d view/i }).click();
     await expect(page.locator("canvas")).toHaveCount(1);
     await expect(
-      page.getByRole("img", { name: /Interactive 3D rendering of Project Aurora's architecture/i }),
+      // projectLabel is the full project.title ("Project Aurora:
+      // Containerised Application on AWS EC2"), not the short "Project
+      // Aurora" - matching only the stable, non-title-dependent part of the
+      // aria-label avoids coupling this test to that title's exact wording.
+      page.getByRole("img", { name: /Interactive 3D rendering of Project Aurora.*architecture/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /close 3d view/i }).click();
@@ -143,20 +155,28 @@ test.describe("Architecture Time Machine: only real stages, never padded", () =>
     const firstStage = group.getByRole("button", { name: /stage 1 of 4/i });
     await expect(firstStage).toHaveAttribute("aria-current", "step");
 
+    // Button click: stage 1 -> stage 2.
     await group.getByRole("button", { name: /next stage in/i }).click();
     await expect(group.getByRole("button", { name: /stage 2 of 4/i })).toHaveAttribute(
       "aria-current",
       "step",
     );
 
-    await firstStage.focus();
+    // Arrow key: the group's onKeyDown handler advances from current state
+    // (stage 2) regardless of which button has DOM focus, so this moves to
+    // stage 3, not back to stage 2 - the component tracks one active index,
+    // not per-button state.
     await page.keyboard.press("ArrowRight");
-    await expect(group.getByRole("button", { name: /stage 2 of 4/i })).toHaveAttribute(
+    await expect(group.getByRole("button", { name: /stage 3 of 4/i })).toHaveAttribute(
       "aria-current",
       "step",
     );
 
+    // Button click: stage 3 -> stage 2.
     await group.getByRole("button", { name: /previous stage in/i }).click();
-    await expect(firstStage).toHaveAttribute("aria-current", "step");
+    await expect(group.getByRole("button", { name: /stage 2 of 4/i })).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
   });
 });

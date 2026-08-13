@@ -15,17 +15,27 @@ import { qualityPresets, type QualityTier } from "@/lib/companion/state";
  * AtlasDiagram's always-present, server-rendered 2D view: everything a
  * visitor can do here (select a node) already works in the 2D view with
  * zero 3D code loaded.
+ *
+ * Per-node accessible names are NOT attempted inside this Canvas - an HTML
+ * `<title>` element used to be here for that purpose, but R3F interprets
+ * every lowercase JSX tag as a Three.js constructor to instantiate
+ * (`<mesh>` -> THREE.Mesh, etc.), not as HTML, so `<title>` threw
+ * "R3F: Title is not part of the THREE namespace!" on every mount - caught
+ * by AtlasCanvasHost's error boundary, which silently fell back to its
+ * "3D view failed to load" message every single time. Canvas content is
+ * opaque to assistive tech regardless, which is why the *whole* canvas
+ * already carries a single `role="img"`/`aria-label` on its wrapping div
+ * in AtlasCanvasHost.tsx - that was always the real accessibility strategy
+ * here, this component never needed its own.
  */
 const SCALE = 1 / 55;
 
 function AtlasNode({
   position,
-  label,
   active,
   onSelect,
 }: {
   position: [number, number, number];
-  label: string;
   active: boolean;
   onSelect: () => void;
 }) {
@@ -69,11 +79,6 @@ function AtlasNode({
           emissiveIntensity={active ? 0.9 : 0.15}
         />
       </mesh>
-      <mesh position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[1.4, 0.01]} />
-        <meshBasicMaterial color="#4a5563" transparent opacity={0} />
-      </mesh>
-      <title>{label}</title>
     </group>
   );
 }
@@ -150,7 +155,6 @@ export function AtlasSpatialScene({
           <AtlasNode
             key={point.nodeId}
             position={point.position}
-            label={node.label}
             active={point.nodeId === selectedNodeId}
             onSelect={() => onSelectNode(point.nodeId)}
           />

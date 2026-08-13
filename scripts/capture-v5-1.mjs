@@ -178,6 +178,27 @@ async function capture(name, fn) {
     await page.screenshot({ path: `${output}/companion/04-integrated-idle-desktop-dock.png` });
   });
 
+  await capture("04b-minimised-desktop", async () => {
+    await page.getByRole("button", { name: /minimise rc-01/i }).click();
+    await page.waitForTimeout(400);
+    await assertVisibleNonZero(
+      page.getByRole("button", { name: /restore rc-01/i }),
+      "Restore RC-01 button after minimising on desktop",
+    );
+    await page.screenshot({ path: `${output}/companion/04b-minimised-desktop.png` });
+    await page.getByRole("button", { name: /restore rc-01/i }).click();
+    await page.waitForTimeout(400);
+  });
+
+  await capture("04c-tour-selection", async () => {
+    await page.getByRole("button", { name: /^tours$/i }).click();
+    await assertVisibleNonZero(
+      page.getByRole("button", { name: /recruiter tour/i }),
+      "tour picker list",
+    );
+    await page.screenshot({ path: `${output}/companion/04c-tour-selection.png` });
+  });
+
   // The "Tours" button toggles its own subpanel, and selecting a tour does
   // not close that subpanel - so blindly clicking "Tours" before every tour
   // selection alternately opens and closes it depending on what a *previous*

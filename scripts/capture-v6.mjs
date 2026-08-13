@@ -92,13 +92,19 @@ async function capture(name, fn) {
   }
 }
 
-const browser = await chromium.launch();
+let browser = await chromium.launch();
 
 await mkdir(`${output}/routes`, { recursive: true });
 await mkdir(`${output}/v6`, { recursive: true });
 
 // 1. Route x breakpoint matrix - the established V5.1 matrix, reused as-is
-// since V6 changed no route's basic 200/404 shape.
+// since V6 changed no route's basic 200/404 shape. 50 sequential
+// browser.newContext() calls (10 routes x 5 breakpoints) on one shared
+// browser process were found to degrade it badly enough that every
+// capture in the next section timed out waiting on a trivial getByRole
+// query, reproducibly, even at low system load - not a VM-noise artifact,
+// a real resource-accumulation bug in reusing one browser this long. Each
+// major section below gets its own freshly launched browser instead.
 for (const size of sizes) {
   const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
   const page = await context.newPage();
@@ -121,7 +127,10 @@ for (const size of sizes) {
 }
 
 // 2. V6-specific states, at a stable desktop size unless a state is
-// inherently mobile-only.
+// inherently mobile-only. Fresh browser (see the note above the route
+// matrix loop).
+await browser.close();
+browser = await chromium.launch();
 {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
@@ -139,8 +148,20 @@ for (const size of sizes) {
   await capture("02-atlas-2d", async () => {
     await page.goto(`${baseUrl}/work/project-aurora`, { waitUntil: "networkidle" });
     await forceInstantScroll(page);
-    const diagram = page.getByRole("group", { name: /architecture nodes, selectable/i });
+    // The <ol> carrying this aria-label has an implicit ARIA role of
+    // "list", not "group" - that mismatch was a real bug (confirmed by
+    // direct inspection of AtlasDiagram.tsx's rendered role=group/list
+    // elements), not VM-load flakiness like most of this file's other
+    // isolated failures.
+    const diagram = page.getByRole("list", { name: /architecture nodes, selectable/i });
     await assertVisibleNonZero(diagram, "Atlas 2D diagram");
+    // isVisible()/boundingBox() don't require scroll-into-view, so this
+    // assertion passes regardless - but a plain page.screenshot() without
+    // scrolling captures whatever's in the initial viewport (the hero),
+    // not the diagram this capture is named for. Unlike captures that
+    // click a button (Playwright auto-scrolls a click target into view),
+    // this one only asserts visibility, so the scroll has to be explicit.
+    await diagram.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${output}/v6/02-atlas-2d.png` });
   });
 
@@ -252,6 +273,8 @@ for (const size of sizes) {
     if ((await page.locator("canvas").count()) !== 0) {
       throw new Error("Reduced motion must never mount a <canvas>");
     }
+    const diagram = page.getByRole("list", { name: /architecture nodes, selectable/i });
+    await diagram.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${output}/v6/11-reduced-motion.png` });
   });
   await context.close();
@@ -265,12 +288,17 @@ await capture("12-webgl-failure-fallback", async () => {
   });
   await page.goto(`${baseUrl}/work/project-aurora`, { waitUntil: "networkidle" });
   await forceInstantScroll(page);
-  await page.getByRole("button", { name: /enter 3d view/i }).click();
-  await page.waitForTimeout(600);
-  await assertVisibleNonZero(
-    page.getByText(/3D view unavailable - WebGL not supported/i),
-    "WebGL-unsupported fallback message",
-  );
+  // useWebGLSupport detects support proactively at mount (lib/companion/
+  // useWebGLSupport.ts's lazy useState initializer), not lazily on click -
+  // with getContext overridden above, the "Enter 3D view" button never
+  // renders at all and the fallback message is already showing. Clicking
+  // a button that doesn't exist was a real bug in this script (confirmed
+  // by direct reproduction), not VM-load flakiness.
+  const fallback = page.getByText(/3D view unavailable - WebGL not supported/i);
+  await assertVisibleNonZero(fallback, "WebGL-unsupported fallback message");
+  // Same scroll-into-view need as capture 02 - no click happens on this
+  // path to trigger Playwright's implicit auto-scroll.
+  await fallback.scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${output}/v6/12-webgl-failure-fallback.png` });
   await context.close();
 });
@@ -283,6 +311,14 @@ await capture("13-error-recovery", async () => {
   await page.getByRole("button", { name: /enter 3d view/i }).click();
   const canvas = page.locator("canvas").first();
   await canvas.waitFor({ state: "visible", timeout: 10000 });
+  // AtlasSpatialScene's webglcontextlost listener is registered in R3F's
+  // onCreated callback, which fires once the renderer/gl context is fully
+  // initialized - that can lag slightly behind the canvas becoming visible
+  // in the DOM. Dispatching immediately after visibility is a real race
+  // (confirmed by direct reproduction: it silently fires before the
+  // listener exists, so nothing catches it) - 2s is a generous margin
+  // past that lag, not an arbitrary stand-in for a real completion signal.
+  await page.waitForTimeout(2000);
   await canvas.evaluate((node) => node.dispatchEvent(new Event("webglcontextlost")));
   await page.waitForTimeout(500);
   await assertVisibleNonZero(

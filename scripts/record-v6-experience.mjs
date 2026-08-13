@@ -61,7 +61,10 @@ await page.waitForTimeout(1400);
 // 3. Atlas 2D - navigate to a real case study.
 await page.goto(`${baseUrl}/work/project-aurora`, { waitUntil: "networkidle" });
 await page.addStyleTag({ content: "* { scroll-behavior: auto !important; }" });
-await page.getByRole("group", { name: /architecture nodes, selectable/i }).scrollIntoViewIfNeeded();
+// The <ol> carrying this aria-label has an implicit role of "list", not
+// "group" - see capture-v6.mjs's identical fix for the direct-inspection
+// evidence.
+await page.getByRole("list", { name: /architecture nodes, selectable/i }).scrollIntoViewIfNeeded();
 await page.waitForTimeout(1800);
 
 // 4. Intent activation + 5. Atlas loading.

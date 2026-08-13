@@ -127,6 +127,10 @@ export function AtlasCanvasHost({
               selectedNodeId={selectedNodeId}
               onSelectNode={onSelectNode}
               qualityTier={qualityTier}
+              onError={() => {
+                setErroredOut(true);
+                dispatch({ type: "SCENE_ERROR", reason: "atlas-canvas-error" });
+              }}
             />
           </SceneErrorBoundary>
         </div>

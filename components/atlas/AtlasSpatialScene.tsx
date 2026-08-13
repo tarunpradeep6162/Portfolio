@@ -106,6 +106,7 @@ interface AtlasSpatialSceneProps {
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string) => void;
   qualityTier: QualityTier;
+  onError: () => void;
 }
 
 export function AtlasSpatialScene({
@@ -113,6 +114,7 @@ export function AtlasSpatialScene({
   selectedNodeId,
   onSelectNode,
   qualityTier,
+  onError,
 }: AtlasSpatialSceneProps) {
   const nodes = parseFlowNodes(flow);
   const edges = parseFlowEdges(nodes);
@@ -144,6 +146,22 @@ export function AtlasSpatialScene({
       frameloop="always"
       gl={{ antialias: quality.antialias, alpha: true, powerPreference: "low-power" }}
       camera={{ position: [centerX, 0.6, 3.4], fov: 34 }}
+      onCreated={({ gl }) => {
+        // A lost WebGL context doesn't throw a JS exception, so
+        // AtlasCanvasHost's SceneErrorBoundary (a React error boundary)
+        // can never catch it on its own - this listener is what actually
+        // routes context loss into that same "3D view failed to load"
+        // recovery path, matching CompanionCanvas.tsx's identical pattern
+        // for RC-01's own canvas.
+        gl.domElement.addEventListener(
+          "webglcontextlost",
+          (event) => {
+            event.preventDefault();
+            onError();
+          },
+          { once: true },
+        );
+      }}
     >
       <ambientLight intensity={0.65} />
       <directionalLight position={[2, 3, 4]} intensity={0.8} />

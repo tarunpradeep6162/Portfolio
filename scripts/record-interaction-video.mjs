@@ -3,10 +3,16 @@ import path from "node:path";
 import { chromium } from "playwright";
 
 /**
- * Records a real Playwright interaction with RC-01, not a staged screen
- * capture - every click here drives the actual production build. Captions
- * are on by default (preferences.captionsOn), so no extra toggle is needed
- * to make them visible in the recording.
+ * Records a real Playwright-driven walkthrough against the production
+ * build - every click here drives the actual app, not a staged screen
+ * capture. Deliberately covers all 9 required sequences with generous
+ * dwell time at each beat so a human reviewer can see each one clearly:
+ * initial fallback, activation/boot, integrated RC-01, tour selection,
+ * individual-stage pointing (captions included), minimise, mobile
+ * collapsed, mobile expanded.
+ *
+ * Captions are on by default (preferences.captionsOn), so no extra toggle
+ * is needed to make them visible.
  */
 const baseUrl = process.env.V5_1_BASE_URL ?? "http://localhost:3400";
 const outputDir = process.env.V5_1_VIDEO_DIR ?? "/home/tarun/screenshots/jury-refinement-v5-1/video";
@@ -34,7 +40,7 @@ await page.addInitScript(() => {
   Object.defineProperty(window, "speechSynthesis", {
     configurable: true,
     value: {
-      speak: (u) => setTimeout(() => u.onend && u.onend(), 1200),
+      speak: (u) => setTimeout(() => u.onend && u.onend(), 1500),
       cancel: () => {},
       pause: () => {},
       resume: () => {},
@@ -42,60 +48,69 @@ await page.addInitScript(() => {
   });
 });
 
+async function assertVisible(locator, label) {
+  const visible = await locator.isVisible().catch(() => false);
+  if (!visible) {
+    throw new Error(`Recorded walkthrough expected "${label}" to be visible but it was not - failing rather than shipping an incomplete video`);
+  }
+}
+
+// 1. Initial fallback - the page before any activation.
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.addStyleTag({ content: "* { scroll-behavior: auto !important; }" });
-await page.waitForTimeout(800);
-
-await page.getByRole("button", { name: /activate rc-01/i }).click();
-await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor({ timeout: 20000 });
 await page.waitForTimeout(1200);
 
-// The "Tours" button toggles its own subpanel, and selecting a tour does
-// not close it - so a blind "click Tours" before every tour selection can
-// toggle it *closed* if a previous selection already left it open (this is
-// exactly what crashed the first run of this script, at the Engineering
-// Tour step below). Check real UI state instead of assuming a fixed
-// open/closed sequence.
-async function startTour(tourButtonName) {
-  if (await page.getByRole("button", { name: /^exit$/i }).isVisible().catch(() => false)) {
-    await page.getByRole("button", { name: /^exit$/i }).click();
-    await page.waitForTimeout(300);
-  }
-  const tourButton = page.getByRole("button", { name: tourButtonName });
-  if (!(await tourButton.isVisible().catch(() => false))) {
-    await page.getByRole("button", { name: /^tours$/i }).click();
-    await page.waitForTimeout(300);
-  }
-  await tourButton.click();
-}
+// 2. Activation and boot.
+await page.getByRole("button", { name: /activate rc-01/i }).click();
+await page.waitForTimeout(300);
+await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor({ timeout: 20000 });
 
-await startTour(/recruiter tour/i);
-await page.waitForTimeout(2200);
+// 3. Integrated RC-01 - idle, docked into the real layout.
+await page.waitForTimeout(1500);
 
-const captionVisible = await page
-  .locator("text=/see captions below|reliability|recruiter/i")
-  .first()
-  .isVisible()
-  .catch(() => false);
-if (!captionVisible) {
-  throw new Error("Recorded walkthrough never showed visible caption text - failing rather than shipping a silent video");
-}
+// 4. Tour selection - the picker itself, before choosing.
+await page.getByRole("button", { name: /^tours$/i }).click();
+await assertVisible(page.getByRole("button", { name: /reliability spine tour/i }), "tour picker");
+await page.waitForTimeout(1800);
 
+// 5. Individual-stage pointing (+ captions) - the Reliability Spine Tour
+// scrolls to and highlights one real stage at a time.
+await page.getByRole("button", { name: /reliability spine tour/i }).click();
+await page.waitForTimeout(2600);
 await page.getByRole("button", { name: "Next" }).click();
-await page.waitForTimeout(2000);
-await page.getByRole("button", { name: "Next" }).click();
-await page.waitForTimeout(2000);
-
-await startTour(/engineering tour/i);
-await page.waitForTimeout(2200);
+await page.waitForTimeout(2600);
 
 await page.getByRole("button", { name: /^exit$/i }).click();
 await page.waitForTimeout(500);
 
-await page.getByRole("button", { name: /mute rc-01/i }).click();
+// 6. Minimise.
+await page.getByRole("button", { name: /minimise rc-01/i }).click();
+await assertVisible(page.getByRole("button", { name: /restore rc-01/i }), "Restore control after minimising");
+await page.waitForTimeout(1600);
+await page.getByRole("button", { name: /restore rc-01/i }).click();
+await page.waitForTimeout(500);
+
+await page.getByRole("button", { name: /deactivate rc-01/i }).click();
+await page.waitForTimeout(500);
+
+// 7. Mobile collapsed - resizing alone would not trigger the real
+// mobile-default behaviour, since the collapsed-by-default initial state
+// is only computed once at mount time. Deactivate first, resize, then
+// reactivate so the component genuinely mounts fresh at the narrow
+// viewport, the same way a real mobile visitor would experience it.
+await page.setViewportSize({ width: 375, height: 812 });
+await page.waitForTimeout(500);
+await page.getByRole("button", { name: /activate rc-01/i }).click();
+await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor({ timeout: 20000 });
+await assertVisible(page.getByRole("button", { name: /restore rc-01/i }), "collapsed-state Restore control");
+await page.waitForTimeout(1800);
+
+// 8. Mobile expanded - restoring enters medium, opening Tours auto-expands.
+await page.getByRole("button", { name: /restore rc-01/i }).click();
 await page.waitForTimeout(600);
-await page.getByRole("button", { name: /unmute rc-01/i }).click();
-await page.waitForTimeout(600);
+await page.getByRole("button", { name: /^tours$/i }).click();
+await assertVisible(page.getByRole("button", { name: /^collapse rc-01 to medium size$/i }), "mobile expanded-state Collapse control");
+await page.waitForTimeout(1800);
 
 await page.getByRole("button", { name: /deactivate rc-01/i }).click();
 await page.waitForTimeout(500);

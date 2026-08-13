@@ -50,7 +50,7 @@ jobs:
       promote: ${{ steps.resolve.outputs.promote }}
     steps:
       - name: Checkout requested candidate
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_ref || github.ref }}
 
@@ -78,12 +78,12 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "npm"
@@ -112,15 +112,15 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Build production image (tagged by candidate commit SHA)
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           push: false
@@ -130,7 +130,7 @@ jobs:
           outputs: type=docker,dest=/tmp/tarun-portfolio-image.tar
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-image
           path: /tmp/tarun-portfolio-image.tar
@@ -142,12 +142,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
@@ -156,7 +156,7 @@ jobs:
         run: docker load --input /tmp/tarun-portfolio-image.tar
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: tarun-portfolio:${{ needs.setup.outputs.sha }}
           severity: CRITICAL,HIGH
@@ -173,12 +173,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docker-image
           path: /tmp
@@ -219,12 +219,12 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "npm"
@@ -271,7 +271,7 @@ jobs:
 
       - name: Upload release evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-evidence
           path: |
@@ -301,7 +301,7 @@ jobs:
     environment: production
     steps:
       - name: Checkout candidate commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.setup.outputs.sha }}
 
@@ -337,7 +337,7 @@ jobs:
 
       - name: Upload release CI summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-summary
           path: reports/ci-summary.md

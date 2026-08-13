@@ -97,8 +97,23 @@ jobs:
       - name: Full validation (lint, typecheck, unit, build)
         run: npm run verify
 
+      - name: Start server for HTML audit
+        # audit-static-html.mjs fetches http://127.0.0.1:3200 by default -
+        # this step never started that server, so this job always failed
+        # here on a real hosted run (a genuine workflow bug, found by
+        # actually dispatching a release candidate, not caught by any
+        # local check that always had a manually-started server already).
+        run: |
+          nohup npm run start -- -p 3200 > /tmp/audit-server.log 2>&1 &
+          echo $! > /tmp/audit-server.pid
+          node scripts/ci/verify-health.mjs http://localhost:3200 60000
+
       - name: HTML audit
         run: npm run audit:html
+
+      - name: Stop HTML audit server
+        if: always()
+        run: node scripts/ci/cleanup.mjs --pid-file /tmp/audit-server.pid
 
       - name: Full Playwright suite (single worker)
         run: npm run test:e2e -- --workers=1

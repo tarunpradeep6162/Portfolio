@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
@@ -14,12 +15,29 @@ const CompanionExperience = dynamic(
   },
 );
 
+/**
+ * An allowlist, not a denylist: RC-01 is only present on routes that are
+ * genuinely appropriate for a guided tour to land on. This is the only
+ * mechanism needed to satisfy "no RC-01 on /resume" AND "no RC-01 on the
+ * 404 page" at once - a 404 is, by definition, any pathname not in this
+ * list, so it never needs special detection.
+ */
+const ALLOWED_ROUTE_PREFIXES = ["/work", "/about", "/contact"];
+
+function isCompanionAllowedRoute(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname === "/") return true;
+  return ALLOWED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 function CompanionLoadingSkeleton() {
   return (
     <div
       role="status"
       aria-label="RC-01 is starting up"
-      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-white/10 bg-[var(--color-control-black)]/97 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.55)] sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[23rem]"
+      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-white/10 bg-[var(--color-control-black)]/97 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.55)] print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[23rem]"
     >
       <div className="flex items-center gap-2">
         <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-signal-lime)] motion-reduce:animate-none" />
@@ -52,32 +70,40 @@ function CompanionLoadingSkeleton() {
  * Three.js / R3F - just a floating button and the trigger logic for
  * loading the heavy CompanionExperience bundle, so every route keeps its
  * existing render/bundle cost until RC-01 is actually requested.
+ *
+ * v5.1: renders nothing at all on a disallowed route (print media, or a
+ * pathname outside the allowlist), and the heavy bundle is never prefetched
+ * automatically - only on real visitor intent (hover, focus, touch, or the
+ * click itself).
  */
 export function CompanionRoot() {
   const [active, setActive] = useState(false);
   const [prefetchArmed, setPrefetchArmed] = useState(false);
   const reducedMotion = useReducedMotion();
+  const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const wasActive = useRef(false);
+  const allowed = isCompanionAllowedRoute(pathname);
+
+  const armPrefetch = () => {
+    if (prefetchArmed || reducedMotion) return;
+    setPrefetchArmed(true);
+    void import("./CompanionExperience");
+  };
 
   useEffect(() => {
-    if (reducedMotion) return; // Reduced-motion users get the static portrait only on demand - no need to prefetch the 3D bundle.
-    const win = window as Window & {
-      requestIdleCallback?: (cb: () => void) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const runPrefetch = () => {
-      setPrefetchArmed(true);
-      void import("./CompanionExperience");
-    };
-
-    if (win.requestIdleCallback) {
-      const id = win.requestIdleCallback(runPrefetch);
-      return () => win.cancelIdleCallback?.(id);
+    // Navigating to a disallowed route (e.g. the Reliability Spine Tour's
+    // own suggested-route confirmation taking the visitor to /resume) must
+    // fully deactivate RC-01, not just hide its reopen control - the brief
+    // requires RC-01 absent on that route, not merely unreachable, and
+    // requires the Activate control to be used again on return rather than
+    // silently resuming. Deferred one tick so the state update happens
+    // inside a callback rather than the effect body itself.
+    if (!allowed && active) {
+      const id = window.setTimeout(() => setActive(false), 0);
+      return () => window.clearTimeout(id);
     }
-    const id = window.setTimeout(runPrefetch, 2000);
-    return () => window.clearTimeout(id);
-  }, [reducedMotion]);
+  }, [allowed, active]);
 
   useEffect(() => {
     if (!active && wasActive.current) {
@@ -85,6 +111,8 @@ export function CompanionRoot() {
     }
     wasActive.current = active;
   }, [active]);
+
+  if (!allowed) return null;
 
   if (active) {
     return (
@@ -99,7 +127,10 @@ export function CompanionRoot() {
       ref={buttonRef}
       type="button"
       onClick={() => setActive(true)}
-      className="fixed bottom-4 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[var(--color-control-black)]/95 px-4 text-[var(--color-cloud-linen)] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] sm:h-11"
+      onPointerEnter={armPrefetch}
+      onFocus={armPrefetch}
+      onTouchStart={armPrefetch}
+      className="fixed bottom-4 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[var(--color-control-black)]/95 px-4 text-[var(--color-cloud-linen)] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors print:hidden hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] sm:h-11"
     >
       <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
         <span

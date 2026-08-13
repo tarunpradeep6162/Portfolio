@@ -544,6 +544,29 @@ the table above.
 
 ## Final commit record
 
-This section is filled in with real `git log` and `git status` output as
-the very last step of this closure pass, after every change above is
-committed — not written in advance of that happening.
+- **Exact parent commit:** `a72ada0` (`immersive-ops-v5`, "Add Immersive
+  Ops v5 completion report").
+- **Evidence-closure commit:** `f7b60a9` ("FINAL EVIDENCE CLOSURE: rewrite
+  completion report with full audit trail").
+- **Branch commit count:** exactly 20 commits on `jury-refinement-v5-1`
+  between `a72ada0` and `f7b60a9` (`git rev-list --count
+  immersive-ops-v5..f7b60a9` → `20`).
+- **Working tree at `f7b60a9`:** `git status --short` produced no output —
+  clean, nothing staged or unstaged.
+- **Protected branches:** none of `main`, `visual-rebuild-v2`,
+  `award-polish-v3`, `award-experience-v4`, or `immersive-ops-v5` was
+  modified by any commit in this closure pass or any prior one on this
+  branch.
+
+**Why this section cannot name the commit that contains it:** a Git commit
+hash is computed from the commit's own content, including this file as it
+will exist in that commit. Writing that hash into the file before
+committing would change the file, which would change the hash, which
+would make the written hash wrong the moment it was written — a commit
+cannot describe its own hash in advance for the same reason a sealed
+envelope cannot describe its own postmark. The commit that carries this
+exact wording is instead identified after the fact by an annotated tag,
+**`jury-refinement-v5.1-final`**, created immediately after this commit
+and pointing at it. `git show-ref --tags jury-refinement-v5.1-final` (or
+`git rev-parse jury-refinement-v5.1-final`) resolves that tag to this
+commit's real hash.

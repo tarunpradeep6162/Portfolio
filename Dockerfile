@@ -1,9 +1,17 @@
 # syntax=docker/dockerfile:1
 # Multi-stage production image for the Next.js 16 standalone output.
-# Deterministic: pinned base digest-free but version-pinned major (node:20),
+# Deterministic: pinned base digest-free but version-pinned major (node:22),
 # npm ci (lockfile-exact), no dev server, no test tooling in the final stage.
-
-ARG NODE_VERSION=20-alpine
+#
+# Node 22, not 20: jsdom@30 (a devDependency, not part of the runtime image)
+# requires Node ^22.22.2 - Node 20's undici lacks
+# webidl.util.markAsUncloneable, which jsdom's CacheStorage import needs at
+# require-time. This broke Fast CI's first real run on GitHub Actions
+# (Node 20 runner) even though it worked locally (this dev machine runs
+# Node 22.22.1). Standardized on 22 everywhere - this Dockerfile, all
+# GitHub Actions workflows, and Jenkinsfile - to match the one
+# Node version actually proven to work.
+ARG NODE_VERSION=22-alpine
 
 # ---- deps: install exact locked dependencies once, cached across stages ----
 # Deliberately no `--mount=type=cache` here: it requires BuildKit, and this

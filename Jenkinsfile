@@ -7,7 +7,7 @@
 // (Docker image publish, Vercel promotion, tagging) - those stay exclusive
 // to .github/workflows/release.yml.
 //
-// Requires a Jenkins agent labeled 'portfolio-docker' with Node 20 and
+// Requires a Jenkins agent labeled 'portfolio-docker' with Node 22 and
 // Docker available. Trigger manually (Build Now) or point an SCM webhook
 // at it - this file makes no assumption about how it's triggered.
 

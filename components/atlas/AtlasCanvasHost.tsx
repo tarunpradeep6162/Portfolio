@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ReactNode, useEffect, useState } from "react";
+import { Component, type ReactNode, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Boxes } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
@@ -66,6 +66,30 @@ export function AtlasCanvasHost({
   const active = experienceState.activeScene === "atlas";
   const qualityTier = resolveQualityTier(preferences.lowPowerMode);
 
+  // Three.js's own WebGLRenderer.dispose() (called by R3F when this scene
+  // unmounts) intentionally force-loses the WebGL context as part of its
+  // own cleanup - that fires the exact same "webglcontextlost" event a
+  // genuine driver crash would. This ref lets AtlasSpatialScene's listener
+  // tell "we just closed this on purpose" apart from "the context actually
+  // died while active": synced via effect for the general case, and set
+  // synchronously in the Close button's own click handler below for the
+  // one path confirmed (by direct reproduction) to race the effect.
+  const activeRef = useRef(active);
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  // Shared by both the outer SceneErrorBoundary (catches a genuine thrown
+  // exception during React's unmount/cleanup pass) and AtlasSpatialScene's
+  // own onError prop (catches the raw webglcontextlost DOM event) - both
+  // paths can fire from Three.js's own intentional cleanup-on-unmount, not
+  // just from a real failure, so both need the same activeRef guard.
+  function handleSceneError() {
+    if (!activeRef.current) return;
+    setErroredOut(true);
+    dispatch({ type: "SCENE_ERROR", reason: "atlas-canvas-error" });
+  }
+
   const armPrefetch = () => {
     if (prefetchArmed || reducedMotion || !webglSupported) return;
     setPrefetchArmed(true);
@@ -116,27 +140,22 @@ export function AtlasCanvasHost({
           role="img"
           aria-label={`Interactive 3D rendering of ${projectLabel}'s architecture - the same nodes as the diagram above, selectable in 3D`}
         >
-          <SceneErrorBoundary
-            onError={() => {
-              setErroredOut(true);
-              dispatch({ type: "SCENE_ERROR", reason: "atlas-canvas-error" });
-            }}
-          >
+          <SceneErrorBoundary onError={handleSceneError}>
             <AtlasSpatialScene
               flow={flow}
               selectedNodeId={selectedNodeId}
               onSelectNode={onSelectNode}
               qualityTier={qualityTier}
-              onError={() => {
-                setErroredOut(true);
-                dispatch({ type: "SCENE_ERROR", reason: "atlas-canvas-error" });
-              }}
+              onError={handleSceneError}
             />
           </SceneErrorBoundary>
         </div>
         <button
           type="button"
-          onClick={() => dispatch({ type: "SCENE_CHANGED", scene: null })}
+          onClick={() => {
+            activeRef.current = false;
+            dispatch({ type: "SCENE_CHANGED", scene: null });
+          }}
           className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"
         >
           Close 3D view

@@ -102,7 +102,13 @@ await page.waitForTimeout(1600);
 await timeMachine.getByRole("button", { name: /next stage in/i }).click();
 await page.waitForTimeout(1600);
 
-// 9. RC-01 activation.
+// 9. RC-01 activation. The Reliability Spine Tour scrolls to a home-page-
+// only section, and Time Machine's own "Next stage in..." button (still
+// on the page from step 8) makes a bare-"Next" query ambiguous against
+// RC-01's tour "Next" control - navigate back to the home page first,
+// matching where this tour actually lives.
+await page.goto(baseUrl, { waitUntil: "networkidle" });
+await page.addStyleTag({ content: "* { scroll-behavior: auto !important; }" });
 await page.getByRole("button", { name: /activate rc-01/i }).click();
 await page.waitForTimeout(300);
 await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor({ timeout: 20000 });
@@ -114,14 +120,18 @@ await assertVisible(page.getByRole("button", { name: /reliability spine tour/i }
 await page.waitForTimeout(1000);
 await page.getByRole("button", { name: /reliability spine tour/i }).click();
 await page.waitForTimeout(2200);
-await page.getByRole("button", { name: "Next" }).click();
+await page.getByRole("button", { name: "Next", exact: true }).click();
 await page.waitForTimeout(2200);
 await page.getByRole("button", { name: /^exit$/i }).click();
 await page.waitForTimeout(500);
 
-// 11. Proof Mode.
+// 11. Proof Mode - only exists on a case-study page, not home, so return
+// there (Time Machine's earlier state doesn't matter here, only the
+// Proof Mode section further down the same page).
 await page.getByRole("button", { name: /deactivate rc-01/i }).click();
 await page.waitForTimeout(400);
+await page.goto(`${baseUrl}/work/project-aurora`, { waitUntil: "networkidle" });
+await page.addStyleTag({ content: "* { scroll-behavior: auto !important; }" });
 const proofToggle = page.getByRole("button", { name: /^proof mode$/i });
 await proofToggle.scrollIntoViewIfNeeded();
 await proofToggle.click();

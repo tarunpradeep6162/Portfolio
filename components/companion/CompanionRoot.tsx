@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
+import { useExperienceState, useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
 import { CompanionPortrait } from "./CompanionPortrait";
 
 const CompanionExperience = dynamic(
@@ -75,15 +76,26 @@ function CompanionLoadingSkeleton() {
  * pathname outside the allowlist), and the heavy bundle is never prefetched
  * automatically - only on real visitor intent (hover, focus, touch, or the
  * click itself).
+ *
+ * V6: "active" is derived from the shared `activeScene` field
+ * (lib/v6/ExperienceProvider) rather than owned locally - this is what
+ * enforces the site-wide "at most 1 mounted canvas" invariant across
+ * RC-01/Atlas/Time-Machine. If the Atlas or Time Machine scene activates
+ * while RC-01 is open, `activeScene` changes away from "rc01", this
+ * component's derived `active` flips to false on the very next render, and
+ * CompanionExperience (and its Canvas) unmounts - no coordination code
+ * needed inside CompanionExperience/CompanionCanvas/RC01Model themselves.
  */
 export function CompanionRoot() {
-  const [active, setActive] = useState(false);
+  const experienceState = useExperienceState();
+  const dispatch = useExperienceDispatch();
   const [prefetchArmed, setPrefetchArmed] = useState(false);
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const wasActive = useRef(false);
   const allowed = isCompanionAllowedRoute(pathname);
+  const active = experienceState.activeScene === "rc01";
 
   const armPrefetch = () => {
     if (prefetchArmed || reducedMotion) return;
@@ -100,10 +112,13 @@ export function CompanionRoot() {
     // silently resuming. Deferred one tick so the state update happens
     // inside a callback rather than the effect body itself.
     if (!allowed && active) {
-      const id = window.setTimeout(() => setActive(false), 0);
+      const id = window.setTimeout(
+        () => dispatch({ type: "SCENE_CHANGED", scene: null }),
+        0,
+      );
       return () => window.clearTimeout(id);
     }
-  }, [allowed, active]);
+  }, [allowed, active, dispatch]);
 
   useEffect(() => {
     if (!active && wasActive.current) {
@@ -117,7 +132,9 @@ export function CompanionRoot() {
   if (active) {
     return (
       <Suspense fallback={<CompanionLoadingSkeleton />}>
-        <CompanionExperience onDeactivate={() => setActive(false)} />
+        <CompanionExperience
+          onDeactivate={() => dispatch({ type: "SCENE_CHANGED", scene: null })}
+        />
       </Suspense>
     );
   }
@@ -126,7 +143,7 @@ export function CompanionRoot() {
     <button
       ref={buttonRef}
       type="button"
-      onClick={() => setActive(true)}
+      onClick={() => dispatch({ type: "SCENE_CHANGED", scene: "rc01" })}
       onPointerEnter={armPrefetch}
       onFocus={armPrefetch}
       onTouchStart={armPrefetch}

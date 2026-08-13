@@ -1,0 +1,157 @@
+"use client";
+
+import { useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { parseFlowEdges, parseFlowNodes } from "@/lib/v6/flowParser";
+import { computeAtlasLayout } from "@/lib/v6/atlasLayout";
+import { qualityPresets, type QualityTier } from "@/lib/companion/state";
+
+/**
+ * Pure procedural geometry only (boxes + line segments derived from the
+ * project's own `flow` string via the already-verified layout functions) -
+ * no imported meshes, matching RC-01's existing "no external 3D assets"
+ * pattern. This is the intent-loaded enhancement layer on top of
+ * AtlasDiagram's always-present, server-rendered 2D view: everything a
+ * visitor can do here (select a node) already works in the 2D view with
+ * zero 3D code loaded.
+ */
+const SCALE = 1 / 55;
+
+function AtlasNode({
+  position,
+  label,
+  active,
+  onSelect,
+}: {
+  position: [number, number, number];
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  // `active` is a prop, so this callback closure (recreated each render by
+  // useFrame's own subscription) always sees its latest value - no ref
+  // needed to smuggle it into the render loop.
+  useFrame((_, delta) => {
+    if (materialRef.current) {
+      materialRef.current.emissiveIntensity = THREE.MathUtils.damp(
+        materialRef.current.emissiveIntensity,
+        active ? 0.9 : 0.15,
+        6,
+        delta,
+      );
+    }
+  });
+
+  return (
+    <group position={position}>
+      <mesh
+        ref={meshRef}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+        }}
+      >
+        <boxGeometry args={[0.62, 0.62, 0.62]} />
+        <meshStandardMaterial
+          ref={materialRef}
+          color={active ? "#d8ff4f" : "#232e3a"}
+          emissive="#d8ff4f"
+          emissiveIntensity={active ? 0.9 : 0.15}
+          roughness={0.5}
+          metalness={0.2}
+        />
+      </mesh>
+      <mesh position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1.4, 0.01]} />
+        <meshBasicMaterial color="#4a5563" transparent opacity={0} />
+      </mesh>
+      <title>{label}</title>
+    </group>
+  );
+}
+
+function AtlasEdges({ points }: { points: [THREE.Vector3, THREE.Vector3][] }) {
+  const geometry = useMemo(() => {
+    const positions = new Float32Array(points.length * 6);
+    points.forEach(([a, b], i) => {
+      positions.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return geo;
+  }, [points]);
+
+  return (
+    <lineSegments geometry={geometry}>
+      <lineBasicMaterial color="#4a5563" transparent opacity={0.6} />
+    </lineSegments>
+  );
+}
+
+interface AtlasSpatialSceneProps {
+  flow: string;
+  selectedNodeId: string | null;
+  onSelectNode: (nodeId: string) => void;
+  qualityTier: QualityTier;
+}
+
+export function AtlasSpatialScene({
+  flow,
+  selectedNodeId,
+  onSelectNode,
+  qualityTier,
+}: AtlasSpatialSceneProps) {
+  const nodes = parseFlowNodes(flow);
+  const edges = parseFlowEdges(nodes);
+  const layout = computeAtlasLayout(nodes);
+  const quality = qualityPresets[qualityTier];
+
+  const positioned = layout.map((point) => ({
+    ...point,
+    position: [point.x * SCALE, -point.y * SCALE, 0] as [number, number, number],
+  }));
+  const centerX =
+    positioned.reduce((sum, p) => sum + p.position[0], 0) / (positioned.length || 1);
+
+  const edgeSegments: [THREE.Vector3, THREE.Vector3][] = edges
+    .map((edge) => {
+      const from = positioned.find((p) => p.nodeId === edge.from);
+      const to = positioned.find((p) => p.nodeId === edge.to);
+      if (!from || !to) return null;
+      return [
+        new THREE.Vector3(...from.position),
+        new THREE.Vector3(...to.position),
+      ] as [THREE.Vector3, THREE.Vector3];
+    })
+    .filter((segment): segment is [THREE.Vector3, THREE.Vector3] => segment !== null);
+
+  return (
+    <Canvas
+      dpr={quality.dpr}
+      frameloop="always"
+      gl={{ antialias: quality.antialias, alpha: true, powerPreference: "low-power" }}
+      camera={{ position: [centerX, 0.6, 3.4], fov: 34 }}
+    >
+      <ambientLight intensity={0.65} />
+      <directionalLight position={[2, 3, 4]} intensity={0.8} />
+      <AtlasEdges points={edgeSegments} />
+      {positioned.map((point) => {
+        const node = nodes.find((n) => n.id === point.nodeId);
+        if (!node) return null;
+        return (
+          <AtlasNode
+            key={point.nodeId}
+            position={point.position}
+            label={node.label}
+            active={point.nodeId === selectedNodeId}
+            onSelect={() => onSelectNode(point.nodeId)}
+          />
+        );
+      })}
+    </Canvas>
+  );
+}

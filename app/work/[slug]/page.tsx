@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArchitectureDiagram } from "@/components/work/ArchitectureDiagram";
+import { AtlasSection } from "@/components/atlas/AtlasSection";
+import { TimeMachine } from "@/components/atlas/TimeMachine";
 import {
   ProjectCoverArt,
   getCoverArtVariant,
@@ -175,6 +177,8 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                 </p>
               )}
               <ArchitectureDiagram flow={project.flow} />
+              <AtlasSection flow={project.flow} projectLabel={project.title} />
+              <TimeMachine spineStageIds={project.spineStages} projectLabel={project.title} />
             </Chapter>
 
             <Chapter number="03" title="The engineering decisions">

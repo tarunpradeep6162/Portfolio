@@ -3,6 +3,7 @@ import { SkipLink } from "@/components/layout/SkipLink";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CompanionRoot } from "@/components/companion/CompanionRoot";
+import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -40,13 +41,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <SkipLink />
-        <SiteHeader />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <CompanionRoot />
+        <ExperienceProvider>
+          <SkipLink />
+          <SiteHeader />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <CompanionRoot />
+        </ExperienceProvider>
       </body>
     </html>
   );

@@ -123,7 +123,14 @@ export const projects: Project[] = [
     slug: "nodejs-auth-mysql-rds",
     title: "Node.js Authentication Application with MySQL and Amazon RDS",
     categories: ["Cloud", "DevOps"],
-    spineStages: ["build", "container", "cloud", "observe"],
+    // Deliberately no "container" stage: this project's own flow ("Build ->
+    // Container-free deploy -> Cloud (EC2 + RDS) -> Observe") and its real
+    // toolsAndServices (no Docker anywhere) both confirm PM2-on-EC2 process
+    // management, not a containerized deploy - the previous ["build",
+    // "container", "cloud", "observe"] value contradicted the project's own
+    // "Container-free deploy" text one field below it, and was corrected to
+    // match the verified architecture rather than the other way around.
+    spineStages: ["build", "cloud", "observe"],
     summary:
       "A Node.js/Express app on Ubuntu EC2 with bcrypt-hashed authentication against MySQL on Amazon RDS, managed by PM2.",
     context:

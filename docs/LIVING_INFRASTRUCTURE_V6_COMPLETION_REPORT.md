@@ -26,7 +26,7 @@ assumed fixed because the code looked right.
 - V5.1 parent tag: `jury-refinement-v5.1-final`
 - V5.1 parent commit: `8574469`
 - Preparation commit: `0a9f533`
-- 16 commits on `living-infrastructure-v6` since the V5.1 parent tag
+- 21 commits on `living-infrastructure-v6` since the V5.1 parent tag
   (`git rev-list --count jury-refinement-v5.1-final..HEAD`)
 
 ## Commit history (chronological)
@@ -48,9 +48,15 @@ assumed fixed because the code looked right.
 | `9610693` | **Add real WebGL context-loss recovery to Atlas**; fix capture-script bugs |
 | `6ec4584` | **Fix a real bug: closing Atlas's 3D view permanently disabled it** |
 | `01e0a1e` | **Fix an unhandled-rejection crash in the per-route performance script** |
+| `506422e` | Update completion report with this continuation's real results (superseded by this revision — see "Final Git state" below for why it was not the final HEAD) |
+| `1feb9ec` | Add a manual release-candidate mode to `release.yml` (`workflow_dispatch`, `candidate_ref`/`promote` inputs) |
+| `5b9e553` | **Fix a real workflow bug**: `release.yml`'s HTML audit step never started its own server |
+| `b6ca463` | **Fix a real workflow bug**: `release.yml`'s image-scan step referenced a Trivy action version that doesn't exist |
+| `274a6ed` | **Fix a real Docker image finding**: strip the base image's unused npm install (and its CVE-flagged internal dependencies) from the runtime stage |
 
-All 16 commits pushed; local `HEAD` matches `origin/living-infrastructure-v6`
-exactly at the time of writing.
+All 21 commits pushed; local `HEAD` matches `origin/living-infrastructure-v6`
+exactly at the time of writing (see "Final Git state" for the exact,
+independently re-verified SHA — do not rely on this table alone for that).
 
 ## What this continuation built
 
@@ -198,32 +204,88 @@ prior phase):
 
 ## Docker, Trivy: local status (honest)
 
-Two more local attempts were made this session, both after the earlier
-phase's documented VM-contention failures, and both under materially better
-conditions (load average 1.55–1.86 vs. the earlier 5.85–6.89 range):
+Local Docker/Trivy execution was never made to work on this VM across either
+phase of this session — every attempt stalled at a different stage (base
+image layer extraction, committing the `npm ci` layer, or a Trivy binary
+download), consistently attributed to genuine VM I/O contention, never
+force-continued indefinitely. Per explicit instruction partway through this
+final phase, local Docker/Trivy retries were stopped altogether; all Docker
+and Trivy verification moved to GitHub-hosted runners instead, which is
+where the real result now comes from — see "Release candidate: real, hosted
+validation" below. Local Docker/Trivy execution remains unproven on this VM
+specifically; that is a property of this VM, not of the image or the CI
+pipeline, both of which are now proven on hosted infrastructure.
 
-- **Docker**: `docker build -t tarun-portfolio:v6-final .` was started and
-  monitored for ~9 minutes. It never progressed past pulling and extracting
-  the `node:22-alpine` base image layers — no container was ever created for
-  the first `RUN npm ci` step. This is a different stall point than the
-  earlier phase's two attempts (which got through `npm ci` and stalled
-  committing that layer), but the same class of issue: this VM's Docker
-  daemon under sustained load. Killed and cleaned up rather than left
-  indefinitely blocking other work, consistent with the same judgment call
-  made earlier this session.
-- **Trivy**: not installed locally. A no-sudo install (the standard
-  `contrib/install.sh` script to `~/.local/bin`, since `apt-get` requires a
-  password this session doesn't have) was attempted; the ~14MB binary
-  download stalled for several minutes with no completion, alongside the
-  concurrent Docker attempt — plausibly the same I/O contention, not
-  conclusively isolated. Killed for the same reason.
+## Release candidate: real, hosted validation
 
-**What this means concretely**: the Docker image has still not been proven
-to build and boot anywhere in this environment. The real build/validate step
-remains `release.yml`'s GitHub-hosted-runner jobs (real BuildKit, no local
-VM contention), structurally reviewed but not yet executed since no release
-tag has been pushed. Trivy's real first execution will be whichever runs
-first between a pushed nightly run and a release tag.
+`release.yml` gained a `workflow_dispatch` release-candidate mode
+(`candidate_ref`, `promote` inputs) so the full release pipeline — build,
+Docker image, Trivy image scan, candidate container boot, route/header
+verification, performance reproduction, evidence generation — could be
+proven for real on a GitHub-hosted runner without pushing a premature final
+tag or requiring Vercel credentials. `promote` defaults to `false` and gates
+the existing `promote-and-smoke-test` job; the final-tag push trigger's
+existing behavior (`promote=true` unconditionally) is unchanged.
+
+Dispatched via `gh workflow run release.yml --ref living-infrastructure-v6
+-f candidate_ref=living-infrastructure-v6 -f promote=false`, four times
+total against this branch as it evolved. Each of the first three surfaced a
+real, distinct, actionable problem — found only because this ran for real on
+hosted infrastructure rather than being assumed to work from a clean-looking
+diff:
+
+1. **Run `31719803367`**: failed at `validate` → HTML audit,
+   `ECONNREFUSED 127.0.0.1:3200`. `release.yml`'s HTML-audit step never
+   started a server on the port `scripts/audit-static-html.mjs` needs — a
+   pre-existing workflow bug never caught locally because local testing
+   always had a server already running. Fixed in `5b9e553` by starting and
+   health-checking a server on port 3200 before the audit step, and stopping
+   it afterward (`if: always()`).
+2. **Run `31720379298`** (after the fix above): got through `validate`,
+   `docker-image`, and `candidate-runtime-check` cleanly, then failed at
+   `image-scan`: `aquasecurity/trivy-action@0.28.0` doesn't resolve to a
+   real published version. Fixed in `b6ca463` by pinning the same Trivy
+   action SHA already proven working in `nightly.yml`
+   (`ed142fd0673e97e23eac54620cfb913e5ce36c25`, v0.36.0).
+3. A separate dispatch's `validate` job failed on `companion.spec.ts`'s
+   `does not cover the Observatory core` assertion (`1170.98` vs. an
+   `<= 1088` budget) — the same test already identified as VM-load-flaky
+   earlier in this session. Reproduced locally 3/3 clean with
+   `--workers=1 --repeat-each=3` against the same commit with no
+   intervening app-code change, confirming CI-runner variance rather than a
+   regression; re-dispatched without a code change.
+4. **Run `31720379298`**, `image-scan`, second failure on the same run
+   (after the action-version fix let the scan actually execute): genuine
+   Trivy findings — 8 CVEs (7 HIGH, 1 CRITICAL: `brace-expansion`,
+   `ip-address`, `picomatch`, `sigstore`, `tar`), all with `fixed` status and
+   real available fix versions, correctly triggering the documented
+   CRITICAL/HIGH-with-a-known-fix gate. Investigated before touching
+   anything: none of the five packages appear anywhere in this project's
+   `package-lock.json`, and none are present in `.next/standalone`'s traced
+   `node_modules` (the only thing `Dockerfile`'s `runner` stage actually
+   copies in). All five are npm's own internal dependencies, bundled by the
+   `node:22-alpine` base image's global npm install regardless of whether a
+   stage invokes npm — which the `runner` stage never does (`CMD` is
+   `node server.js` directly; `HEALTHCHECK` uses `node -e`). Fixed in
+   `274a6ed` by removing the base image's unused npm install from the final
+   stage — an infrastructure fix, not an application-code change, since the
+   application never used or depended on any of the flagged packages.
+
+**Run `31721550307`** (candidate SHA `274a6ed`, after all three fixes)
+passed completely. Verified per-job from real log content, not just the
+overall `conclusion` field:
+
+| Job | Result | Verified via |
+|---|---|---|
+| `setup` | success | resolved candidate SHA `274a6edc5a7c61aaee37eb0202802c43c4051ab0` |
+| `validate` | success | lint/typecheck/unit/build, HTML audit (server started+stopped), **full Playwright suite, single worker**, `git diff --check` — all individual steps success |
+| `docker-image` | success | real BuildKit build on a hosted runner, tagged `tarun-portfolio:274a6edc5a7c61aaee37eb0202802c43c4051ab0`, image artifact uploaded |
+| `candidate-runtime-check` | success | real container health (`200` after 98ms), all 13 route checks, unknown-route 404 (`got 404`), all header checks — verified against the running container, not the source |
+| `image-scan` | success | Trivy image scan: `app/package.json` node-pkg — **0 findings, Clean** |
+| `release-evidence` | success | all 14 steps ran (none skipped): production build, Atlas interaction performance gate reproduced **twice**, per-route performance budgets, screenshot matrix, interaction video, 15-cycle soak test, evidence uploaded |
+| `promote-and-smoke-test` | **skipped** | zero steps executed — correctly gated behind `promote == 'true'`, and this dispatch used `promote=false`. **Production promotion did not execute.** |
+
+Workflow run: `https://github.com/tarunpradeep6162/Portfolio/actions/runs/31721550307`
 
 ## GitHub Actions: real, hosted results this session
 
@@ -266,17 +328,28 @@ first between a pushed nightly run and a release tag.
 
 ## Known limitations and deferred work (updated)
 
-1. **Docker image**: still not built successfully anywhere in this
-   environment (see above). First real verification remains
-   `release.yml`'s GitHub-hosted job, pending a release tag push.
-2. **Trivy**: not run locally in either phase of this session. First real
-   execution is whichever of the nightly workflow or a release tag comes
-   first.
+1. **Docker image**: **proven** — real BuildKit build, real Trivy image
+   scan (clean), real container boot/health/route/header verification, all
+   on a GitHub-hosted runner (run `31721550307`, see above). Local Docker
+   execution on this specific VM remains unproven (see "Docker, Trivy:
+   local status" above) — a property of this VM, not of the image.
+2. **Trivy**: **proven**, twice over — the filesystem scan in `nightly.yml`
+   (run `31716460320`) and now the image scan in `release.yml`'s candidate
+   mode (run `31721550307`), both clean.
 3. **Jenkins**: `Jenkinsfile` reviewed structurally, never executed (no
    Jenkins agent labeled `portfolio-docker` configured in this environment).
-4. **Vercel**: not linked in this environment; `preview-validate.yml` and
-   the release workflow's promotion job will report "not configured" rather
-   than fail or fabricate a deployment.
+   Still genuinely deferred — no hosted-runner equivalent was in scope for
+   this closure.
+4. **Vercel**: not linked in this environment. Per the committed policy in
+   `docs/AUTOMATED_CI_CD.md` ("One-time setup required (not done by this
+   commit)" and the `promote-and-smoke-test` job description), this is an
+   explicitly accepted, documented, non-blocking limitation — the job
+   "skips itself with a clear warning (not a fabricated pass)" when
+   `VERCEL_PRODUCTION_URL` isn't set, rather than being a required gate on
+   the final tag. This closure does not weaken that policy; it was already
+   the committed design. Every release-candidate dispatch this session used
+   `promote=false` regardless, so `promote-and-smoke-test` never ran and
+   production was never touched.
 5. **Per-route V5.1 baselines**: only home has a documented, verified V5.1
    byte baseline to gate against. Every other route's current bytes are
    reported honestly (see the table above) rather than checked against an
@@ -292,14 +365,28 @@ npm run start -- -p 3500
 
 ## Final Git state
 
-```
-$ git status --short
-(clean)
+This report distinguishes four different commits rather than collapsing
+them into one "final HEAD," because they are not the same thing:
 
-$ git rev-parse HEAD
-01e0a1e...  (matches origin/living-infrastructure-v6)
-```
+- **Application/evidence closure commit**: `01e0a1e` — the last commit that
+  changed application code, scripts, or workflow behavior in the phase
+  before this one. Not the final HEAD; three more real workflow/infra fixes
+  landed after it (see "Release candidate: real, hosted validation" above).
+- **Exact SHA validated by the passing hosted release candidate**:
+  `274a6edc5a7c61aaee37eb0202802c43c4051ab0` (short: `274a6ed`) — this is
+  the commit `release.yml`'s candidate mode actually built, scanned,
+  booted, and evidence-tested for real, in run `31721550307`. This is the
+  load-bearing SHA for everything claimed as "proven" in this report.
+- **Report commits**: this file's own commit(s), including the one that
+  introduces this exact paragraph. A report commit, by construction, cannot
+  contain its own hash — that would be self-referential and impossible —
+  so it is not repeated here. Report-only changes do not touch application
+  code, the Docker image, or CI workflow behavior, so they do not
+  invalidate the validation recorded against `274a6ed` above.
+- **Final tag commit**: recorded in the tag itself (`git rev-parse HEAD`
+  and `git status --short`, checked immediately before tagging, both
+  through real Git output at tag-creation time) — see the session's final
+  response for that exact value, not hardcoded here to avoid the same
+  self-referential problem.
 
-No protected branch touched. `living-infrastructure-v6-final` has
-deliberately not been created — see "Known limitations" above for what's
-still genuinely outstanding before that tag would be honest.
+No protected branch was touched at any point in this session.

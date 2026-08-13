@@ -45,6 +45,14 @@ async function measureRoute(browser, name, config) {
     if (url.includes("/_next/static/chunks/")) {
       try {
         jsBytes += (await res.body()).length;
+      } catch {
+        // A request still in flight when the settle loop below closes the
+        // context throws here ("Target page, context or browser has been
+        // closed") - an unhandled rejection from this async event handler
+        // would otherwise crash the whole script (a real bug, found by
+        // direct reproduction: the settle loop only watches jsRequests
+        // count, not font request count, so a slow font response could
+        // still be pending when JS requests look stable).
       } finally {
         jsRequests++;
       }

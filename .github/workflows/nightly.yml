@@ -67,17 +67,16 @@ jobs:
       - name: Verify headers
         run: node scripts/ci/verify-headers.mjs http://localhost:3500 /
 
-      - name: V6 performance measurement (reproduced twice)
+      - name: V6 Atlas interaction performance gate (reproduced twice)
         run: |
           node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/perf-run-1.txt
           node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/perf-run-2.txt
 
-      - name: Soak test
-        # soak-test.mjs defaults to port 3400 (V5_1_BASE_URL) - this
-        # workflow's server runs on 3500 (the shared V6 preview port), so
-        # the env var must be set explicitly or this would fail against an
-        # unrelated, non-running port rather than testing anything real.
-        run: V5_1_BASE_URL=http://localhost:3500 node scripts/soak-test.mjs || echo "::warning::soak-test.mjs exited non-zero - see log above"
+      - name: V6 per-route performance budgets
+        run: node scripts/measure-v6-routes.mjs | tee /tmp/perf-routes.txt
+
+      - name: V6 soak test (15 activation/deactivation cycles, real gate)
+        run: node scripts/soak-test-v6.mjs | tee /tmp/soak-run.txt
 
       - name: Stop production preview
         if: always()
@@ -101,6 +100,8 @@ jobs:
           path: |
             /tmp/perf-run-1.txt
             /tmp/perf-run-2.txt
+            /tmp/perf-routes.txt
+            /tmp/soak-run.txt
             /tmp/trivy-fs-report.txt
             /tmp/nightly-server.log
             playwright-report/

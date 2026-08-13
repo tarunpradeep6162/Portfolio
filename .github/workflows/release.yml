@@ -168,34 +168,26 @@ jobs:
           echo $! > /tmp/release-server.pid
           node scripts/ci/verify-health.mjs http://localhost:3500 60000
 
-      - name: Performance budgets, reproduced twice
+      - name: Atlas interaction performance gate, reproduced twice
         run: |
           node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/release-perf-1.txt
           node scripts/measure-v6-performance.mjs /work/project-aurora | tee /tmp/release-perf-2.txt
 
+      - name: Per-route performance budgets
+        run: node scripts/measure-v6-routes.mjs | tee /tmp/release-perf-routes.txt
+
       - name: Screenshot matrix
         env:
-          # Matches the existing capture-v5-1.mjs convention (screenshots
-          # write outside the repo, not into a committed directory) - see
-          # V5_1_SCREENSHOT_DIR. Defined here so capture-v6.mjs, once built,
-          # has a stable env var name already wired into this workflow.
           V6_SCREENSHOT_DIR: /tmp/v6-screenshots
-        run: |
-          if [ -f scripts/capture-v6.mjs ]; then
-            node scripts/capture-v6.mjs
-          else
-            echo "::warning::scripts/capture-v6.mjs not present yet - screenshot matrix skipped, not fabricated"
-          fi
+        run: node scripts/capture-v6.mjs
 
       - name: Interaction video
         env:
           V6_VIDEO_DIR: /tmp/v6-video
-        run: |
-          if [ -f scripts/record-v6-experience.mjs ]; then
-            node scripts/record-v6-experience.mjs
-          else
-            echo "::warning::scripts/record-v6-experience.mjs not present yet - interaction video skipped, not fabricated"
-          fi
+        run: node scripts/record-v6-experience.mjs
+
+      - name: Soak test (15 activation/deactivation cycles)
+        run: node scripts/soak-test-v6.mjs | tee /tmp/release-soak.txt
 
       - name: Stop local candidate
         if: always()
@@ -209,6 +201,8 @@ jobs:
           path: |
             /tmp/release-perf-1.txt
             /tmp/release-perf-2.txt
+            /tmp/release-perf-routes.txt
+            /tmp/release-soak.txt
             /tmp/v6-screenshots/
             /tmp/v6-video/
             /tmp/release-server.log

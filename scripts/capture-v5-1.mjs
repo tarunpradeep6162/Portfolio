@@ -215,6 +215,27 @@ async function capture(name, fn) {
         ).length === 1,
       { timeout: 5000 },
     );
+    // The app calls scrollIntoView({behavior: "smooth"}) to bring the
+    // spine section into view, and that explicit JS option overrides the
+    // page-level `scroll-behavior: auto !important` CSS - the override does
+    // NOT force an instant jump the way it does for CSS/anchor-link
+    // scrolling. The real scroll animation takes ~1s, well past the 650ms
+    // mark when the highlight class above already applies, so a screenshot
+    // taken right after that class check can land mid-scroll on a blank
+    // transitional frame (this is exactly what produced a solid black
+    // capture here previously). Poll window.scrollY until it stops
+    // changing before treating the page as settled.
+    let lastY = -1;
+    let stableSince = Date.now();
+    const giveUpAt = Date.now() + 5000;
+    while (Date.now() - stableSince < 400 && Date.now() < giveUpAt) {
+      const y = await page.evaluate(() => window.scrollY);
+      if (y !== lastY) {
+        lastY = y;
+        stableSince = Date.now();
+      }
+      await page.waitForTimeout(100);
+    }
     await page.screenshot({ path: `${output}/companion/06-individual-stage-pointing.png` });
   });
 

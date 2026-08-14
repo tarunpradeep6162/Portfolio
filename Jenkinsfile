@@ -161,7 +161,17 @@ pipeline {
 
         stage('Install Playwright browsers') {
             steps {
-                sh 'npx playwright install --with-deps chromium'
+                // No --with-deps: that flag unconditionally tries to su/sudo
+                // to root to (re-)install OS packages via apt, which fails
+                // here (the jenkins user has no root access, deliberately -
+                // least-privilege, no unnecessary root escalation for
+                // pipeline steps) and is redundant anyway: jenkins/agent/
+                // Dockerfile already installs Playwright's system
+                // dependencies at image-build time (as root, once) and
+                // pre-downloads this exact pinned chromium build as the
+                // jenkins user. This just verifies/no-ops against that
+                // existing cache.
+                sh 'npx playwright install chromium'
             }
         }
 

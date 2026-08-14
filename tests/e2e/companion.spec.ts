@@ -291,7 +291,50 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toBeVisible();
   });
 
-  test("command console: atlas and proof commands guide without claiming to control the page", async ({
+  test("command console: atlas and proof commands now genuinely control shared state (V7)", async ({
+    page,
+  }) => {
+    // V6's "atlas"/"proof" commands only narrated; V7 upgraded them to
+    // dispatch real shared state (spec Section 10.9: "must control real
+    // shared application state, not simulated console output"). This
+    // replaces the old assertion that they *didn't* control the page -
+    // that guarantee was intentionally changed, not regressed.
+    await installFakeSpeech(page);
+    await page.goto("/");
+    await activate(page);
+    await page.getByRole("button", { name: /^console$/i }).click();
+    const input = page.getByLabel("RC-01 console command");
+
+    await input.fill("proof");
+    await input.press("Enter");
+    // "proof" traces every stage - a real dispatch into the same
+    // selectedStageId/traceScope every other V7 surface reads, visible
+    // via System Trace's stable DOM signal.
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "commit",
+    );
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-scope",
+      "all",
+    );
+
+    // "twin" activates the real Operational Twin scene and, via the same
+    // one-canvas mutual exclusion Atlas/RC-01 already share, closes RC-01
+    // itself - not simulated text, an observable state change. RC-01 is
+    // already open from above (the "proof" command doesn't close it) -
+    // re-clicking "Activate RC-01" here would target a button that isn't
+    // rendered while already active, so this reuses the still-open panel
+    // instead of re-activating it.
+    await input.fill("twin");
+    await input.press("Enter");
+    await expect(
+      page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),
+    ).toHaveCount(0);
+    await expect(page.locator("canvas")).toHaveCount(1);
+  });
+
+  test("command console: reset command clears trace state and closes RC-01 itself", async ({
     page,
   }) => {
     await installFakeSpeech(page);
@@ -300,13 +343,22 @@ test.describe("RC-01 Reliability Companion", () => {
     await page.getByRole("button", { name: /^console$/i }).click();
     const input = page.getByLabel("RC-01 console command");
 
-    await input.fill("atlas");
+    await input.fill("spine");
     await input.press("Enter");
-    await expect(page.getByText(/living infrastructure atlas.*architecture time machine/i)).toBeVisible();
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "commit",
+    );
 
-    await input.fill("proof");
-    await input.press("Enter");
-    await expect(page.getByText(/proof mode.*disclosure/i)).toBeVisible();
+    await page.getByLabel("RC-01 console command").fill("reset");
+    await page.getByLabel("RC-01 console command").press("Enter");
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "none",
+    );
+    await expect(
+      page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),
+    ).toHaveCount(0);
   });
 
   test("command console: recruiter/engineer/explorer commands set the visitor path via shared state", async ({

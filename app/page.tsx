@@ -10,6 +10,7 @@ import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { SystemTrace } from "@/components/v7/SystemTrace";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -86,6 +87,7 @@ export default function Home() {
                 stage to inspect the operating principle and see how much
                 project evidence maps to it.
               </p>
+              <SystemTrace className="mt-6" />
               <div className="mt-10 grid max-w-md grid-cols-2 border border-[var(--line)] font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
                 <div className="border-r border-[var(--line)] p-4">
                   <span className="block font-display text-3xl font-semibold text-[var(--accent)]">

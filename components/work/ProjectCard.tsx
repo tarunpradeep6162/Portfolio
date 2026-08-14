@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/content/types";
 import { ProjectCoverArt, getCoverArtVariant } from "./ProjectCoverArt";
 import { cn } from "@/lib/cn";
+import { useExperienceState } from "@/lib/v6/ExperienceProvider";
 
 export function ProjectCard({
   project,
@@ -15,6 +18,18 @@ export function ProjectCard({
 }) {
   const href =
     project.kind === "flagship" ? `/work/${project.slug}` : undefined;
+
+  // System Trace (spec Section 10.2): "project cards reveal which projects
+  // genuinely demonstrate that stage." Reads the same selectedStageId the
+  // Operational Twin/Spine already share - no second source of truth. Only
+  // flagship projects carry a spineStages array; lab projects and "no
+  // stage selected" both render with no trace styling.
+  const { selectedStageId } = useExperienceState();
+  const demonstratesTracedStage =
+    project.kind === "flagship" &&
+    selectedStageId !== null &&
+    project.spineStages.includes(selectedStageId);
+  const isTraceDimmed = selectedStageId !== null && !demonstratesTracedStage;
 
   const body = (
     <>
@@ -60,13 +75,31 @@ export function ProjectCard({
     </>
   );
 
+  const traceProps = {
+    "data-v7-trace-demonstrates": demonstratesTracedStage ? "true" : "false",
+  };
+  const traceClassName = cn(
+    "transition-[opacity,border-color] duration-300",
+    isTraceDimmed && "opacity-40",
+    demonstratesTracedStage &&
+      "outline outline-1 outline-offset-4 outline-[var(--color-signal-lime)]",
+  );
+
   if (href) {
     return (
-      <Link href={href} className={cn("project-card group block", className)}>
+      <Link
+        href={href}
+        className={cn("project-card group block", traceClassName, className)}
+        {...traceProps}
+      >
         {body}
       </Link>
     );
   }
 
-  return <div className={className}>{body}</div>;
+  return (
+    <div className={cn(traceClassName, className)} {...traceProps}>
+      {body}
+    </div>
+  );
 }

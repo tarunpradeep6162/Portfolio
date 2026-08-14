@@ -12,6 +12,14 @@
   --color-signal-coral: #ff6847;
   --color-telemetry-steel: #8996a3;
 
+  /* V7 additions - see docs/OPERATIONAL_TWIN_V7_DESIGN_DIRECTION.md for the
+     reasoning behind each. Deliberately three new tokens, not a repaint:
+     the other Operational Twin semantic roles (verified/healthy, data
+     movement) already map onto signal-lime and packet-blue above. */
+  --color-relay-cyan: #6fd3e0;
+  --color-incident-amber: #f2ad4e;
+  --color-recovery-violet: #9c8cff;
+
   --font-display: "Syne Variable", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
@@ -35,6 +43,10 @@
   --accent-secondary: var(--color-packet-blue);
   --signal-warm: var(--color-signal-coral);
   --focus-ring: var(--color-signal-lime);
+  --evidence-verified: var(--color-signal-lime);
+  --evidence-explained: var(--color-relay-cyan);
+  --evidence-missing: var(--color-incident-amber);
+  --state-recovery: var(--color-recovery-violet);
 }
 
 [data-field="manual"] {
@@ -51,6 +63,14 @@
   --accent-secondary: #3456df;
   --signal-warm: #c83d22;
   --focus-ring: #3456df;
+  /* Light-mode-safe values, not the dark tokens re-used - each checked
+     against --color-cloud-linen (#eeefe8) with the real WCAG
+     relative-luminance formula: relay-cyan 6.21:1, incident-amber 5.11:1,
+     recovery-violet 5.90:1. See design-direction doc for the calculation. */
+  --evidence-verified: #456000;
+  --evidence-explained: #0a6070;
+  --evidence-missing: #8a5a12;
+  --state-recovery: #5b3fd1;
   color-scheme: light;
 }
 

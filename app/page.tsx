@@ -12,6 +12,7 @@ import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SystemTrace } from "@/components/v7/SystemTrace";
 import { IncidentReplay } from "@/components/v7/IncidentReplay";
+import { AutomationFabric } from "@/components/v7/AutomationFabric";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -125,6 +126,24 @@ export default function Home() {
             observed, what was verified, and what changed as a result.
           </p>
           <IncidentReplay />
+        </Container>
+      </section>
+
+      <section
+        id="automation"
+        className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
+      >
+        <Container>
+          <Eyebrow>Automation fabric</Eyebrow>
+          <h2 className="mt-5 max-w-[18ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em] text-[var(--ink)]">
+            The pipeline this site ships through.
+          </h2>
+          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
+            Change to rollback readiness - every stage names the real system
+            behind it, and pending means genuinely not yet run for this
+            version, never a hidden failure.
+          </p>
+          <AutomationFabric />
         </Container>
       </section>
 

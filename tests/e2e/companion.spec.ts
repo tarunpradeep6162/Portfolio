@@ -193,10 +193,20 @@ test.describe("RC-01 Reliability Companion", () => {
     // content-heavy home page; under this VM's documented CPU contention
     // each Tab+evaluate round-trip can be slow, so this walk gets a longer
     // budget than the default per-test timeout.
+    //
+    // The iteration bound is a separate concern from that timeout: V7 added
+    // several new homepage sections (System Trace, Incident Replay,
+    // Automation Fabric, Proof Ledger, Project Comparison), each
+    // contributing focusable elements before Activate in tab order. Measured
+    // directly against a real build: 62 presses are needed as of this
+    // writing, exceeding the old bound of 60 regardless of speed - this is
+    // not the same failure the CPU-contention comment above describes.
+    // 120 leaves real headroom for further homepage growth rather than
+    // re-tuning this to another exact count.
     test.setTimeout(60_000);
     await page.goto("/");
     let reachedActivate = false;
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 120; i++) {
       await page.keyboard.press("Tab");
       // The Activate button's accessible name comes from its visible text
       // content, not an aria-label attribute (unlike the panel's other
@@ -252,7 +262,12 @@ test.describe("RC-01 Reliability Companion", () => {
 
     // The Recruiter Tour's suggestedRoute only appears on its final step
     // (content/companion.ts) - advance through the rest with Next first.
-    const nextButton = page.getByRole("button", { name: "Next" });
+    // exact: true - IncidentReplay's own Next button (added later this
+    // session) has an aria-label "Next step in this incident's record",
+    // which still substring-matches a non-exact { name: "Next" } query and
+    // makes this locator ambiguous (Playwright strict-mode violation) now
+    // that both are on the same page.
+    const nextButton = page.getByRole("button", { name: "Next", exact: true });
     await nextButton.click();
     await nextButton.click();
     await nextButton.click();
@@ -507,7 +522,9 @@ test.describe("RC-01 Reliability Companion", () => {
     const firstHighlighted = (await firstHandle.jsonValue()) as number[];
     expect(firstHighlighted).toHaveLength(1);
 
-    await page.getByRole("button", { name: "Next" }).click();
+    // exact: true - see the same disambiguation note above against
+    // IncidentReplay's own Next button.
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     const secondHandle = await page.waitForFunction(
       (previousIndex) => {
         const indices = Array.from(document.querySelectorAll("ol > li")).reduce<number[]>(

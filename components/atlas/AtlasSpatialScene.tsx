@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { parseFlowEdges, parseFlowNodes } from "@/lib/v6/flowParser";
-import { computeAtlasLayout } from "@/lib/v6/atlasLayout";
+import { computeTopologyLayout } from "@/lib/v7/topologyLayout";
 import { qualityPresets, type QualityTier } from "@/lib/companion/state";
 
 /**
@@ -118,7 +118,11 @@ export function AtlasSpatialScene({
 }: AtlasSpatialSceneProps) {
   const nodes = parseFlowNodes(flow);
   const edges = parseFlowEdges(nodes);
-  const layout = computeAtlasLayout(nodes);
+  // V7: same content-derived topology shape AtlasDiagram.tsx now uses -
+  // see lib/v7/topologyClassifier.ts. centerX below is a plain average,
+  // so it's unaffected by whether the layout is centered at x=0 (linear)
+  // or genuinely negative on one side (perimeter/fork).
+  const layout = computeTopologyLayout(nodes);
   const quality = qualityPresets[qualityTier];
 
   const positioned = layout.map((point) => ({

@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 import { parseFlowEdges, parseFlowNodes } from "@/lib/v6/flowParser";
-import { computeAtlasLayout, layoutBounds } from "@/lib/v6/atlasLayout";
+import { computeTopologyLayout, computeTopologyBounds } from "@/lib/v7/topologyLayout";
 import { cn } from "@/lib/cn";
 
 /**
@@ -31,8 +31,14 @@ export function AtlasDiagram({
 }) {
   const nodes = parseFlowNodes(flow);
   const edges = parseFlowEdges(nodes);
-  const layout = computeAtlasLayout(nodes);
-  const bounds = layoutBounds(layout);
+  // V7: layout shape (linear/agent-branch/service-fork/perimeter) is
+  // derived from this project's own real flow content - see
+  // docs/OPERATIONAL_TWIN_V7_ARCHITECTURE.md and
+  // lib/v7/topologyClassifier.ts. Same LayoutPoint[] shape V6's
+  // computeAtlasLayout produced, so nothing downstream of `layout` here
+  // changed except the numbers.
+  const layout = computeTopologyLayout(nodes);
+  const bounds = computeTopologyBounds(layout);
   const titleId = useId();
 
   const pointFor = (nodeId: string) => layout.find((p) => p.nodeId === nodeId);
@@ -42,7 +48,7 @@ export function AtlasDiagram({
       <svg
         role="group"
         aria-labelledby={titleId}
-        viewBox={`-20 -60 ${bounds.width + 40} ${bounds.height + 40}`}
+        viewBox={`${bounds.minX - 20} ${bounds.minY - 20} ${bounds.width + 40} ${bounds.height + 40}`}
         className="w-full overflow-visible"
       >
         <title id={titleId}>{`${projectLabel} architecture: ${nodes.map((n) => n.label).join(" then ")}`}</title>

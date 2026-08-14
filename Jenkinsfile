@@ -15,6 +15,17 @@
 // (Build Now) or point an SCM webhook at it - this file makes no assumption
 // about how it's triggered.
 
+// Plain top-level Groovy variable, deliberately NOT declared in the
+// pipeline's environment{} block: Declarative Pipeline has a known
+// limitation where a variable declared via environment{} cannot be
+// reliably overridden later with env.X = ... in a script step - reproduced
+// directly in build #3 (the reassignment silently had no effect, every
+// later stage still saw the placeholder default). Reassigning this plain
+// variable in a script step and referencing it via Groovy string
+// interpolation (${CI_BASE_URL}) in later sh steps sidesteps that
+// limitation entirely.
+def CI_BASE_URL = 'http://localhost:3600'
+
 pipeline {
     agent { label 'portfolio-docker' }
 
@@ -43,17 +54,6 @@ pipeline {
     }
 
     environment {
-        // Placeholder only - overwritten in "Run candidate container" with
-        // the candidate's own bridge IP. This agent's sh steps run inside
-        // the portfolio-build-agent container itself, which has its own
-        // network namespace separate from the Docker host: a sibling
-        // container's host-published port (localhost:3600, or even the
-        // docker0 gateway 172.17.0.1:3600) is not reachable from here on
-        // this host's network setup - confirmed by direct reproduction,
-        // not assumed. Addressing the sibling container by its own bridge
-        // IP + container-internal port works because that's ordinary
-        // container-to-container traffic, not host port-publish NAT.
-        CI_BASE_URL = 'http://localhost:3600'
         IMAGE_TAG = "tarun-portfolio:jenkins-${env.BUILD_NUMBER}"
     }
 
@@ -143,17 +143,19 @@ pipeline {
                         script: "docker inspect jenkins-candidate --format '{{.NetworkSettings.Networks.bridge.IPAddress}}'",
                         returnStdout: true
                     ).trim()
-                    env.CI_BASE_URL = "http://${candidateIp}:3600"
-                    echo "Candidate reachable at ${env.CI_BASE_URL} (sibling-container bridge IP - this agent's own localhost/gateway cannot reach the host-published port here, confirmed by direct reproduction)"
+                    CI_BASE_URL = "http://${candidateIp}:3600"
+                    echo "Candidate reachable at ${CI_BASE_URL} (sibling-container bridge IP - this agent's own localhost/gateway cannot reach the host-published port here, confirmed by direct reproduction)"
                 }
             }
         }
 
         stage('Verify candidate') {
             steps {
-                sh 'node scripts/ci/verify-health.mjs "$CI_BASE_URL" 120000'
-                sh 'node scripts/ci/verify-routes.mjs "$CI_BASE_URL"'
-                sh 'node scripts/ci/verify-headers.mjs "$CI_BASE_URL" /'
+                script {
+                    sh "node scripts/ci/verify-health.mjs ${CI_BASE_URL} 120000"
+                    sh "node scripts/ci/verify-routes.mjs ${CI_BASE_URL}"
+                    sh "node scripts/ci/verify-headers.mjs ${CI_BASE_URL} /"
+                }
             }
         }
 
@@ -166,39 +168,49 @@ pipeline {
         stage('Targeted Playwright (not the full suite)') {
             when { expression { !params.FINAL_RELEASE } }
             steps {
-                sh 'PLAYWRIGHT_TEST_BASE_URL="$CI_BASE_URL" npx playwright test tests/e2e/routes.spec.ts --workers=1'
+                script {
+                    sh "PLAYWRIGHT_TEST_BASE_URL=${CI_BASE_URL} npx playwright test tests/e2e/routes.spec.ts --workers=1"
+                }
             }
         }
 
         stage('Full Playwright suite') {
             when { expression { params.FINAL_RELEASE } }
             steps {
-                sh 'PLAYWRIGHT_TEST_BASE_URL="$CI_BASE_URL" npx playwright test --workers=1'
+                script {
+                    sh "PLAYWRIGHT_TEST_BASE_URL=${CI_BASE_URL} npx playwright test --workers=1"
+                }
             }
         }
 
         stage('Accessibility / structural HTML audit') {
             when { expression { params.FINAL_RELEASE } }
             steps {
-                sh 'V4_BASE_URL="$CI_BASE_URL" npm run audit:html'
+                script {
+                    sh "V4_BASE_URL=${CI_BASE_URL} npm run audit:html"
+                }
             }
         }
 
         stage('Performance budgets') {
             when { expression { params.FINAL_RELEASE } }
             steps {
-                sh '''
-                    V6_BASE_URL="$CI_BASE_URL" node scripts/measure-v6-performance.mjs /work/project-aurora | tee perf-run-1.txt
-                    V6_BASE_URL="$CI_BASE_URL" node scripts/measure-v6-performance.mjs /work/project-aurora | tee perf-run-2.txt
-                    V6_BASE_URL="$CI_BASE_URL" node scripts/measure-v6-routes.mjs | tee perf-routes.txt
-                '''
+                script {
+                    sh """
+                        V6_BASE_URL=${CI_BASE_URL} node scripts/measure-v6-performance.mjs /work/project-aurora | tee perf-run-1.txt
+                        V6_BASE_URL=${CI_BASE_URL} node scripts/measure-v6-performance.mjs /work/project-aurora | tee perf-run-2.txt
+                        V6_BASE_URL=${CI_BASE_URL} node scripts/measure-v6-routes.mjs | tee perf-routes.txt
+                    """
+                }
             }
         }
 
         stage('Canvas-before-intent check') {
             when { expression { params.FINAL_RELEASE } }
             steps {
-                sh 'V6_BASE_URL="$CI_BASE_URL" node scripts/check-hero-canvas.mjs'
+                script {
+                    sh "V6_BASE_URL=${CI_BASE_URL} node scripts/check-hero-canvas.mjs"
+                }
             }
         }
 
@@ -208,7 +220,9 @@ pipeline {
                 V6_SCREENSHOT_DIR = "${WORKSPACE}/evidence/screenshots"
             }
             steps {
-                sh 'V6_BASE_URL="$CI_BASE_URL" node scripts/capture-v6.mjs'
+                script {
+                    sh "V6_BASE_URL=${CI_BASE_URL} node scripts/capture-v6.mjs"
+                }
             }
         }
 
@@ -218,14 +232,18 @@ pipeline {
                 V6_VIDEO_DIR = "${WORKSPACE}/evidence/video"
             }
             steps {
-                sh 'V6_BASE_URL="$CI_BASE_URL" node scripts/record-v6-experience.mjs'
+                script {
+                    sh "V6_BASE_URL=${CI_BASE_URL} node scripts/record-v6-experience.mjs"
+                }
             }
         }
 
         stage('Evidence: soak test') {
             when { expression { params.FINAL_RELEASE && params.RUN_EVIDENCE_CAPTURE } }
             steps {
-                sh 'V6_BASE_URL="$CI_BASE_URL" node scripts/soak-test-v6.mjs | tee evidence/soak-test.txt'
+                script {
+                    sh "V6_BASE_URL=${CI_BASE_URL} node scripts/soak-test-v6.mjs | tee evidence/soak-test.txt"
+                }
             }
         }
 

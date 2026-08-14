@@ -10,9 +10,11 @@
 - **HEAD**: see `git log -1 --format=%H` for the exact value; not hardcoded
   here (self-referential — same reasoning V6's completion report applied to
   its own final-HEAD wording).
-- **Working tree**: clean at last commit (`7377658` at the time of writing —
+- **Working tree**: clean at last commit (`e7aefdf` at the time of writing —
   verify with `git log -1` rather than trusting this number as time passes).
 - **V6**: verified closed and untouched throughout.
+- **Pushed to origin**: yes, tracking branch set up. Verify with
+  `git rev-parse HEAD origin/operational-twin-v7` before assuming sync.
 
 ## Completed phases
 
@@ -50,34 +52,73 @@
   engineering) in the spec's own ordering, not skipped — just not done
   yet.
 
+- **Phase 6 (System Trace)**: done. `components/v7/SystemTrace.tsx` - real
+  cross-surface sync verified in-browser, not assumed: selecting a stage
+  updates the URL (`?stage=`), highlights the matching `ReliabilitySpine`
+  node, and correctly dims/highlights `ProjectCard`s by whether they
+  demonstrate that stage (3 demonstrating / 1 dimmed for "build",
+  matching real content exactly). Caught and fixed a real production
+  build failure (`useSearchParams()` needs a `Suspense` boundary) by
+  actually running `next build`, not just typecheck/lint - a lint-clean
+  component can still fail a real build.
+- **Phase 8 (four project-world topologies)**: done.
+  `lib/v7/topologyClassifier.ts` + `lib/v7/topologyLayout.ts` - all four
+  real flagship projects classify into four different topology shapes
+  (linear/agent-branch/service-fork/perimeter) from structural cues
+  already in their real flow text, feeding the one shared layout function
+  both `AtlasDiagram.tsx` (2D) and `AtlasSpatialScene.tsx` (3D) already
+  called. Found and fixed two real bugs by actually looking at rendered
+  output, not trusting the math: a stale leftover server process serving
+  pre-fix code (killed by exact PID via `lsof -i`), and a genuine x-axis
+  line-crossover in the service-fork layout (now has a regression test).
+
 ## Not yet started
 
-Phases 5–20 essentially in full: the Operational Twin's real visual
-polish, System Trace UI (the reducer/data plumbing exists via
-`selectedStageId`/`traceScope`; no dedicated UI component yet), the four
-flagship project worlds' distinct topologies, Deployment Replay, Incident
-Replay, Automation Fabric, Proof Ledger, project comparison, RC-01's V7
-command upgrades, About/résumé/skills/contact refinement, mobile/a11y
-hardening pass, and — a substantial addition from the most recent
-instruction — the entire Jenkins pipeline (Jenkinsfile, local controller
-inspection, parameterized final-release pipeline, real execution against
-`http://192.168.1.38:8080`).
+Phases 5, 7, 9-20 in large part: the Operational Twin's real visual
+polish (still a working-but-minimal instanced-box deck, not the fully
+art-directed Instrument Deck), full homepage narrative recomposition
+around the Twin (Phase 7), Deployment Replay, Incident Replay, Automation
+Fabric, Proof Ledger, project comparison, RC-01's V7 command upgrades,
+About/résumé/skills/contact refinement, mobile/a11y hardening pass, and —
+a substantial addition from the most recent instruction — the entire
+Jenkins pipeline (Jenkinsfile, local controller inspection, parameterized
+final-release pipeline, real execution). Confirmed this session: the
+Jenkins controller (`http://192.168.1.38:8080`) and an agent
+(`jenkins-agent-01`) are genuinely running on this same VM (`192.168.1.38`
+is this machine's own LAN IP) - not yet inspected further.
 
 ## Checks actually run (exact results, this session)
 
 - `tsc --noEmit` — clean at every commit.
 - `eslint` on every new/changed directory — clean (one unused-directive
   warning caught and removed, not left in).
-- `vitest run` (full suite) — 66 → 71 → 74 passing as each batch of new
-  tests landed; never a regression in the existing count.
+- `vitest run` (full suite) — 66 → 71 → 74 → 84 → 85 passing as each batch
+  of new tests landed; never a regression in the existing count (two
+  mid-session failures both reproduced clean in isolation and traced to
+  VM load contention, not real regressions — see below).
 - `next typegen` — required once per fresh worktree/route change (not a
   full build) to get real `tsc` signal on route files.
-- Real browser verification against a `next dev` server on port 3700 (not
-  assumed from code): 0 canvas before intent, exactly 1 canvas after
-  activating the Operational Twin, instrument click doesn't crash, 0 close
-  → 1 reopen canvas count, 0 console/page errors throughout. Reduced
-  motion: 0 canvas, fallback SVG present, no activate button rendered.
-  Mobile 320px/375px with the Twin active: 0px horizontal overflow.
+- `next build` (full production build) — run twice this session, both
+  clean. Worth knowing: this is the only check that caught the
+  `useSearchParams()` Suspense-boundary failure; `tsc`/`eslint`/`next dev`
+  all stayed silent about it.
+- Real browser verification against local servers (not assumed from
+  code): Operational Twin activation lifecycle, System Trace cross-surface
+  sync (URL, ReliabilitySpine, ProjectCard), and all four topology
+  screenshots individually inspected, not just measured.
+- `tests/e2e/atlas.spec.ts` (13 tests, existing V6 spec) run twice against
+  this session's changes since they touch shared Atlas rendering code —
+  13/13 both times.
+
+**Process hygiene lesson, worth repeating for whoever resumes this**: a
+`kill <pid>` or `pkill` that returns a non-zero/144 exit code does **not**
+mean the process died — this session lost real time to a stale `next
+start` process left listening on port 3700 from an earlier check, serving
+pre-fix code to every subsequent verification for several tool calls
+before `lsof -i :3700` surfaced the actual PID and a `kill -9` on that
+exact PID fixed it. Always verify with `lsof -i :<port>` (or equivalent)
+after killing a dev/preview server, never assume the kill command's exit
+code tells you the port is free.
 
 No full Playwright/Docker/Trivy/screenshot/video/soak run yet — correctly
 deferred to the single final closure pass per the testing-frequency policy
@@ -89,20 +130,22 @@ None.
 
 ## Next three tasks
 
-1. Build the System Trace UI component (`components/v7/SystemTrace.tsx`)
-   that makes `selectedStageId`/`activeProject`/`traceScope` visibly
-   synchronize across the Twin, Atlas, Time Machine, and (once built)
-   Proof Ledger — the spec's signature interaction, currently only wired
-   at the state level, not yet visible/operable as its own control.
-2. Give each of the four flagship project worlds distinct topology
-   (`app/work/[slug]/page.tsx` currently reuses Atlas's generic node/edge
-   layout for all four) — start with Project Aurora since it's the only
-   project with a real repository link to ground the "evidence" surfaces
-   against.
-3. Begin the Jenkins pipeline: inspect the existing controller at
-   `http://192.168.1.38:8080` (plugins, agent `jenkins-agent-01` status,
-   Docker access) before writing anything, per the explicit "inspect
-   before changing" requirement — this has not been started yet.
+1. Deployment Replay (`components/v7/DeploymentReplay.tsx` per the spec's
+   suggested structure): deterministic stage replay with
+   previous/play-pause/next/restart/select controls, clearly labelled as
+   simulated/replayed state, not a live deployment claim.
+2. Incident Replay: audit real documented V6/V7 incidents worth using
+   (the Atlas close/reopen regression and the System Trace Suspense-
+   boundary build failure from this session are both real, documented,
+   verified candidates) before writing the component - only use
+   incidents that actually happened, per the "select only after auditing
+   source documents" instruction.
+3. Begin the Jenkins pipeline once the above (or enough of Phases 9-15)
+   land: inspect the existing controller at `http://192.168.1.38:8080`
+   (plugins, agent `jenkins-agent-01` status, Docker access) before
+   writing anything, per the explicit "inspect before changing"
+   requirement — confirmed running on this same VM this session, not yet
+   inspected further.
 
 ## Commands to resume
 

@@ -11,6 +11,7 @@ import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SystemTrace } from "@/components/v7/SystemTrace";
+import { IncidentReplay } from "@/components/v7/IncidentReplay";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -105,6 +106,25 @@ export default function Home() {
             </div>
           </div>
           <ReliabilitySpine />
+        </Container>
+      </section>
+
+      <section
+        id="incidents"
+        data-field="manual"
+        className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
+      >
+        <Container>
+          <Eyebrow>Incident record</Eyebrow>
+          <h2 className="mt-5 max-w-[16ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
+            Real problems, found and fixed in the open.
+          </h2>
+          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
+            Every incident below happened during this site&rsquo;s own build -
+            not a client outage, not invented drama. Step through what was
+            observed, what was verified, and what changed as a result.
+          </p>
+          <IncidentReplay />
         </Container>
       </section>
 

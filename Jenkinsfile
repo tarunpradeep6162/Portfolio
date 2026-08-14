@@ -43,6 +43,16 @@ pipeline {
     }
 
     environment {
+        // Placeholder only - overwritten in "Run candidate container" with
+        // the candidate's own bridge IP. This agent's sh steps run inside
+        // the portfolio-build-agent container itself, which has its own
+        // network namespace separate from the Docker host: a sibling
+        // container's host-published port (localhost:3600, or even the
+        // docker0 gateway 172.17.0.1:3600) is not reachable from here on
+        // this host's network setup - confirmed by direct reproduction,
+        // not assumed. Addressing the sibling container by its own bridge
+        // IP + container-internal port works because that's ordinary
+        // container-to-container traffic, not host port-publish NAT.
         CI_BASE_URL = 'http://localhost:3600'
         IMAGE_TAG = "tarun-portfolio:jenkins-${env.BUILD_NUMBER}"
     }
@@ -99,9 +109,21 @@ pipeline {
 
         stage('Trivy image scan') {
             steps {
-                sh '''
+                // #!/bin/bash + pipefail so a real trivy failure (e.g. its
+                // vulnerability-DB download) actually fails this stage,
+                // rather than the pipe's exit code being tee's (always 0) -
+                // a real, previously-latent bug: a genuine trivy DB-download
+                // timeout failed silently in build #1 and the pipeline moved
+                // on as if the scan had passed. --timeout 30m because this
+                // VM's measured throughput to the DB mirror this session was
+                // ~60 KiB/s (real, not stalled) - too slow for trivy's 5m
+                // default against a ~107 MiB DB. The DB is cached under
+                // this long-lived agent container's own filesystem, so only
+                // the first run on a fresh agent pays this cost.
+                sh '''#!/bin/bash
+                    set -o pipefail
                     if command -v trivy >/dev/null 2>&1; then
-                        trivy image --severity CRITICAL,HIGH --ignore-unfixed \
+                        trivy image --timeout 30m --severity CRITICAL,HIGH --ignore-unfixed \
                             "$IMAGE_TAG" | tee trivy-jenkins-report.txt
                     else
                         echo "trivy not installed on this agent - scan skipped, not fabricated" | tee trivy-jenkins-report.txt
@@ -112,16 +134,24 @@ pipeline {
 
         stage('Run candidate container') {
             steps {
-                sh '''
-                    docker rm -f jenkins-candidate 2>/dev/null || true
-                    docker run -d --name jenkins-candidate -p 3600:3600 -e PORT=3600 "$IMAGE_TAG"
-                '''
+                script {
+                    sh '''
+                        docker rm -f jenkins-candidate 2>/dev/null || true
+                        docker run -d --name jenkins-candidate -p 3600:3600 -e PORT=3600 "$IMAGE_TAG"
+                    '''
+                    def candidateIp = sh(
+                        script: "docker inspect jenkins-candidate --format '{{.NetworkSettings.Networks.bridge.IPAddress}}'",
+                        returnStdout: true
+                    ).trim()
+                    env.CI_BASE_URL = "http://${candidateIp}:3600"
+                    echo "Candidate reachable at ${env.CI_BASE_URL} (sibling-container bridge IP - this agent's own localhost/gateway cannot reach the host-published port here, confirmed by direct reproduction)"
+                }
             }
         }
 
         stage('Verify candidate') {
             steps {
-                sh 'node scripts/ci/verify-health.mjs "$CI_BASE_URL" 60000'
+                sh 'node scripts/ci/verify-health.mjs "$CI_BASE_URL" 120000'
                 sh 'node scripts/ci/verify-routes.mjs "$CI_BASE_URL"'
                 sh 'node scripts/ci/verify-headers.mjs "$CI_BASE_URL" /'
             }

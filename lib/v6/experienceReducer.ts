@@ -126,6 +126,27 @@ export function experienceReducer(
     case "RESET":
       return initialExperienceState;
 
+    case "QUALITY_TIER_SET":
+      // Dropping to fallback tier means no WebGL canvas at all (spec
+      // Section 11) - force the active scene closed the same way reduced
+      // motion and low power already do, rather than leaving a canvas
+      // mounted under a tier that says it shouldn't exist.
+      if (action.tier === "fallback" && state.spatialLoad.status !== "idle") {
+        return {
+          ...state,
+          qualityTier: action.tier,
+          activeScene: null,
+          spatialLoad: { status: "idle" },
+        };
+      }
+      return { ...state, qualityTier: action.tier };
+
+    case "WEBGL_CAPABILITY_SET":
+      return { ...state, webglCapability: action.capability };
+
+    case "TRACE_SCOPE_SET":
+      return { ...state, traceScope: action.scope };
+
     default:
       return state;
   }

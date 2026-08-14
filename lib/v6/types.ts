@@ -46,9 +46,31 @@ export interface EvidenceItem {
   href?: string;
 }
 
-export type SceneKind = "atlas" | "time-machine" | "rc01" | null;
+export type SceneKind =
+  | "atlas"
+  | "time-machine"
+  | "rc01"
+  | "operational-twin"
+  | null;
 
 export type VisitorPath = "recruiter" | "engineer" | "explorer" | null;
+
+/** V7 addition. Reuses V6's existing high/balanced/fallback vocabulary
+ * (master spec Section 11) rather than inventing new tier names. */
+export type QualityTier = "high" | "balanced" | "fallback";
+
+/** Detected once at mount via the existing WebGL-detection pattern
+ * (useWebGLSupport's lazy useState initializer), not re-checked per
+ * interaction - see Atlas's precedent for why this must be a one-time
+ * check, not a reactive one. */
+export type WebGLCapability = "unknown" | "supported" | "unsupported";
+
+/** System Trace's "one stage, one project, or all stages" requirement
+ * (spec Section 10.2) reuses selectedStageId/activeProject as its trace
+ * state - no duplicate source of truth. This flag only distinguishes
+ * "focus one stage" from "show the whole pipeline at once"; it does not
+ * introduce a second place stage selection lives. */
+export type TraceScope = "single" | "all";
 
 /** Read-only from the app's point of view - mirrors `prefers-reduced-motion`
  * via the existing `useReducedMotion()` hook, not a second implementation. */
@@ -80,6 +102,11 @@ export interface ExperienceState {
   motion: MotionPreference;
   power: PowerPreference;
   spatialLoad: SpatialLoadState;
+  /** V7 additions below. Detected/set once, not per-frame - see the
+   * type-level comments on QualityTier/WebGLCapability. */
+  qualityTier: QualityTier;
+  webglCapability: WebGLCapability;
+  traceScope: TraceScope;
 }
 
 export type ExperienceAction =
@@ -96,7 +123,10 @@ export type ExperienceAction =
   | { type: "POWER_PREFERENCE_SET"; value: PowerPreference }
   | { type: "SPATIAL_LOAD_STATE_SET"; state: SpatialLoadState }
   | { type: "SCENE_ERROR"; reason: string }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "QUALITY_TIER_SET"; tier: QualityTier }
+  | { type: "WEBGL_CAPABILITY_SET"; capability: WebGLCapability }
+  | { type: "TRACE_SCOPE_SET"; scope: TraceScope };
 
 export const initialExperienceState: ExperienceState = {
   activeRoute: null,
@@ -109,6 +139,9 @@ export const initialExperienceState: ExperienceState = {
   motion: "full",
   power: "standard",
   spatialLoad: { status: "idle" },
+  qualityTier: "high",
+  webglCapability: "unknown",
+  traceScope: "single",
 };
 
 export type { ProjectCategory, SpineStageId };

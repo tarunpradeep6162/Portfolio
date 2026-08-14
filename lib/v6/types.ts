@@ -1,4 +1,5 @@
 import type { ProjectCategory, SpineStageId } from "@/content/types";
+import type { QualityTier } from "@/lib/companion/state";
 
 /**
  * Architecture nodes and Reliability Spine stages are deliberately separate
@@ -54,10 +55,6 @@ export type SceneKind =
   | null;
 
 export type VisitorPath = "recruiter" | "engineer" | "explorer" | null;
-
-/** V7 addition. Reuses V6's existing high/balanced/fallback vocabulary
- * (master spec Section 11) rather than inventing new tier names. */
-export type QualityTier = "high" | "balanced" | "fallback";
 
 /** Detected once at mount via the existing WebGL-detection pattern
  * (useWebGLSupport's lazy useState initializer), not re-checked per
@@ -144,4 +141,4 @@ export const initialExperienceState: ExperienceState = {
   traceScope: "single",
 };
 
-export type { ProjectCategory, SpineStageId };
+export type { ProjectCategory, SpineStageId, QualityTier };

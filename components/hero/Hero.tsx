@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { HeroCopyReveal } from "./HeroCopyReveal";
 import { InfrastructureObservatory } from "./InfrastructureObservatory";
+import { OperationalTwinHost } from "@/components/v7/OperationalTwinHost";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
@@ -54,6 +55,10 @@ export function Hero() {
               <Button href={hero.secondaryCta.href} variant="secondary">
                 {hero.secondaryCta.label}
               </Button>
+            </div>
+
+            <div data-reveal>
+              <OperationalTwinHost />
             </div>
 
             <div

@@ -81,6 +81,17 @@
 html {
   color-scheme: dark;
   background: var(--color-control-black);
+  /* Real bug, found by actually testing whether a page reporting
+     documentElement.scrollWidth > clientWidth was genuinely scrollable
+     to a user, not assumed safe because body already had overflow-x:
+     clip - it did, but <html> (the actual scrolling container for the
+     whole document, not <body>) still defaulted to visible, so
+     intentional negative-margin bleed elements (e.g. the hero's
+     Observatory portrait) could still be dragged/scrolled into view
+     below the sm: breakpoint. Confirmed with window.scrollTo() actually
+     moving scrollX to the same distance measured as overflow, on the
+     real dev server, before this fix - not assumed from the CSS alone. */
+  overflow-x: clip;
 }
 
 body {

@@ -13,6 +13,8 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SystemTrace } from "@/components/v7/SystemTrace";
 import { IncidentReplay } from "@/components/v7/IncidentReplay";
 import { AutomationFabric } from "@/components/v7/AutomationFabric";
+import { ProofLedger } from "@/components/v7/ProofLedger";
+import { ProjectComparison } from "@/components/v7/ProjectComparison";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -144,6 +146,25 @@ export default function Home() {
             version, never a hidden failure.
           </p>
           <AutomationFabric />
+        </Container>
+      </section>
+
+      <section
+        id="proof-ledger"
+        data-field="manual"
+        className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
+      >
+        <Container>
+          <Eyebrow>Proof ledger</Eyebrow>
+          <h2 className="mt-5 max-w-[16ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
+            Every claim, resolved to one honest state.
+          </h2>
+          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
+            Verified, explained, or missing - filterable, and synchronized
+            with whichever stage is currently traced above.
+          </p>
+          <ProofLedger />
+          <ProjectComparison />
         </Container>
       </section>
 

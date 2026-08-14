@@ -27,9 +27,13 @@ const BASE_HEIGHT = 0.28;
 const HEIGHT_PER_COUNT = 0.22;
 const WIDTH = 0.62;
 const DEPTH = 0.5;
+const PIP_SPACING = 0.16;
+const PIP_RADIUS = 0.055;
 
 const IDLE_COLOR = new THREE.Color("#4a5563");
 const ACTIVE_COLOR = new THREE.Color("#d8ff4f");
+const PIP_COLOR = new THREE.Color("#8996a3");
+const PIP_ACTIVE_COLOR = new THREE.Color("#47d7b0");
 
 function instrumentHeight(instrument: SpineInstrument): number {
   return BASE_HEIGHT + instrument.demonstratedByCount * HEIGHT_PER_COUNT;
@@ -120,17 +124,96 @@ function InstrumentDeckInstances({
   );
 }
 
+/**
+ * A discrete, per-project readout above each instrument - one small pip
+ * per real flagship project that demonstrates that stage, stacked above
+ * the bar rather than only encoded in bar height. Bar height alone is
+ * hard to compare precisely at a glance; a small count of physical marks
+ * reads the way a real instrument's indicator lights do, and it's a
+ * second honest representation of the exact same real number
+ * (demonstratedByCount), not a second, independently-invented metric.
+ * One InstancedMesh for every pip across every instrument, not one
+ * component per pip (spec Section 11's instancing requirement applies
+ * here exactly as much as it does to the bars themselves).
+ */
+function StatusPips({
+  instruments,
+  selectedStageId,
+}: {
+  instruments: SpineInstrument[];
+  selectedStageId: string | null;
+}) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const centerX = ((instruments.length - 1) * GAP) / 2;
+
+  const pipLayout = useMemo(() => {
+    const layout: { instrumentIndex: number; y: number }[] = [];
+    instruments.forEach((instrument, i) => {
+      const barTop = instrumentHeight(instrument);
+      for (let p = 0; p < instrument.demonstratedByCount; p++) {
+        layout.push({ instrumentIndex: i, y: barTop + PIP_RADIUS * 1.6 + p * PIP_SPACING });
+      }
+    });
+    return layout;
+  }, [instruments]);
+
+  const colorTargets = useRef<THREE.Color[]>(pipLayout.map(() => PIP_COLOR.clone()));
+
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    pipLayout.forEach((pip, i) => {
+      const x = pip.instrumentIndex * GAP - centerX;
+      const matrix = new THREE.Matrix4();
+      matrix.compose(
+        new THREE.Vector3(x, pip.y, DEPTH / 2 + PIP_RADIUS),
+        new THREE.Quaternion(),
+        new THREE.Vector3(1, 1, 1),
+      );
+      mesh.setMatrixAt(i, matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pipLayout]);
+
+  useFrame((_, delta) => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    pipLayout.forEach((pip, i) => {
+      const instrument = instruments[pip.instrumentIndex];
+      const isActive = instrument.stageId === selectedStageId;
+      const target = isActive ? PIP_ACTIVE_COLOR : PIP_COLOR;
+      colorTargets.current[i].lerp(target, 1 - Math.pow(0.001, delta));
+      mesh.setColorAt(i, colorTargets.current[i]);
+    });
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  });
+
+  if (pipLayout.length === 0) return null;
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, pipLayout.length]}>
+      <sphereGeometry args={[PIP_RADIUS, 8, 6]} />
+      <meshLambertMaterial />
+    </instancedMesh>
+  );
+}
+
 function OrbitCamera({ centerX }: { centerX: number }) {
   useFrame(({ camera, clock }) => {
     // Slow, restrained orbit - spec Section 8: "slow camera interpolation...
     // avoid elastic, bouncy, constantly floating or attention-seeking
-    // motion." One full revolution takes 90s.
+    // motion." One full revolution takes 90s. Radius widened from the
+    // first pass's 4.2 - at that distance with a 38 deg FOV, the 8-unit-
+    // wide deck (8 instruments at 1.15 units apart) didn't fit in frame,
+    // cropping to about 4 visible instruments. Found by actually looking
+    // at a screenshot, not by trusting the numbers.
     const t = clock.getElapsedTime() * ((Math.PI * 2) / 90);
-    const radius = 4.2;
-    camera.position.x = centerX + Math.sin(t) * radius * 0.35;
+    const radius = 8.6;
+    camera.position.x = centerX + Math.sin(t) * radius * 0.3;
     camera.position.z = Math.cos(t) * radius;
-    camera.position.y = 1.6;
-    camera.lookAt(centerX, 0.5, 0);
+    camera.position.y = 2.3;
+    camera.lookAt(centerX, 0.6, 0);
   });
   return null;
 }
@@ -156,7 +239,7 @@ export function OperationalTwinScene({
       dpr={quality.dpr}
       frameloop="always"
       gl={{ antialias: quality.antialias, alpha: true, powerPreference: "low-power" }}
-      camera={{ position: [0, 1.6, 4.2], fov: 38 }}
+      camera={{ position: [0, 2.6, 8.6], fov: 38 }}
       onCreated={({ gl }) => {
         // Same context-loss guard as Atlas/RC-01 (proven necessary during
         // V6: Three.js's own dispose() on unmount fires a genuine
@@ -174,15 +257,27 @@ export function OperationalTwinScene({
         );
       }}
     >
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[2, 4, 3]} intensity={0.9} />
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[2, 4, 3]} intensity={1.1} />
+      {/* Cool rim/fill light from the opposite side - cheap (no shadow
+          casting, per Section 11's "no real-time shadows by default"),
+          just a second directional light for silhouette definition so
+          the deck reads as a considered object, not a flat-lit block. */}
+      <directionalLight position={[-3, 1.5, -2]} intensity={0.35} color="#4e79ff" />
       <OrbitCamera centerX={0} />
       <InstrumentDeckInstances
         instruments={instruments}
         selectedStageId={selectedStageId}
         onSelectStage={onSelectStage}
       />
-      <gridHelper args={[10, 10, "#232e3a", "#161d24"]} />
+      <StatusPips instruments={instruments} selectedStageId={selectedStageId} />
+      {/* A solid deck surface, not a generic 3D-editor wireframe grid -
+          reads as the instrument panel's own physical base rather than
+          scaffolding left over from building the scene. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <planeGeometry args={[12, 6]} />
+        <meshLambertMaterial color="#0d1218" />
+      </mesh>
     </Canvas>
   );
 }

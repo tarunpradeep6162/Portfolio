@@ -1,6 +1,7 @@
 "use client";
 
-import { ControlRoomScene } from "@/components/v8/ControlRoomScene";
+import type { Ref } from "react";
+import { ControlRoomScene, type ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { OperationalTwinSceneContent } from "./OperationalTwinSceneContent";
 import type { SpineInstrument } from "@/lib/v7/spineInstruments";
 
@@ -19,14 +20,17 @@ export function OperationalTwinControlRoomScene({
   onSelectStage,
   onError,
   className,
+  ref,
 }: {
   selectedStageId: string | null;
   onSelectStage: (stageId: SpineInstrument["stageId"]) => void;
   onError: () => void;
   className?: string;
+  ref?: Ref<ControlRoomSceneHandle>;
 }) {
   return (
     <ControlRoomScene
+      ref={ref}
       scene="operational-twin"
       errorReason="operational-twin-canvas-error"
       ariaLabel="The Operational Twin: an interactive instrument deck representing the real delivery pipeline from commit to recovery"

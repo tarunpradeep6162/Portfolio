@@ -39,6 +39,7 @@ import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import type { CompanionState } from "@/lib/companion/state";
 import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
 import { CompanionControlRoomScene } from "./CompanionControlRoomScene";
+import type { ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
@@ -75,6 +76,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const [currentScript, setCurrentScript] = useState<CompanionScript | null>(null);
   const [fallbackCaptionIndex, setFallbackCaptionIndex] = useState(-1);
   const [canvasErrored, setCanvasErrored] = useState(false);
+  const controlRoomRef = useRef<ControlRoomSceneHandle>(null);
   const [announcement, setAnnouncement] = useState("RC-01 activated.");
   const [paused, setPaused] = useState(false);
   // Collapsed peek is the required default state on activation below the
@@ -460,6 +462,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       return;
     }
     handleStop();
+    controlRoomRef.current?.markClosing();
     onDeactivate();
   }, [subpanel, activeTourId, exitTour, handleStop, onDeactivate]);
 
@@ -592,6 +595,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             type="button"
             onClick={() => {
               handleStop();
+              controlRoomRef.current?.markClosing();
               onDeactivate();
             }}
             aria-label="Deactivate RC-01"
@@ -619,6 +623,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       >
         {show3D ? (
           <CompanionControlRoomScene
+            ref={controlRoomRef}
             state={companionState}
             accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}

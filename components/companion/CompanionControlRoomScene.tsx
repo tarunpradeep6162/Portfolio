@@ -1,6 +1,7 @@
 "use client";
 
-import { ControlRoomScene } from "@/components/v8/ControlRoomScene";
+import type { Ref } from "react";
+import { ControlRoomScene, type ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { RC01Model } from "./RC01Model";
 import { qualityPresets, type CompanionState } from "@/lib/companion/state";
 
@@ -24,14 +25,17 @@ export function CompanionControlRoomScene({
   accentColor,
   onError,
   className,
+  ref,
 }: {
   state: CompanionState;
   accentColor?: string | null;
   onError: () => void;
   className?: string;
+  ref?: Ref<ControlRoomSceneHandle>;
 }) {
   return (
     <ControlRoomScene
+      ref={ref}
       scene="rc01"
       errorReason="rc01-canvas-error"
       ariaLabel="RC-01, the Reliability Companion's animated 3D portrait"

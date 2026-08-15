@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Boxes } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
@@ -8,6 +8,7 @@ import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useCompanionPreferences } from "@/lib/companion/useCompanionPreferences";
 import { useExperienceState, useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
 import { computeAtlasSceneGeometry } from "@/lib/v8/atlasSceneGeometry";
+import type { ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 
 const AtlasControlRoomScene = dynamic(
   () => import("./AtlasControlRoomScene").then((mod) => mod.AtlasControlRoomScene),
@@ -52,6 +53,7 @@ export function AtlasCanvasHost({
   const dispatch = useExperienceDispatch();
   const [prefetchArmed, setPrefetchArmed] = useState(false);
   const [erroredOut, setErroredOut] = useState(false);
+  const controlRoomRef = useRef<ControlRoomSceneHandle>(null);
 
   const active = experienceState.activeScene === "atlas";
 
@@ -101,6 +103,7 @@ export function AtlasCanvasHost({
     return (
       <div className="mt-4">
         <AtlasControlRoomScene
+          ref={controlRoomRef}
           flow={flow}
           projectLabel={projectLabel}
           selectedNodeId={selectedNodeId}
@@ -111,7 +114,13 @@ export function AtlasCanvasHost({
         />
         <button
           type="button"
-          onClick={() => dispatch({ type: "SCENE_CHANGED", scene: null })}
+          onClick={() => {
+            // Synchronous, before dispatch - see
+            // components/v8/ControlRoomScene.tsx's markClosing doc comment
+            // for the real race this prevents (a Phase 7 finding).
+            controlRoomRef.current?.markClosing();
+            dispatch({ type: "SCENE_CHANGED", scene: null });
+          }}
           className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"
         >
           Close 3D view

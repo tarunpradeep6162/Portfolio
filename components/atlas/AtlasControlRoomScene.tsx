@@ -1,6 +1,7 @@
 "use client";
 
-import { ControlRoomScene } from "@/components/v8/ControlRoomScene";
+import type { Ref } from "react";
+import { ControlRoomScene, type ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { AtlasSceneContent } from "./AtlasSceneContent";
 
 /**
@@ -28,6 +29,7 @@ export function AtlasControlRoomScene({
   cameraPosition,
   onError,
   className,
+  ref,
 }: {
   flow: string;
   projectLabel: string;
@@ -36,9 +38,16 @@ export function AtlasControlRoomScene({
   cameraPosition: [number, number, number];
   onError: () => void;
   className?: string;
+  /** Forwarded straight through to ControlRoomScene - React 19 passes
+   * `ref` through next/dynamic's plain prop-spreading without needing
+   * forwardRef at any layer. Lets AtlasCanvasHost's Close button call
+   * `markClosing()` synchronously before dispatching (see
+   * components/v8/ControlRoomScene.tsx for why that must be synchronous). */
+  ref?: Ref<ControlRoomSceneHandle>;
 }) {
   return (
     <ControlRoomScene
+      ref={ref}
       scene="atlas"
       errorReason="atlas-canvas-error"
       ariaLabel={`Interactive 3D rendering of ${projectLabel}'s architecture - the same nodes as the diagram above, selectable in 3D`}

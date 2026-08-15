@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
@@ -30,6 +30,14 @@ class SceneErrorBoundary extends Component<
 
 export interface ControlRoomSceneRenderContext {
   qualityTier: QualityTier;
+}
+
+export interface ControlRoomSceneHandle {
+  /** Call synchronously from a Close/Deactivate control's onClick,
+   * before dispatching SCENE_CHANGED - see the `activeRef`/`markClosing`
+   * comment below for why this must happen synchronously rather than via
+   * an effect. */
+  markClosing: () => void;
 }
 
 export interface ControlRoomSceneProps {
@@ -74,6 +82,13 @@ export interface ControlRoomSceneProps {
    * `spatialLoad` field (which could reflect a different scene's past
    * failure). */
   onError?: () => void;
+  /** React 19 accepts `ref` as a plain prop on function components - no
+   * `forwardRef` wrapper needed. Exposes `ControlRoomSceneHandle`, so a
+   * Close/Deactivate control (in whichever host renders this, through
+   * whichever next/dynamic wrapper - see AtlasControlRoomScene.tsx et al,
+   * which each forward this same prop straight through) can call
+   * `markClosing()` synchronously. */
+  ref?: Ref<ControlRoomSceneHandle>;
 }
 
 /**
@@ -105,6 +120,7 @@ export function ControlRoomScene({
   children,
   onError,
   deactivateOnError = true,
+  ref,
 }: ControlRoomSceneProps) {
   const reducedMotion = useReducedMotion();
   const webglSupported = useWebGLSupport();
@@ -120,10 +136,29 @@ export function ControlRoomScene({
   });
   const active = requestedActive && mountDecision.shouldMount;
 
+  // A real regression was found and fixed here during Phase 7 evidence
+  // capture: this ref used to be synced via a useEffect, which runs after
+  // commit/paint - too late to guard against Three.js's own dispose()-
+  // triggered webglcontextlost, confirmed (by direct reproduction) to
+  // fire synchronously as part of the SAME commit that unmounts the
+  // Canvas when `active` flips to false. Every migrated scene was left
+  // permanently stuck on its error fallback after a normal Close,
+  // requiring a page reload to recover. The pre-V8 hosts avoided this by
+  // synchronously flipping their own local activeRef inside the Close
+  // button's onClick, before dispatching - not directly reachable here
+  // since ControlRoomScene is shared across three dynamically-imported
+  // wrapper layers, so `markClosing` (exposed via the imperative handle
+  // below) gives each host the same synchronous capability through a ref.
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useImperativeHandle(ref, () => ({
+    markClosing: () => {
+      activeRef.current = false;
+    },
+  }));
 
   useEffect(() => {
     dispatch({ type: "SPATIAL_LOAD_STATE_SET", state: { status: active ? "loading" : "idle" } });

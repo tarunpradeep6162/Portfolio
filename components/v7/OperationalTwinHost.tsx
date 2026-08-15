@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Activity } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
@@ -10,6 +10,7 @@ import { useExperienceState, useExperienceDispatch } from "@/lib/v6/ExperiencePr
 import { decideSceneMount } from "@/lib/v7/sceneDirector";
 import { OperationalTwinFallback } from "./OperationalTwinFallback";
 import type { SpineStageId } from "@/content/types";
+import type { ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 
 const OperationalTwinControlRoomScene = dynamic(
   () =>
@@ -49,6 +50,7 @@ export function OperationalTwinHost() {
   const dispatch = useExperienceDispatch();
   const [prefetchArmed, setPrefetchArmed] = useState(false);
   const [erroredOut, setErroredOut] = useState(false);
+  const controlRoomRef = useRef<ControlRoomSceneHandle>(null);
 
   const active = experienceState.activeScene === "operational-twin";
 
@@ -87,6 +89,7 @@ export function OperationalTwinHost() {
     return (
       <div className="mt-4">
         <OperationalTwinControlRoomScene
+          ref={controlRoomRef}
           selectedStageId={experienceState.selectedStageId}
           onSelectStage={handleSelectStage}
           onError={() => setErroredOut(true)}
@@ -94,7 +97,10 @@ export function OperationalTwinHost() {
         />
         <button
           type="button"
-          onClick={() => dispatch({ type: "SCENE_CHANGED", scene: null })}
+          onClick={() => {
+            controlRoomRef.current?.markClosing();
+            dispatch({ type: "SCENE_CHANGED", scene: null });
+          }}
           className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"
         >
           Close Operational Twin

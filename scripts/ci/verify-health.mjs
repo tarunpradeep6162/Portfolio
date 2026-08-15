@@ -10,12 +10,19 @@ const baseUrl = process.argv[2] ?? process.env.CI_BASE_URL ?? "http://localhost:
 const timeoutMs = Number(process.argv[3] ?? 60_000);
 const pollIntervalMs = 500;
 
+// Vercel Deployment Protection (SSO wall) intercepts every route on a
+// protected preview with a 302 unless this header is present - present
+// only when the env var is set (e.g. against a Vercel preview URL in CI),
+// a no-op everywhere else (local/Docker candidates). Never logged.
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+const headers = bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {};
+
 const start = Date.now();
 let lastError = null;
 
 while (Date.now() - start < timeoutMs) {
   try {
-    const res = await fetch(`${baseUrl}/`, { redirect: "manual" });
+    const res = await fetch(`${baseUrl}/`, { redirect: "manual", headers });
     if (res.status < 500) {
       console.log(`Healthy: ${baseUrl}/ responded ${res.status} after ${Date.now() - start}ms`);
       process.exit(0);

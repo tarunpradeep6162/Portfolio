@@ -13,6 +13,13 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const externalBaseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL;
 
+// Vercel Deployment Protection (SSO wall) intercepts every route on a
+// protected preview unless this header is present on every request - only
+// relevant when externalBaseUrl is an actual Vercel preview (Preview
+// Validation), a no-op against a local server or a Docker candidate where
+// the env var is never set. Never logged.
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
@@ -33,6 +40,9 @@ export default defineConfig({
   use: {
     baseURL: externalBaseUrl ?? "http://localhost:3100",
     trace: "retain-on-failure",
+    ...(vercelBypassSecret
+      ? { extraHTTPHeaders: { "x-vercel-protection-bypass": vercelBypassSecret } }
+      : {}),
   },
   projects: [
     {

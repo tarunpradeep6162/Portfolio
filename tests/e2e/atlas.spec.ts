@@ -68,7 +68,7 @@ test.describe("Living Infrastructure Atlas: node selection", () => {
 });
 
 test.describe("Living Infrastructure Atlas: intent-loaded 3D view and one-canvas rule", () => {
-  test("no canvas exists before any spatial intent - the 2D diagram works alone", async ({
+  test("no canvas exists before any spatial intent - the 2D diagram works alone @release-fast", async ({
     page,
   }) => {
     await page.goto("/work/project-aurora");
@@ -76,7 +76,7 @@ test.describe("Living Infrastructure Atlas: intent-loaded 3D view and one-canvas
     expect(await page.locator("canvas").count()).toBe(0);
   });
 
-  test("'Enter 3D view' mounts exactly one canvas, selecting the same node in it works", async ({
+  test("'Enter 3D view' mounts exactly one canvas, selecting the same node in it works @release-fast", async ({
     page,
   }) => {
     await page.goto("/work/project-aurora");
@@ -94,7 +94,7 @@ test.describe("Living Infrastructure Atlas: intent-loaded 3D view and one-canvas
     await expect(page.locator("canvas")).toHaveCount(0);
   });
 
-  test("activating the 3D view closes RC-01 first - at most one mounted canvas at any time", async ({
+  test("activating the 3D view closes RC-01 first - at most one mounted canvas at any time @release-fast", async ({
     page,
   }) => {
     await page.goto("/work/project-aurora");

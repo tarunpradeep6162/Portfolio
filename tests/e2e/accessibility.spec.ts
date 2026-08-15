@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("skip link is the first focusable element and jumps to main content", async ({
+test("skip link is the first focusable element and jumps to main content @release-fast", async ({
   page,
 }) => {
   await page.goto("/");
@@ -31,7 +31,7 @@ test("focus is visible on an interactive element", async ({ page }) => {
   expect(outlineWidth).not.toBe("0px");
 });
 
-test("reduced motion is honored: hero copy is immediately visible with no animation delay", async ({
+test("reduced motion is honored: hero copy is immediately visible with no animation delay @release-fast", async ({
   browser,
 }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });

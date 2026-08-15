@@ -46,17 +46,21 @@ RUN curl -fsSL --connect-timeout 15 --max-time 60 --retry 3 --retry-delay 5 \
     && rm -rf /var/lib/apt/lists/* \
     && node --version && npm --version
 
-# Docker CLI only (no daemon, no dockerd) - this agent talks to the
-# host's Docker daemon exclusively through the bind-mounted socket.
+# Docker CLI (no daemon, no dockerd - this agent talks to the host's
+# Docker daemon exclusively through the bind-mounted socket) plus the
+# buildx plugin: this CLI's DOCKER_BUILDKIT=1 requires buildx to be
+# present (confirmed directly - it refuses with "BuildKit is enabled but
+# the buildx component is missing" otherwise), so real BuildKit builds
+# need this plugin, not just the env var.
 RUN curl -fsSL --connect-timeout 15 --max-time 60 --retry 3 --retry-delay 5 \
       https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
       > /etc/apt/sources.list.d/docker.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce-cli \
+    && apt-get install -y --no-install-recommends docker-ce-cli docker-buildx-plugin \
     && rm -rf /var/lib/apt/lists/* \
-    && docker --version
+    && docker --version && docker buildx version
 
 # Trivy - filesystem and image scanning, matching the same tool GitHub
 # Actions' nightly/release workflows already use. Installed via GitHub's

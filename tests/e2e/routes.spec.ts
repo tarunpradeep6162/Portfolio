@@ -11,7 +11,10 @@ const routes = [
 
 test.describe("all routes load without console errors", () => {
   for (const route of routes) {
-    test(`${route} renders and is free of console errors`, async ({ page }) => {
+    // @release-fast on home (console-clean landing) and one representative
+    // project case-study route - the rest stay in FULL_VALIDATION only.
+    const tag = route === "/" || route === "/work/project-aurora" ? " @release-fast" : "";
+    test(`${route} renders and is free of console errors${tag}`, async ({ page }) => {
       const errors: string[] = [];
       page.on("console", (msg) => {
         if (msg.type() === "error") errors.push(msg.text());
@@ -29,7 +32,7 @@ test.describe("all routes load without console errors", () => {
   }
 });
 
-test("navigation links reach every route from the header", async ({ page }) => {
+test("navigation links reach every route from the header @release-fast", async ({ page }) => {
   await page.goto("/");
   // Scoped to the Primary nav and exact-matched - "Work" otherwise substring-matches
   // project card links whose summary text happens to contain "network".
@@ -55,7 +58,7 @@ test("browser back/forward works across route navigation", async ({ page }) => {
   await expect(page).toHaveURL("/work");
 });
 
-test("a nonexistent route renders the 404 page, not a crash", async ({
+test("a nonexistent route renders the 404 page, not a crash @release-fast", async ({
   page,
 }) => {
   const response = await page.goto("/this-route-does-not-exist");

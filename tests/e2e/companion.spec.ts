@@ -63,7 +63,7 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toHaveCount(0);
   });
 
-  test("activation boots the panel but does not itself start speech - Speak is a separate control", async ({
+  test("activation boots the panel but does not itself start speech - Speak is a separate control @release-fast", async ({
     page,
   }) => {
     await installFakeSpeech(page);
@@ -306,7 +306,7 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toBeVisible();
   });
 
-  test("command console: atlas and proof commands now genuinely control shared state (V7)", async ({
+  test("command console: atlas and proof commands now genuinely control shared state (V7) @release-fast", async ({
     page,
   }) => {
     // V6's "atlas"/"proof" commands only narrated; V7 upgraded them to

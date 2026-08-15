@@ -178,14 +178,24 @@ See `docs/OPERATIONAL_TWIN_V7_HOSTED_CICD.md` for full detail. Summary:
   correctness, not yet proven by actually creating a Codespace.
 - `.github/workflows/v7-fast-ci.yml` - required on every
   `operational-twin-v7` push/PR; two parallel jobs (lint/typecheck/unit/
-  build, and the curated `@release-fast` Playwright subset). **First run
-  result**: see the live session's own status reporting, not this frozen
-  text - this doc was written while that run was still in flight.
+  build, and the curated `@release-fast` Playwright subset). **Confirmed
+  passing** on multiple real runs this session (~1-2 minutes per job on
+  GitHub-hosted runners, no VM contention).
 - `.github/workflows/v7-full-validation.yml` - manual/nightly, complete
   Playwright suite + Docker Buildx + Trivy fs/image scan + candidate
-  container checks, two parallel jobs.
+  container checks, two parallel jobs. Hit a real, documented GitHub
+  limitation on first use - `workflow_dispatch` cannot be invoked via
+  API/CLI for a workflow that has never fired on that branch (confirmed
+  via a direct 404 from the dispatch endpoint) - worked around with a
+  temporary `push` trigger for one registration run, then removed once
+  `workflow_dispatch` itself was confirmed working. **Confirmed passing**
+  against the exact current HEAD via a proper `workflow_dispatch` call
+  (commit `605366ab7f9ef600f3205f383e3add2543c0790f`) - all three jobs
+  (`setup`, `docker-scan-candidate`, `validate`) succeeded, ~4 minutes
+  total wall-clock.
 - `.github/workflows/v7-evidence-capture.yml` - manual, candidate-SHA-
-  scoped, screenshot/video/soak/inventory only.
+  scoped, screenshot/video/soak/inventory only. Not yet run - deliberately
+  deferred until the final candidate is chosen, per its own design.
 - **Real finding**: every V7 Vercel preview deployment has returned HTTP
   302 to `vercel.com/sso-api` on every route across ~19 consecutive
   `Preview Validation` runs (confirmed with a direct `curl -I`, not

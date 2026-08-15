@@ -1,35 +1,18 @@
 "use client";
 
-import { Component, type ReactNode, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Boxes } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useCompanionPreferences } from "@/lib/companion/useCompanionPreferences";
-import { resolveQualityTier } from "@/lib/companion/state";
 import { useExperienceState, useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
+import { computeAtlasSceneGeometry } from "@/lib/v8/atlasSceneGeometry";
 
-const AtlasSpatialScene = dynamic(
-  () => import("./AtlasSpatialScene").then((mod) => mod.AtlasSpatialScene),
+const AtlasControlRoomScene = dynamic(
+  () => import("./AtlasControlRoomScene").then((mod) => mod.AtlasControlRoomScene),
   { ssr: false },
 );
-
-class SceneErrorBoundary extends Component<
-  { onError: () => void; children: ReactNode },
-  { failed: boolean }
-> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  componentDidCatch() {
-    this.props.onError();
-  }
-  render() {
-    if (this.state.failed) return null;
-    return this.props.children;
-  }
-}
 
 interface AtlasCanvasHostProps {
   flow: string;
@@ -39,15 +22,22 @@ interface AtlasCanvasHostProps {
 }
 
 /**
- * The intent-loaded spatial enhancement on top of AtlasSection's always-
- * present 2D diagram - zero bytes of this file's dynamic import
- * (@react-three/fiber, three, AtlasSpatialScene) are requested until a real
- * user gesture (hover/focus/touch/click on the "Enter 3D view" control
- * below). Enforces the site-wide one-canvas rule via the shared
- * `activeScene` reducer field: activating this scene claims "atlas",
- * which - because CompanionRoot derives its own visibility from the same
- * field - closes RC-01 first if it was open, and this scene closes itself
- * if something else (RC-01, later Time Machine) claims the scene instead.
+ * V8 Phase 2: the intent-loaded spatial enhancement on top of
+ * AtlasSection's always-present 2D diagram, now mounted through the
+ * shared components/v8/ControlRoomScene.tsx instead of owning its own
+ * Canvas/SceneErrorBoundary/context-loss-listener/activeRef boilerplate -
+ * that entire lifecycle (previously duplicated identically across Atlas,
+ * Operational Twin, and RC-01) now lives in exactly one place. This host
+ * keeps only what's genuinely Atlas-specific: the reduced-motion/no-WebGL/
+ * low-power/errored fallback messages, the "Enter 3D view"/"Close 3D view"
+ * controls (mutually exclusive with the active scene, exactly as V7), and
+ * the camera's project-specific centerX (computed once here via the same
+ * pure lib/v8/atlasSceneGeometry helper AtlasSceneContent uses to render,
+ * so both agree on the same number without duplicating the layout math).
+ *
+ * Zero bytes of @react-three/fiber/three/AtlasSceneContent are requested
+ * until a real user gesture (hover/focus/touch/click) on "Enter 3D view" -
+ * unchanged from V7.
  */
 export function AtlasCanvasHost({
   flow,
@@ -64,41 +54,12 @@ export function AtlasCanvasHost({
   const [erroredOut, setErroredOut] = useState(false);
 
   const active = experienceState.activeScene === "atlas";
-  const qualityTier = resolveQualityTier(preferences.lowPowerMode);
-
-  // Three.js's own WebGLRenderer.dispose() (called by R3F when this scene
-  // unmounts) intentionally force-loses the WebGL context as part of its
-  // own cleanup - that fires the exact same "webglcontextlost" event a
-  // genuine driver crash would. This ref lets AtlasSpatialScene's listener
-  // tell "we just closed this on purpose" apart from "the context actually
-  // died while active": synced via effect for the general case, and set
-  // synchronously in the Close button's own click handler below for the
-  // one path confirmed (by direct reproduction) to race the effect.
-  const activeRef = useRef(active);
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-
-  // Shared by both the outer SceneErrorBoundary (catches a genuine thrown
-  // exception during React's unmount/cleanup pass) and AtlasSpatialScene's
-  // own onError prop (catches the raw webglcontextlost DOM event) - both
-  // paths can fire from Three.js's own intentional cleanup-on-unmount, not
-  // just from a real failure, so both need the same activeRef guard.
-  function handleSceneError() {
-    if (!activeRef.current) return;
-    setErroredOut(true);
-    dispatch({ type: "SCENE_ERROR", reason: "atlas-canvas-error" });
-  }
 
   const armPrefetch = () => {
     if (prefetchArmed || reducedMotion || !webglSupported) return;
     setPrefetchArmed(true);
-    void import("./AtlasSpatialScene");
+    void import("./AtlasControlRoomScene");
   };
-
-  useEffect(() => {
-    dispatch({ type: "SPATIAL_LOAD_STATE_SET", state: { status: active ? "loading" : "idle" } });
-  }, [active, dispatch]);
 
   if (reducedMotion) {
     return (
@@ -124,6 +85,9 @@ export function AtlasCanvasHost({
     );
   }
 
+  // Same ordering/short-circuit as V7's AtlasCanvasHost: once erroredOut is
+  // set, this branch owns rendering permanently for this mounted instance -
+  // preserved for behavioral parity (see docs/PORTFOLIO_V8_PHASE2_ATLAS.md).
   if (erroredOut) {
     return (
       <p className="mt-4 font-mono text-[9px] uppercase leading-5 tracking-[0.08em] text-[var(--ink-muted)]">
@@ -133,29 +97,21 @@ export function AtlasCanvasHost({
   }
 
   if (active) {
+    const centerX = computeAtlasSceneGeometry(flow).centerX;
     return (
       <div className="mt-4">
-        <div
+        <AtlasControlRoomScene
+          flow={flow}
+          projectLabel={projectLabel}
+          selectedNodeId={selectedNodeId}
+          onSelectNode={onSelectNode}
+          cameraPosition={[centerX, 0.6, 3.4]}
+          onError={() => setErroredOut(true)}
           className="h-72 w-full overflow-hidden rounded border border-[var(--color-signal-lime)]/30 bg-[var(--color-control-black)] sm:h-96"
-          role="img"
-          aria-label={`Interactive 3D rendering of ${projectLabel}'s architecture - the same nodes as the diagram above, selectable in 3D`}
-        >
-          <SceneErrorBoundary onError={handleSceneError}>
-            <AtlasSpatialScene
-              flow={flow}
-              selectedNodeId={selectedNodeId}
-              onSelectNode={onSelectNode}
-              qualityTier={qualityTier}
-              onError={handleSceneError}
-            />
-          </SceneErrorBoundary>
-        </div>
+        />
         <button
           type="button"
-          onClick={() => {
-            activeRef.current = false;
-            dispatch({ type: "SCENE_CHANGED", scene: null });
-          }}
+          onClick={() => dispatch({ type: "SCENE_CHANGED", scene: null })}
           className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"
         >
           Close 3D view
@@ -168,10 +124,6 @@ export function AtlasCanvasHost({
     <button
       type="button"
       onClick={() => {
-        // Reset any error from a previous activation - this component
-        // instance persists across scene switches (mutual exclusion only
-        // hides its output, it doesn't unmount AtlasCanvasHost), so a stale
-        // error flag must not survive a fresh activation attempt.
         setErroredOut(false);
         dispatch({ type: "SCENE_CHANGED", scene: "atlas" });
       }}

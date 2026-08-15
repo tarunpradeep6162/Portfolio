@@ -54,6 +54,13 @@ export interface ControlRoomSceneProps {
    * losing per-scene code-splitting) - see
    * docs/PORTFOLIO_V8_IMPLEMENTATION_PLAN.md Phase 1/2. */
   children: (ctx: ControlRoomSceneRenderContext) => ReactNode;
+  /** Optional: called (in addition to this component's own SCENE_ERROR
+   * dispatch) whenever this scene fails - lets the caller keep its own
+   * local error-UI flag exactly as every V7 host already did, rather than
+   * inferring "did *my* scene fail" from the shared, not scene-scoped
+   * `spatialLoad` field (which could reflect a different scene's past
+   * failure). */
+  onError?: () => void;
 }
 
 /**
@@ -83,6 +90,7 @@ export function ControlRoomScene({
   cameraPosition,
   cameraFov,
   children,
+  onError,
 }: ControlRoomSceneProps) {
   const reducedMotion = useReducedMotion();
   const webglSupported = useWebGLSupport();
@@ -135,14 +143,21 @@ export function ControlRoomScene({
         );
       }
       dispatch({ type: "SCENE_ERROR", reason: `${errorReason}-ownership-conflict` });
+      onError?.();
       return;
     }
     return () => releaseCanvasOwnership(scene);
+    // onError intentionally excluded - callers pass a stable setState
+    // callback (see AtlasCanvasHost/OperationalTwinHost), and including it
+    // would re-run this effect (and re-claim ownership) on every render
+    // for callers that don't memoize it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, scene, errorReason, dispatch]);
 
   function handleSceneError() {
     if (!activeRef.current) return;
     dispatch({ type: "SCENE_ERROR", reason: errorReason });
+    onError?.();
   }
 
   if (!active) return null;

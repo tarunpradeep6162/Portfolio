@@ -36,9 +36,9 @@ import { useActiveSection } from "@/lib/companion/useActiveSection";
 import { useCompanionSound } from "@/lib/companion/useCompanionSound";
 import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
-import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
+import type { CompanionState } from "@/lib/companion/state";
 import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
-import { CompanionCanvas } from "./CompanionCanvas";
+import { CompanionControlRoomScene } from "./CompanionControlRoomScene";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
@@ -497,7 +497,6 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
   const show3D =
     webglSupported === true && !reducedMotion && !preferences.lowPowerMode && !canvasErrored;
-  const qualityTier = resolveQualityTier(preferences.lowPowerMode);
   // v5.1: project briefings use a project-specific accent color (by real
   // category, see PROJECT_ACCENT_BY_CATEGORY) instead of the standard lime
   // status color, so RC-01 visibly differentiates "narrating a project"
@@ -619,11 +618,11 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         }}
       >
         {show3D ? (
-          <CompanionCanvas
+          <CompanionControlRoomScene
             state={companionState}
-            quality={qualityPresets[qualityTier]}
             accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}
+            className="h-full w-full"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

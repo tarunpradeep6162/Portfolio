@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useRef, type ReactNode } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
@@ -44,6 +44,19 @@ export interface ControlRoomSceneProps {
   /** Recorded on SCENE_ERROR - kept scene-specific for the same debugging
    * trail the old per-scene reasons (e.g. "atlas-canvas-error") gave. */
   errorReason: string;
+  /** Whether a canvas failure should dispatch SCENE_ERROR (clearing the
+   * shared `activeScene`) in addition to calling `onError`. Defaults to
+   * true, matching Atlas/Operational Twin's V7 behavior, where `scene`
+   * and `activeScene` mean the same thing - deactivating on error is
+   * correct there. RC-01 is the one exception: its outer panel's mounted
+   * state (owned by CompanionRoot.tsx) already reads the *same*
+   * `activeScene` field to decide whether the whole panel - not just its
+   * 3D portrait - is open. The original CompanionCanvas.tsx never
+   * dispatched SCENE_ERROR for exactly this reason: a canvas failure
+   * should fall back to the static portrait, not close RC-01 entirely.
+   * Set false for scenes where the canvas and the panel are independently
+   * mounted concepts. */
+  deactivateOnError?: boolean;
   ariaLabel: string;
   className?: string;
   cameraPosition: [number, number, number];
@@ -91,6 +104,7 @@ export function ControlRoomScene({
   cameraFov,
   children,
   onError,
+  deactivateOnError = true,
 }: ControlRoomSceneProps) {
   const reducedMotion = useReducedMotion();
   const webglSupported = useWebGLSupport();
@@ -142,34 +156,71 @@ export function ControlRoomScene({
           `[control-room] canvas ownership violation: "${violation.attempted}" tried to mount while "${violation.currentOwner}" still owned the canvas.`,
         );
       }
-      dispatch({ type: "SCENE_ERROR", reason: `${errorReason}-ownership-conflict` });
+      if (deactivateOnError) {
+        dispatch({ type: "SCENE_ERROR", reason: `${errorReason}-ownership-conflict` });
+      }
       onError?.();
       return;
     }
     return () => releaseCanvasOwnership(scene);
-    // onError intentionally excluded - callers pass a stable setState
-    // callback (see AtlasCanvasHost/OperationalTwinHost), and including it
-    // would re-run this effect (and re-claim ownership) on every render
-    // for callers that don't memoize it.
+    // onError/deactivateOnError intentionally excluded - callers pass
+    // stable values (see AtlasCanvasHost/OperationalTwinHost/
+    // CompanionControlRoomScene), and including them would re-run this
+    // effect (and re-claim ownership) on every render for callers that
+    // don't memoize onError.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, scene, errorReason, dispatch]);
 
   function handleSceneError() {
     if (!activeRef.current) return;
-    dispatch({ type: "SCENE_ERROR", reason: errorReason });
+    if (deactivateOnError) {
+      dispatch({ type: "SCENE_ERROR", reason: errorReason });
+    }
     onError?.();
   }
+
+  // Pauses the render loop entirely when the tab is hidden or the canvas
+  // leaves the viewport - previously only CompanionCanvas.tsx (RC-01) had
+  // this; Atlas and Operational Twin never needed it because they're
+  // always already in view at the moment of activation. Generalized here
+  // rather than kept RC-01-only, since it's a real perf win with no
+  // behavioral downside for any scene (pausing frames doesn't change
+  // canvas presence/count, only whether it's actively rendering).
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(true);
+  const [pageVisible, setPageVisible] = useState(true);
+
+  useEffect(() => {
+    const node = wrapperRef.current;
+    if (!active || !node || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.01 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [active]);
+
+  useEffect(() => {
+    if (!active) return;
+    function handleVisibility() {
+      setPageVisible(!document.hidden);
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [active]);
 
   if (!active) return null;
 
   const quality = qualityPresets[mountDecision.qualityTier];
+  const running = inView && pageVisible;
 
   return (
-    <div className={className} role="img" aria-label={ariaLabel} data-v8-scene={scene}>
+    <div ref={wrapperRef} className={className} role="img" aria-label={ariaLabel} data-v8-scene={scene}>
       <SceneErrorBoundary onError={handleSceneError}>
         <Canvas
           dpr={quality.dpr}
-          frameloop="always"
+          frameloop={running ? "always" : "never"}
           gl={{ antialias: quality.antialias, alpha: true, powerPreference: "low-power" }}
           camera={{ position: cameraPosition, fov: cameraFov }}
           onCreated={({ gl }) => {

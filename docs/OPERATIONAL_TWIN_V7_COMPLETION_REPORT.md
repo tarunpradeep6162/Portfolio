@@ -2,19 +2,97 @@
 
 ## Exact final commit SHA
 
-`24954550f87f7ffe70b20969b3de6772bf18d164` (branch `operational-twin-v7`)
+`9aa3514072fe0d95202892456bb7ab330595d4c3` (branch `operational-twin-v7`)
 
-All four hosted gates below passed for this **exact** commit - not an
-approximate or "close enough" ancestor.
+`V7 Fast CI` and `V7 Evidence Capture` passed for this exact commit.
+`V7 Full Validation` and `Preview Validation`'s last real pass covers an
+earlier commit, `24954550f87f7ffe70b20969b3de6772bf18d164` - **confirmed
+via `git diff --stat` that zero application code differs between the two**;
+the only changes since are the evidence-tooling fix described below and
+documentation (`.github/workflows/v7-evidence-capture.yml`,
+`scripts/capture-v7.mjs`, `scripts/record-v7-operational-twin-walkthrough.mjs`,
+two docs files - nothing in `app/`, `components/`, `lib/`, `content/`,
+`package.json`, `Dockerfile`, `playwright.config.ts`, or any test file).
+Full Validation was **not** re-run for the newer commit, per explicit
+instruction ("Do not rerun Full Validation. It has already passed.").
+
+## A real defect found by inspecting evidence, not trusting a green checkmark
+
+The first `V7 Evidence Capture` run (commit `2495455`) reported success and
+was initially reported as complete, valid evidence. On review, it was not:
+the workflow called `capture-v6.mjs` and `record-v6-experience.mjs`
+(reused unchanged from V6's own release pipeline), and **neither script
+contains a single line that touches any V7 feature**. Confirmed two ways:
+
+1. **Complete source review** of both files - every route they visit
+   (`/work`, `/work/project-aurora`, home), every control they click
+   (Atlas "Enter 3D view", Time Machine's old Previous/Next, RC-01 tours,
+   V6's own "Proof Mode" button), and every screenshot they name (visitor
+   path, Atlas 2D/3D, WebGL fallback, mobile RC-01 states) is a V6
+   surface. None of the ten required V7 items - Operational Twin, System
+   Trace, the four project topologies, Deployment Replay's Play control,
+   Incident Replay, Automation Fabric, Proof Ledger, project comparison, a
+   V7 RC-01 command, one-canvas mutual exclusion - appears anywhere.
+2. **Exact reconciliation** against the original run's own logs: 72 files
+   (55 route screenshots + 16 V6 interaction screenshots + 1 video),
+   matching precisely what the source code would produce - the artifact
+   was genuinely what the scripts generated, not corrupted or mislabeled.
+
+A full byte-for-byte download of that original 48.3 MB artifact was also
+attempted for direct frame-by-frame video playback, as an additional
+check beyond source review - this VM's network throughput to GitHub's
+artifact storage was measured at roughly 5-7 KB/s for this specific
+transfer (consistent with this session's previously-documented slow-but-
+real network pattern), making full download impractical within this
+session. It was left running in the background and was not completed; the
+source-code and log-based reconciliation above is what actually
+established the V6-only finding, not an assumption made instead of
+checking.
+
+**Fix**: two new scripts, each visually verified frame-by-frame against a
+real recorded video before being trusted (not just checked for a passing
+exit code):
+
+- `scripts/capture-v7.mjs` - 16 screenshots covering all ten required
+  items, including a real assertion that the `"twin"` console command
+  leaves exactly one canvas mounted and closes RC-01.
+- `scripts/record-v7-operational-twin-walkthrough.mjs` - one coherent
+  walkthrough covering the same list, correctly named
+  `v7-operational-twin-walkthrough.webm` (not `v6-*`).
+
+Building and testing these surfaced two more real, previously-undiscovered
+environment bugs, each found by literally watching the recorded video
+frame-by-frame, not by trusting a passing assertion:
+
+1. **A timing race between two independently-dispatched effects.** After
+   the `"twin"` command, canvas-mount and RC-01-close were observed
+   resolving in different orders across different runs under real VM
+   contention (confirmed by direct reproduction - two different failure
+   messages on two different attempts with identical code). Fixed by
+   polling each condition independently instead of one check after a
+   fixed wait.
+2. **This headless Chromium environment does not reliably honor
+   `reducedMotion: "no-preference"` immediately.** A recorded video showed
+   the Operational Twin's reduced-motion fallback (a static bar chart)
+   instead of the real 3D scene, for several real seconds after page load,
+   even with the option explicitly set - traced directly to
+   `useReducedMotion()`'s documented server-snapshot behavior (defaults to
+   `reduced=true` on first paint to avoid a motion flash, corrects only
+   after client hydration) combined with this VM's hydration taking longer
+   than assumed under contention (measured: up to several seconds, not
+   the ~1 second originally assumed). Fixed by polling for the real
+   post-hydration button state instead of a fixed wait - not a change to
+   any application code, the application's behavior was always correct.
 
 ## Workflow runs (exact URLs)
 
-| Workflow | Result | Run URL |
-|---|---|---|
-| V7 Fast CI | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874442811 |
-| V7 Full Validation | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874612311 |
-| Preview Validation | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874464694 |
-| V7 Evidence Capture | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874920999 |
+| Workflow | Commit | Result | Run URL |
+|---|---|---|---|
+| V7 Fast CI | `9aa3514` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878603635 |
+| V7 Full Validation | `2495455` (identical app code to `9aa3514`) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874612311 |
+| Preview Validation | `2495455` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874464694 |
+| V7 Evidence Capture (corrected) | `9aa3514` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878623273 |
+| V7 Evidence Capture (V6-only, superseded) | `2495455` | ✅ success but evidence was wrong scope - see above | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874920999 |
 
 ## Test totals
 
@@ -70,21 +148,36 @@ approximate or "close enough" ancestor.
   promoted; that remains a separate, explicit future action once a V7
   final tag exists and its own promotion path is authorized.
 
-## Evidence inventory
+## Evidence inventory (corrected)
 
 Archived as GitHub Actions artifact
-`v7-evidence-24954550f87f7ffe70b20969b3de6772bf18d164` (90-day retention,
-48.3 MB, 72 files):
-[https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874920999/artifacts/9244506471](https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874920999/artifacts/9244506471)
+`v7-evidence-9aa3514072fe0d95202892456bb7ab330595d4c3` (90-day retention,
+17,614,097 bytes, artifact ID `9245449735`, **22 files** - confirmed via
+the upload step's own "With the provided path, there will be 22 files
+uploaded" log line, not assumed):
+[https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878623273/artifacts/9245449735](https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878623273/artifacts/9245449735)
 
-- 55 route screenshots (10 routes × 5-6 breakpoints: 375×812, 768×1024,
-  1024×900, 1440×1000, 1920×1080)
-- 16 interaction screenshots (visitor path, Atlas 2D/3D, node selection,
-  Time Machine, Proof Mode, RC-01 activation/captions/minimised/restored,
-  reduced motion, WebGL fallback, error recovery, mobile
-  collapsed/medium/expanded, clean deactivated state)
-- 1 interaction walkthrough video (`v6-experience-walkthrough.webm`)
-- `evidence-inventory.md` (generated manifest with file sizes)
+- **16 V7 screenshots** (`screenshots/v7/`): Operational Twin idle/active/
+  closed (3), System Trace stage selection (1), 4 distinct project
+  topologies (`topologies/case-aurora.png`, `case-jenkins.png`,
+  `case-secure-aws.png`, `case-nodejs-auth.png` - each visually confirmed
+  to show a genuinely different shape: linear chain, agent-branch
+  triangle, etc.), Deployment Replay mid-playback (1), Incident Replay
+  (1), Automation Fabric (1), Proof Ledger + project comparison table (1),
+  RC-01 command console (1), the `"twin"` command's one-canvas exclusion
+  (1), Operational Twin reduced-motion fallback (1), mobile V7 sections
+  (1).
+- **3 videos**: `v7-operational-twin-walkthrough.webm` (3.5 MB, the
+  primary ~2-minute walkthrough covering every item above in one take -
+  visually confirmed frame-by-frame, not just a passing exit code) plus
+  two short supplementary clips (reduced-motion and mobile passes,
+  hash-named).
+- **3 reports**: `evidence-inventory.md` (generated manifest),
+  `soak-test.txt`, `perf-routes.txt`.
+
+The superseded, V6-only artifact (`v7-evidence-24954550...`, 72 files,
+48.3 MB) remains archived on its original run for historical reference
+but should not be treated as V7 evidence.
 
 ## Remaining limitations
 
@@ -95,23 +188,30 @@ Archived as GitHub Actions artifact
   application behavior. Recommended: create one Codespace on
   `operational-twin-v7` and confirm `npm run dev`/`npm run test:e2e` work
   before relying on it day-to-day.
-- **`workflow_dispatch` registration quirk**: both manual-only workflows
-  (`v7-full-validation.yml`, `v7-evidence-capture.yml`) required a
-  one-time temporary `push` trigger to register with GitHub before
-  `workflow_dispatch` became callable via API/CLI - a documented GitHub
-  limitation (confirmed via a direct 404 from the dispatch endpoint), not
-  a defect in either file. Both are fully registered and working now;
-  this won't recur unless the workflow files are deleted and recreated
-  from scratch.
+- **`workflow_dispatch` registration quirk**: `v7-full-validation.yml` and
+  `v7-evidence-capture.yml` each required a one-time temporary `push`
+  trigger to register with GitHub before `workflow_dispatch` became
+  callable via API/CLI - a documented GitHub limitation (confirmed via a
+  direct 404 from the dispatch endpoint), not a defect in either file.
+  Both are fully registered and working now.
 - **Nightly schedule** (`21:15 UTC` for V7 Full Validation) has not yet
   fired for real - only manually dispatched runs are confirmed.
-- **Jenkins** (see below) still has an untested code path: the
-  `Deploy to Vercel` stage in `Jenkinsfile` was never exercised (no
-  Jenkins Credentials for it exist), and the newly-added `docker buildx`
-  support (`portfolio-build-agent:buildx-v2`) was built and verified
-  standalone but never swapped into the running agent container - both
-  moot now that GitHub Actions is the active platform, but noted for
-  completeness.
+- **Full Validation's exact-SHA gap**: as explained above, it last ran for
+  real against `2495455`, not the newer `9aa3514` - the application code
+  is identical between them (confirmed via diff), but if this matters for
+  a strict audit trail, one more `V7 Full Validation` dispatch against
+  `9aa3514` would close it exactly (not done here per explicit
+  instruction not to rerun it).
+- **Superseded artifact download**: the original V6-only artifact's
+  background download for direct video playback never finished (this
+  VM's network throughput to GitHub's artifact storage). Not needed for
+  the conclusion reached (see above), but noted so it isn't mistaken for
+  a completed check.
+- **Jenkins**: the `Deploy to Vercel` stage in `Jenkinsfile` was never
+  exercised (no Jenkins Credentials for it exist), and the newly-added
+  `docker buildx` support (`portfolio-build-agent:buildx-v2`) was built
+  and verified standalone but never swapped into the running agent
+  container - both moot now that GitHub Actions is the active platform.
 
 ## Codespaces usage instructions
 
@@ -183,10 +283,12 @@ this session.
 
 ## What has not happened (explicitly, to avoid any ambiguity)
 
-- **No V7 final tag has been created.** All four required hosted gates
-  have passed for the same commit, which is the stated precondition -
-  creating the tag itself is a separate, explicit action for the user to
-  request by name/format, not inferred here.
+- **No V7 final tag has been created.** Fast CI and Evidence Capture have
+  passed for the exact final commit; Full Validation and Preview
+  Validation's last real pass is for an ancestor commit with identical
+  application code (see above) - creating the tag itself is a separate,
+  explicit action for the user to request by name/format, not inferred
+  here.
 - **No production promotion.** V6 remains the sole production deployment.
 - **No Jenkins shutdown.** Commands are provided above; none were
   executed.

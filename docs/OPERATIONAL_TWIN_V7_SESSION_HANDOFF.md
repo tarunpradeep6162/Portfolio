@@ -194,11 +194,23 @@ See `docs/OPERATIONAL_TWIN_V7_HOSTED_CICD.md` for full detail. Summary:
   (`setup`, `docker-scan-candidate`, `validate`) succeeded, ~4 minutes
   total wall-clock.
 - `.github/workflows/v7-evidence-capture.yml` - manual, candidate-SHA-
-  scoped, screenshot/video/soak/inventory only. **Confirmed passing**
-  for commit `24954550f87f7ffe70b20969b3de6772bf18d164` - 72 files (57
-  route screenshots × 6 breakpoints, 16 interaction screenshots, 1
-  walkthrough video), soak test clean (15 same-page cycles + mutual-
-  exclusion check + 4 cross-route cycles, no leaks/crashes).
+  scoped. **Real defect found by inspecting the artifact, not trusting
+  the green checkmark**: the first run (commit `2495455`) called
+  `capture-v6.mjs`/`record-v6-experience.mjs` (reused unchanged from V6),
+  and neither script touches a single V7 feature - confirmed by complete
+  source review and exact 72-file log reconciliation. Fixed with two new
+  scripts (`scripts/capture-v7.mjs`, `scripts/record-v7-operational-twin-
+  walkthrough.mjs`) covering all ten required V7 items, each visually
+  verified frame-by-frame against a real recorded video (not just a
+  passing exit code) - this caught two more real bugs along the way (a
+  canvas/RC-01-close timing race, and this headless environment's
+  hydration-timing gap before `reducedMotion: "no-preference"` actually
+  takes effect - both fixed with proper polling, no application code
+  changed). **Confirmed passing** for the corrected commit
+  `9aa3514072fe0d95202892456bb7ab330595d4c3` - 22 files (16 V7
+  screenshots, the correctly-named `v7-operational-twin-walkthrough.webm`
+  + 2 supplementary clips, 3 reports), soak test clean. Full account:
+  `docs/OPERATIONAL_TWIN_V7_COMPLETION_REPORT.md`.
 - **Vercel Deployment Protection, resolved**: every V7 preview had
   returned HTTP 302 to `vercel.com/sso-api` on every route across ~19
   consecutive `Preview Validation` runs - confirmed via direct `curl -I`,

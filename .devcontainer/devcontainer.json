@@ -1,0 +1,53 @@
+{
+  "name": "Operational Twin V7",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+
+  // A minimum, not a forced machine - Codespaces filters the machine-type
+  // picker to options meeting this, but the user still chooses the actual
+  // size at creation time. 4 cores because the full local build + Playwright
+  // run is genuinely CPU-bound (this repo's own Jenkins pipeline history
+  // documents real slowdowns under 1-2 vCPU contention).
+  "hostRequirements": {
+    "cpus": 4
+  },
+
+  "forwardPorts": [3000, 3100, 3600],
+  "portsAttributes": {
+    "3000": {
+      "label": "next dev",
+      "onAutoForward": "openPreview"
+    },
+    "3100": {
+      "label": "Playwright target (npm run test:e2e's own webServer)",
+      "onAutoForward": "silent"
+    },
+    "3600": {
+      "label": "production candidate (npm run build && npm start -- -p 3600)",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // npm ci, not npm install - reproducible, matches package-lock.json
+  // exactly, same discipline as every CI workflow in this repo.
+  // playwright install --with-deps also pulls the OS-level Chromium
+  // dependencies (fonts, codecs, etc.), not just the browser binary -
+  // needed once per Codespace, not per `npm ci`.
+  "postCreateCommand": "npm ci && npx playwright install --with-deps chromium",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  "remoteUser": "node"
+}

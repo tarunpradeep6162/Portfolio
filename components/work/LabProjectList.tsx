@@ -7,7 +7,7 @@ export function LabProjectList({ projects }: { projects: LabProject[] }) {
         <li
           key={project.slug}
           data-reveal
-          className="group grid gap-3 border-b border-[var(--line)] py-6 sm:grid-cols-[3rem_0.72fr_1.28fr] sm:gap-6"
+          className="group grid grid-cols-1 gap-3 border-b border-[var(--line)] py-6 sm:grid-cols-[3rem_0.72fr_1.28fr] sm:gap-6"
         >
           <span className="font-mono text-[9px] tracking-[0.14em] text-[var(--accent-secondary)]">
             {String(index + 1).padStart(2, "0")}

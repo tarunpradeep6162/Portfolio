@@ -5,7 +5,7 @@ import { ExternalLink } from "@/components/ui/ExternalLink";
 export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-[var(--color-control-black)] py-8 text-[var(--color-telemetry-steel)]">
-      <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+      <Container className="grid grid-cols-1 gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
           <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
             {site.name}

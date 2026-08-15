@@ -27,7 +27,7 @@ export default function ResumePage() {
             aria-hidden
             className="absolute -right-20 -top-36 h-[28rem] w-[28rem] rounded-full border border-dashed border-white/10 route-orbit"
           />
-          <div className="relative grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div className="relative grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div>
               <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-signal-lime)]">
                 Web résumé / current record
@@ -75,7 +75,7 @@ export default function ResumePage() {
           </div>
         </header>
 
-        <div className="grid border-x border-b border-[var(--line)] lg:grid-cols-[0.38fr_0.62fr]">
+        <div className="grid grid-cols-1 border-x border-b border-[var(--line)] lg:grid-cols-[0.38fr_0.62fr]">
           <aside className="border-b border-[var(--line)] p-6 sm:p-10 lg:border-b-0 lg:border-r">
             {resumeFile.status === "ready" ? (
               <Button href={resumeFile.value.href}>

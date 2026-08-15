@@ -92,7 +92,7 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
           className={flagships.length > 0 ? "mt-28" : "mt-16"}
           aria-labelledby="lab-heading"
         >
-          <div className="grid gap-4 sm:grid-cols-[0.7fr_1.3fr] sm:items-end">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[0.7fr_1.3fr] sm:items-end">
             <h2
               id="lab-heading"
               className="font-display text-heading font-semibold tracking-[-0.045em] text-[var(--ink)]"

@@ -36,9 +36,9 @@ export default function Home() {
         className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
       >
         <Container>
-          <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
-              <Eyebrow>Selected systems / 01</Eyebrow>
+              <Eyebrow>Selected systems</Eyebrow>
               <h2 className="mt-5 max-w-[12ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
                 Evidence over adjectives.
               </h2>
@@ -79,19 +79,40 @@ export default function Home() {
         id="spine"
         className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
       >
-        <Container className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
-          <div>
-            <div className="lg:sticky lg:top-32">
-              <Eyebrow>Reliability protocol / 02</Eyebrow>
-              <h2 className="mt-5 max-w-[10ch] font-display text-display font-semibold leading-[0.93] tracking-[-0.055em] text-[var(--ink)]">
-                A system is only as strong as its recovery path.
-              </h2>
-              <p className="mt-6 max-w-[46ch] text-base leading-7 text-[var(--ink-muted)]">
-                The same eight-stage protocol connects every case study. Open a
-                stage to inspect the operating principle and see how much
-                project evidence maps to it.
+        <Container>
+          <div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+            <div>
+              <div className="lg:sticky lg:top-32">
+                <Eyebrow>The control room</Eyebrow>
+                <h2 className="mt-5 max-w-[11ch] font-display text-display font-semibold leading-[0.93] tracking-[-0.055em] text-[var(--ink)]">
+                  One protocol, traced live across everything below.
+                </h2>
+                <p className="mt-6 max-w-[46ch] text-base leading-7 text-[var(--ink-muted)]">
+                  The same eight-stage Reliability Spine connects every case
+                  study, every incident, and every automated check on this
+                  page. Trace a stage to watch it light up everywhere it
+                  actually appears - the spine, the incident record, and the
+                  proof ledger all read the same selection.
+                </p>
+                <SystemTrace className="mt-6" />
+              </div>
+            </div>
+            <div>
+              {/* A real second scale-contrast moment (V3's long-standing
+                  finding: "nothing on the rest of the page is large again
+                  until the next page's hero-less heading") - the same real
+                  stage count already shown in the stat grid below, given
+                  hero-scale typographic weight instead of staying a small
+                  number in a box. */}
+              <p
+                aria-hidden
+                className="select-none font-display text-[clamp(6rem,14vw,13rem)] font-bold leading-[0.7] tracking-[-0.09em] text-[var(--ink)] opacity-[0.06]"
+              >
+                08
               </p>
-              <SystemTrace className="mt-6" />
+              <div className="-mt-10 sm:-mt-16 lg:-mt-20">
+                <ReliabilitySpine />
+              </div>
               <div className="mt-10 grid max-w-md grid-cols-2 border border-[var(--line)] font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
                 <div className="border-r border-[var(--line)] p-4">
                   <span className="block font-display text-3xl font-semibold text-[var(--accent)]">
@@ -106,65 +127,12 @@ export default function Home() {
                   mapped systems
                 </div>
               </div>
+              <IncidentReplay />
+              <AutomationFabric />
+              <ProofLedger />
+              <ProjectComparison />
             </div>
           </div>
-          <ReliabilitySpine />
-        </Container>
-      </section>
-
-      <section
-        id="incidents"
-        data-field="manual"
-        className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
-      >
-        <Container>
-          <Eyebrow>Incident record</Eyebrow>
-          <h2 className="mt-5 max-w-[16ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
-            Real problems, found and fixed in the open.
-          </h2>
-          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
-            Every incident below happened during this site&rsquo;s own build -
-            not a client outage, not invented drama. Step through what was
-            observed, what was verified, and what changed as a result.
-          </p>
-          <IncidentReplay />
-        </Container>
-      </section>
-
-      <section
-        id="automation"
-        className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
-      >
-        <Container>
-          <Eyebrow>Automation fabric</Eyebrow>
-          <h2 className="mt-5 max-w-[18ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em] text-[var(--ink)]">
-            The pipeline this site ships through.
-          </h2>
-          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
-            Change to rollback readiness - every stage names the real system
-            behind it, and pending means genuinely not yet run for this
-            version, never a hidden failure.
-          </p>
-          <AutomationFabric />
-        </Container>
-      </section>
-
-      <section
-        id="proof-ledger"
-        data-field="manual"
-        className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
-      >
-        <Container>
-          <Eyebrow>Proof ledger</Eyebrow>
-          <h2 className="mt-5 max-w-[16ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
-            Every claim, resolved to one honest state.
-          </h2>
-          <p className="mt-6 max-w-[58ch] text-lead leading-8 text-[var(--ink-muted)]">
-            Verified, explained, or missing - filterable, and synchronized
-            with whichever stage is currently traced above.
-          </p>
-          <ProofLedger />
-          <ProjectComparison />
         </Container>
       </section>
 
@@ -172,9 +140,9 @@ export default function Home() {
         data-field="manual"
         className="bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
       >
-        <Container className="grid gap-14 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
+        <Container className="grid grid-cols-1 gap-14 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
           <div>
-            <Eyebrow>Capability matrix / 03</Eyebrow>
+            <Eyebrow>Capability matrix</Eyebrow>
             <p className="mt-8 font-display text-[clamp(5rem,13vw,12rem)] font-bold leading-[0.7] tracking-[-0.09em] text-[var(--ink)]">
               05
             </p>
@@ -187,7 +155,7 @@ export default function Home() {
             {skillDomains.map((domain, index) => (
               <div
                 key={domain.domain}
-                className="grid gap-3 border-b border-[var(--line)] py-6 sm:grid-cols-[3rem_0.55fr_1.45fr] sm:gap-6"
+                className="grid grid-cols-1 gap-3 border-b border-[var(--line)] py-6 sm:grid-cols-[3rem_0.55fr_1.45fr] sm:gap-6"
               >
                 <dt className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
                   0{index + 1}
@@ -209,9 +177,9 @@ export default function Home() {
         className="border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
       >
         <Container>
-          <div className="grid gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
             <div>
-              <Eyebrow>Operating history / 04</Eyebrow>
+              <Eyebrow>Operating history</Eyebrow>
               <h2 className="mt-5 max-w-[11ch] font-display text-display font-semibold leading-[0.95] tracking-[-0.055em]">
                 From support pressure to cloud delivery.
               </h2>
@@ -233,9 +201,9 @@ export default function Home() {
         data-field="manual"
         className="border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
       >
-        <Container className="grid gap-14 lg:grid-cols-2 lg:gap-20">
+        <Container className="grid grid-cols-1 gap-14 lg:grid-cols-2 lg:gap-20">
           <div>
-            <Eyebrow>Credentials / 05</Eyebrow>
+            <Eyebrow>Credentials</Eyebrow>
             <h2 className="mt-5 font-display text-heading font-semibold tracking-[-0.04em]">
               Education and selected certification
             </h2>
@@ -260,7 +228,7 @@ export default function Home() {
           </div>
 
           <div className="border-l-0 border-[var(--line)] lg:border-l lg:pl-20">
-            <Eyebrow>Engineering lab / 06</Eyebrow>
+            <Eyebrow>Engineering lab</Eyebrow>
             <p className="mt-6 font-display text-[clamp(3.75rem,8vw,7rem)] font-bold leading-none tracking-[-0.075em]">
               {String(labProjects.length).padStart(2, "0")}
             </p>
@@ -288,7 +256,7 @@ export default function Home() {
           className="absolute -right-8 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full border border-[var(--color-signal-lime)]/20"
         />
         <Container className="relative">
-          <Eyebrow>Final route / 07</Eyebrow>
+          <Eyebrow>Final route</Eyebrow>
           <h2 className="mt-6 max-w-[13ch] font-display text-display font-semibold leading-[0.92] tracking-[-0.06em] text-[var(--ink)]">
             Bring me the system that cannot stay manual.
           </h2>

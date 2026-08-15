@@ -36,9 +36,10 @@ import { useActiveSection } from "@/lib/companion/useActiveSection";
 import { useCompanionSound } from "@/lib/companion/useCompanionSound";
 import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
-import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
+import type { CompanionState } from "@/lib/companion/state";
 import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
-import { CompanionCanvas } from "./CompanionCanvas";
+import { CompanionControlRoomScene } from "./CompanionControlRoomScene";
+import type { ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
@@ -75,6 +76,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const [currentScript, setCurrentScript] = useState<CompanionScript | null>(null);
   const [fallbackCaptionIndex, setFallbackCaptionIndex] = useState(-1);
   const [canvasErrored, setCanvasErrored] = useState(false);
+  const controlRoomRef = useRef<ControlRoomSceneHandle>(null);
   const [announcement, setAnnouncement] = useState("RC-01 activated.");
   const [paused, setPaused] = useState(false);
   // Collapsed peek is the required default state on activation below the
@@ -460,6 +462,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       return;
     }
     handleStop();
+    controlRoomRef.current?.markClosing();
     onDeactivate();
   }, [subpanel, activeTourId, exitTour, handleStop, onDeactivate]);
 
@@ -497,7 +500,6 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
   const show3D =
     webglSupported === true && !reducedMotion && !preferences.lowPowerMode && !canvasErrored;
-  const qualityTier = resolveQualityTier(preferences.lowPowerMode);
   // v5.1: project briefings use a project-specific accent color (by real
   // category, see PROJECT_ACCENT_BY_CATEGORY) instead of the standard lime
   // status color, so RC-01 visibly differentiates "narrating a project"
@@ -593,6 +595,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             type="button"
             onClick={() => {
               handleStop();
+              controlRoomRef.current?.markClosing();
               onDeactivate();
             }}
             aria-label="Deactivate RC-01"
@@ -619,11 +622,12 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         }}
       >
         {show3D ? (
-          <CompanionCanvas
+          <CompanionControlRoomScene
+            ref={controlRoomRef}
             state={companionState}
-            quality={qualityPresets[qualityTier]}
             accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}
+            className="h-full w-full"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

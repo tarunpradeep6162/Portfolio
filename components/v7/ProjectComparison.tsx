@@ -43,7 +43,7 @@ export function ProjectComparison() {
             aria-labelledby={leftId}
             value={leftSlug}
             onChange={(event) => setLeftSlug(event.target.value)}
-            className="rounded border border-[var(--line)] bg-transparent px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink)]"
+            className="w-full max-w-[16rem] rounded border border-[var(--line)] bg-transparent px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink)]"
           >
             {flagships.map((p) => (
               <option key={p.slug} value={p.slug}>
@@ -60,7 +60,7 @@ export function ProjectComparison() {
             aria-labelledby={rightId}
             value={rightSlug}
             onChange={(event) => setRightSlug(event.target.value)}
-            className="rounded border border-[var(--line)] bg-transparent px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink)]"
+            className="w-full max-w-[16rem] rounded border border-[var(--line)] bg-transparent px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink)]"
           >
             {flagships.map((p) => (
               <option key={p.slug} value={p.slug}>

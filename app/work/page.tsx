@@ -24,7 +24,7 @@ export default function WorkPage() {
           aria-hidden
           className="absolute right-[-8rem] top-[-16rem] h-[42rem] w-[42rem] rounded-full border border-dashed border-white/10 route-orbit"
         />
-        <Container className="relative grid gap-12 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+        <Container className="relative grid grid-cols-1 gap-12 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
           <div>
             <Eyebrow>Work index / 01</Eyebrow>
             <h1 className="mt-6 max-w-[13ch] font-display text-display font-semibold leading-[0.91] tracking-[-0.065em] text-[var(--ink)]">

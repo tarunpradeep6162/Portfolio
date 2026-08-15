@@ -89,7 +89,7 @@ export function ProofLedger() {
           </li>
         ) : (
           records.map((record) => (
-            <li key={record.id} className="grid gap-2 border-b border-[var(--line)] py-4 sm:grid-cols-[7rem_1fr]">
+            <li key={record.id} className="grid grid-cols-1 gap-2 border-b border-[var(--line)] py-4 sm:grid-cols-[7rem_1fr]">
               <span
                 className="inline-flex h-fit items-center gap-1.5 self-start font-mono text-[8px] uppercase tracking-[0.1em]"
                 style={{ color: STATUS_COLOR[record.status] }}

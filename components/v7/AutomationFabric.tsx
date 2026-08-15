@@ -28,7 +28,7 @@ export function AutomationFabric() {
         {automationStages.map((item, index) => {
           const verified = item.evidence.status === "verified";
           return (
-            <li key={item.slug} className="grid gap-3 py-4 sm:grid-cols-[2.5rem_10rem_1fr] sm:gap-5">
+            <li key={item.slug} className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-[2.5rem_10rem_1fr] sm:gap-5">
               <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--ink-muted)]">
                 {String(index + 1).padStart(2, "0")}
               </span>

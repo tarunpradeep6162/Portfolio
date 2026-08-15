@@ -95,18 +95,32 @@ jobs:
           echo $! > /tmp/evidence-server.pid
           node scripts/ci/verify-health.mjs http://localhost:3500 60000
 
-      - name: Screenshot matrix (desktop + mobile breakpoints)
+      # V7-specific evidence, not the V6-only capture-v6.mjs/
+      # record-v6-experience.mjs scripts (which this workflow used
+      # originally - a real gap found by direct artifact inspection after
+      # the first real run: their route/breakpoint matrix and interaction
+      # walkthrough only ever exercised Atlas, RC-01 tours, and V6's Proof
+      # Mode, never the Operational Twin, System Trace, project topologies,
+      # Deployment Replay, Incident Replay, Automation Fabric, Proof
+      # Ledger, project comparison, or any V7 RC-01 command). capture-v7.mjs
+      # and record-v7-operational-twin-walkthrough.mjs cover all of those
+      # explicitly - see each script's own header for what it demonstrates.
+      - name: V7 screenshot matrix
         env:
-          V6_BASE_URL: http://localhost:3500
-          V6_SCREENSHOT_DIR: /tmp/v7-evidence/screenshots
-        run: node scripts/capture-v6.mjs
+          V7_BASE_URL: http://localhost:3500
+          V7_SCREENSHOT_DIR: /tmp/v7-evidence/screenshots
+        run: node scripts/capture-v7.mjs
 
-      - name: Interaction walkthrough video
+      - name: V7 Operational Twin walkthrough video
         env:
-          V6_BASE_URL: http://localhost:3500
-          V6_VIDEO_DIR: /tmp/v7-evidence/video
-        run: node scripts/record-v6-experience.mjs
+          V7_BASE_URL: http://localhost:3500
+          V7_VIDEO_DIR: /tmp/v7-evidence/video
+        run: node scripts/record-v7-operational-twin-walkthrough.mjs
 
+      # Kept as supplementary evidence, not V7-specific by nature (they
+      # measure real one-canvas-exclusion behavior and per-route byte
+      # budgets generically, unrelated to which surface a page happens to
+      # show) - not a claim that these alone demonstrate V7 features.
       - name: Soak test (15 activation/deactivation cycles)
         env:
           V6_BASE_URL: http://localhost:3500

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { HeroCopyReveal } from "./HeroCopyReveal";
 import { InfrastructureObservatory } from "./InfrastructureObservatory";
+import { OperationalTwinHost } from "@/components/v7/OperationalTwinHost";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
@@ -11,7 +12,7 @@ export function Hero() {
     <section className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(116,140,255,0.13),transparent_66%)]" />
 
-      <Container className="relative grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">
+      <Container className="relative grid grid-cols-1 min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">
         <HeroCopyReveal>
           <div className="relative z-10 max-w-[46rem]">
             <p
@@ -54,6 +55,10 @@ export function Hero() {
               <Button href={hero.secondaryCta.href} variant="secondary">
                 {hero.secondaryCta.label}
               </Button>
+            </div>
+
+            <div data-reveal>
+              <OperationalTwinHost />
             </div>
 
             <div

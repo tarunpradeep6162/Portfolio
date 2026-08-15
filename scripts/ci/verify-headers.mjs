@@ -9,6 +9,10 @@
 const baseUrl = process.argv[2] ?? process.env.CI_BASE_URL ?? "http://localhost:3500";
 const path = process.argv[3] ?? "/";
 
+// See verify-health.mjs for why this exists - no-op unless set.
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+const headers = bypassSecret ? { "x-vercel-protection-bypass": bypassSecret } : {};
+
 const required = [
   ["x-content-type-options", "nosniff"],
   ["referrer-policy", "strict-origin-when-cross-origin"],
@@ -17,7 +21,7 @@ const required = [
   ["strict-transport-security", "max-age=63072000; includeSubDomains"],
 ];
 
-const res = await fetch(`${baseUrl}${path}`, { redirect: "manual" });
+const res = await fetch(`${baseUrl}${path}`, { redirect: "manual", headers });
 let failures = 0;
 
 for (const [header, expectedValue] of required) {

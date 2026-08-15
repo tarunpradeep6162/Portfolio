@@ -13,14 +13,36 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const externalBaseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL;
 
+// Vercel Deployment Protection (SSO wall) intercepts every route on a
+// protected preview unless this header is present on every request - only
+// relevant when externalBaseUrl is an actual Vercel preview (Preview
+// Validation), a no-op against a local server or a Docker candidate where
+// the env var is never set. Never logged.
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
-  retries: 0,
+  // Zero for local dev - a real failure should surface immediately while
+  // iterating. Retries only when targeting an external base URL (CI-style
+  // runs against a real Vercel preview or Docker candidate, the same signal
+  // this file already uses above): across 5 real full-suite runs of this
+  // Jenkins pipeline on a resource-constrained VM, exactly one test failed
+  // each time - a different, unrelated test every time (skip-link session
+  // drop, WebGL-context-loss timing, generic 30s timeouts), never the same
+  // one twice, and every one of them passed cleanly in isolated local
+  // reruns - consistent with rare, genuine environmental flakiness, not a
+  // deterministic bug (a real regression reproduced 100% of the time when
+  // isolated, unlike these). 2 retries absorbs that without masking a real,
+  // reproducible failure, which will still fail all 3 attempts.
+  retries: externalBaseUrl ? 2 : 0,
   reporter: [["list"]],
   use: {
     baseURL: externalBaseUrl ?? "http://localhost:3100",
     trace: "retain-on-failure",
+    ...(vercelBypassSecret
+      ? { extraHTTPHeaders: { "x-vercel-protection-bypass": vercelBypassSecret } }
+      : {}),
   },
   projects: [
     {

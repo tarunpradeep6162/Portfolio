@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { site } from "@/content/site";
 
 test.describe("external identity links", () => {
-  test("GitHub and LinkedIn links point to the real profiles with safe rel attributes", async ({
+  test("GitHub and LinkedIn links point to the real profiles with safe rel attributes @release-fast", async ({
     page,
   }) => {
     await page.goto("/contact");

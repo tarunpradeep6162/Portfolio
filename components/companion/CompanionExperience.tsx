@@ -36,9 +36,10 @@ import { useActiveSection } from "@/lib/companion/useActiveSection";
 import { useCompanionSound } from "@/lib/companion/useCompanionSound";
 import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
-import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
+import type { CompanionState } from "@/lib/companion/state";
 import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
-import { CompanionCanvas } from "./CompanionCanvas";
+import { CompanionControlRoomScene } from "./CompanionControlRoomScene";
+import type { ControlRoomSceneHandle } from "@/components/v8/ControlRoomScene";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
@@ -75,6 +76,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const [currentScript, setCurrentScript] = useState<CompanionScript | null>(null);
   const [fallbackCaptionIndex, setFallbackCaptionIndex] = useState(-1);
   const [canvasErrored, setCanvasErrored] = useState(false);
+  const controlRoomRef = useRef<ControlRoomSceneHandle>(null);
   const [announcement, setAnnouncement] = useState("RC-01 activated.");
   const [paused, setPaused] = useState(false);
   // Collapsed peek is the required default state on activation below the
@@ -342,6 +344,15 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             playScript(scripts.projects);
             break;
           case "spine":
+            // V7: also traces every real stage across every surface that
+            // reads selectedStageId/traceScope (System Trace,
+            // ReliabilitySpine, ProjectCard, Proof Ledger, the
+            // Operational Twin's instrument highlighting) - a real
+            // dispatch, not just narration. traceScope alone has no
+            // visible effect while selectedStageId is null (see
+            // ReliabilitySpine.tsx), so both are set together.
+            experienceDispatch({ type: "STAGE_SELECTED", stageId: "commit" });
+            experienceDispatch({ type: "TRACE_SCOPE_SET", scope: "all" });
             playScript(scripts.spine);
             break;
           case "skills":
@@ -361,8 +372,29 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             handleStop();
             break;
           case "atlas":
-          case "proof":
+            // V7: real scene activation on a case-study page (Atlas
+            // exists there); dispatching this from the homepage, where
+            // Atlas isn't mounted, has no visible target but is not a
+            // fabricated effect either - the shared state genuinely
+            // changes, nothing simulates a response that isn't real.
+            experienceDispatch({ type: "SCENE_CHANGED", scene: "atlas" });
             setCompanionState("idle");
+            break;
+          case "proof":
+            experienceDispatch({ type: "STAGE_SELECTED", stageId: "commit" });
+            experienceDispatch({ type: "TRACE_SCOPE_SET", scope: "all" });
+            setCompanionState("idle");
+            break;
+          case "twin":
+            experienceDispatch({ type: "SCENE_CHANGED", scene: "operational-twin" });
+            setCompanionState("idle");
+            break;
+          case "reset":
+            experienceDispatch({ type: "RESET" });
+            setCompanionState("idle");
+            break;
+          case "pipeline":
+            playScript(scripts.pipeline);
             break;
           case "recruiter":
             experienceDispatch({ type: "VISITOR_PATH_SET", path: "recruiter" });
@@ -382,11 +414,11 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
       switch (command) {
         case "help":
-          return "Documented commands only: help, projects, spine, skills, resume, contact, mute, stop, atlas, proof, recruiter, engineer, explorer.";
+          return "Documented commands only: help, projects, spine, skills, resume, contact, mute, stop, atlas, proof, twin, reset, pipeline, recruiter, engineer, explorer.";
         case "projects":
           return "Speaking flagship project summaries — see captions below.";
         case "spine":
-          return "Speaking the eight-stage Reliability Spine — see captions below.";
+          return "Speaking the eight-stage Reliability Spine, and tracing every stage across System Trace, the Spine, project cards, and the Proof Ledger — see captions below.";
         case "skills":
           return "Speaking the capability matrix — see captions below.";
         case "resume":
@@ -398,9 +430,15 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         case "stop":
           return "Stopped current playback.";
         case "atlas":
-          return "The Living Infrastructure Atlas and Architecture Time Machine live on each case-study page, under 'The architecture' — real nodes and stages derived from that project's own verified data, no invented ones.";
+          return "Opening the Living Infrastructure Atlas on this page, if it's a case study — real nodes and stages derived from that project's own verified data, no invented ones.";
         case "proof":
-          return "Proof Mode is the 'Proof Mode' disclosure near the bottom of each case-study page — verified evidence, the engineering explanation, and known limitations, kept explicitly separate.";
+          return "Tracing every stage so the Proof Ledger below shows every real claim across every project, not filtered to one.";
+        case "twin":
+          return "Activating the Operational Twin — closes this panel first, one canvas at a time.";
+        case "reset":
+          return "Resetting to a clean state — every trace, selection, and open scene, including this panel.";
+        case "pipeline":
+          return "Speaking the real automation pipeline this site ships through — see captions below, and the Automation Fabric section for the full record.";
         case "recruiter":
           return "Visitor path set to Recruiter — fast, outcome-first framing. Reset any time from the /work index.";
         case "engineer":
@@ -424,6 +462,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       return;
     }
     handleStop();
+    controlRoomRef.current?.markClosing();
     onDeactivate();
   }, [subpanel, activeTourId, exitTour, handleStop, onDeactivate]);
 
@@ -461,7 +500,6 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
   const show3D =
     webglSupported === true && !reducedMotion && !preferences.lowPowerMode && !canvasErrored;
-  const qualityTier = resolveQualityTier(preferences.lowPowerMode);
   // v5.1: project briefings use a project-specific accent color (by real
   // category, see PROJECT_ACCENT_BY_CATEGORY) instead of the standard lime
   // status color, so RC-01 visibly differentiates "narrating a project"
@@ -557,6 +595,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             type="button"
             onClick={() => {
               handleStop();
+              controlRoomRef.current?.markClosing();
               onDeactivate();
             }}
             aria-label="Deactivate RC-01"
@@ -583,11 +622,12 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         }}
       >
         {show3D ? (
-          <CompanionCanvas
+          <CompanionControlRoomScene
+            ref={controlRoomRef}
             state={companionState}
-            quality={qualityPresets[qualityTier]}
             accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}
+            className="h-full w-full"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

@@ -4,6 +4,7 @@ import { skillDomains } from "./skills";
 import { site } from "./site";
 import { isReady } from "./types";
 import type { SpineStageId, ProjectCategory } from "./types";
+import { automationStages } from "./v7/automation";
 
 /**
  * Every word RC-01 can speak or caption is generated here from the same
@@ -78,6 +79,17 @@ export const scripts: Record<string, CompanionScript> = {
       "For a fast overview: Tarun is a Cloud Engineer working across AWS, Azure, Linux, Docker, and Jenkins.",
       `${flagships.length} flagship systems and ${labProjects.length} lab projects are documented with real tools and outcomes — nothing here is a template placeholder.`,
       "The résumé page has the full operating history, and the contact page has verified ways to reach him directly.",
+    ],
+  },
+  pipeline: {
+    id: "pipeline",
+    title: "Automation Fabric",
+    lines: [
+      `This site ships through a real pipeline, ${automationStages.length} stages from Change to Rollback readiness.`,
+      ...automationStages.map(
+        (stage) => `${stage.stage}, run by ${stage.tool}: ${stage.evidence.status === "verified" ? "verified" : "pending — not yet run for this version"}.`,
+      ),
+      "Every stage's real status is in the Proof Ledger section below, with evidence links where they exist.",
     ],
   },
 };
@@ -252,6 +264,14 @@ export const consoleCommands = [
   "recruiter",
   "engineer",
   "explorer",
+  // V7 additions: unlike the commands above (which only narrate), these
+  // dispatch into the shared experience reducer - a real, observable
+  // effect on Atlas/the Operational Twin/System Trace/Proof Ledger, not
+  // simulated console text. See CompanionExperience.tsx's
+  // handleConsoleCommand for exactly what each one dispatches.
+  "twin",
+  "reset",
+  "pipeline",
 ] as const;
 
 export type ConsoleCommand = (typeof consoleCommands)[number];

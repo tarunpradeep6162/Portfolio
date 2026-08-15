@@ -7,7 +7,7 @@ export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
         <li
           key={`${role.org}-${role.dates}`}
           data-reveal
-          className="grid gap-4 border-b border-[var(--line)] py-7 sm:grid-cols-[3rem_1fr] sm:gap-6 sm:py-8"
+          className="grid grid-cols-1 gap-4 border-b border-[var(--line)] py-7 sm:grid-cols-[3rem_1fr] sm:gap-6 sm:py-8"
         >
           <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
             0{index + 1}
@@ -27,7 +27,7 @@ export function ExperienceTimeline({ roles }: { roles: ExperienceRole[] }) {
             </p>
 
             {role.achievements.status === "ready" && (
-              <ul className="mt-5 grid gap-3 lg:grid-cols-2">
+              <ul className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {role.achievements.value.map((item) => (
                   <li
                     key={item}

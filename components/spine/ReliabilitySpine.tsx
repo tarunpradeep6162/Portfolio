@@ -6,6 +6,7 @@ import { projects } from "@/content/projects";
 import { SpineNode } from "./SpineNode";
 import type { SpineStageId } from "@/content/types";
 import { useObservatoryHighlightListener } from "@/lib/companion/observatoryHighlight";
+import { useExperienceState } from "@/lib/v6/ExperienceProvider";
 
 /**
  * v5.1: when no explicit `activeStages` prop is given, this list listens
@@ -17,6 +18,13 @@ import { useObservatoryHighlightListener } from "@/lib/companion/observatoryHigh
  * explicit `activeStages` prop always wins, so any future caller that
  * wants deliberate control over which stages are marked active is
  * unaffected.
+ *
+ * V7: below both of those in priority, this also falls back to the shared
+ * System Trace state (`selectedStageId`/`traceScope`) - a *persistent*
+ * user selection, unlike the transient 1.8s RC-01 highlight above it. Two
+ * genuinely different mechanisms for two genuinely different purposes
+ * (momentary narration vs. deliberate selection), not a duplicate source
+ * of truth for the same thing - see docs/OPERATIONAL_TWIN_V7_ARCHITECTURE.md.
  */
 export function ReliabilitySpine({
   activeStages,
@@ -43,13 +51,21 @@ export function ReliabilitySpine({
     };
   }, []);
 
+  const { selectedStageId, traceScope } = useExperienceState();
+  const traceActiveStages =
+    selectedStageId === null
+      ? undefined
+      : traceScope === "all"
+        ? spineStages.map((s) => s.id)
+        : [selectedStageId];
+
   const effectiveActiveStages =
     activeStages ??
     (eventHighlight === "all"
       ? spineStages.map((s) => s.id)
       : eventHighlight
         ? [eventHighlight]
-        : undefined);
+        : traceActiveStages);
 
   return (
     <div className={className}>

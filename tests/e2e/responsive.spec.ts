@@ -16,7 +16,10 @@ const breakpoints = [
 ];
 
 for (const bp of breakpoints) {
-  test(`no horizontal overflow on home at ${bp.name} (${bp.width}px)`, async ({
+  // @release-fast only at 360px (the smallest, most overflow-prone
+  // breakpoint) - the full sweep across all six stays in FULL_VALIDATION.
+  const tag = bp.width === 360 ? " @release-fast" : "";
+  test(`no horizontal overflow on home at ${bp.name} (${bp.width}px)${tag}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: bp.width, height: bp.height });

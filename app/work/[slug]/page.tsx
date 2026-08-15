@@ -48,7 +48,7 @@ function Chapter({
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-4 border-t border-[var(--line)] py-10 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:py-14">
+    <section className="grid grid-cols-1 gap-4 border-t border-[var(--line)] py-10 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:py-14">
       <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
         {number}
       </span>
@@ -86,7 +86,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
           >
             <ArrowLeft size={13} aria-hidden /> Work index
           </Link>
-          <div className="mt-10 grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <Eyebrow>
                 Case study / {String(projectIndex + 1).padStart(2, "0")}
@@ -131,7 +131,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
         data-field="manual"
         className="manual-grid bg-[var(--surface)] text-[var(--ink)]"
       >
-        <Container className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[0.36fr_0.64fr] lg:gap-20 lg:py-28">
+        <Container className="grid grid-cols-1 gap-12 py-16 sm:py-20 lg:grid-cols-[0.36fr_0.64fr] lg:gap-20 lg:py-28">
           <aside>
             <div className="border-t border-[var(--line)] pt-5 lg:sticky lg:top-28">
               <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--accent-secondary)]">
@@ -223,7 +223,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
       </div>
 
       <section className="border-t border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20">
-        <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+        <Container className="grid grid-cols-1 gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--color-telemetry-steel)]">
               Next system

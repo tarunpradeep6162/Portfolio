@@ -24,7 +24,7 @@ export default function AboutPage() {
           aria-hidden
           className="absolute -right-48 top-12 h-[36rem] w-[36rem] rounded-full border border-dashed border-white/10 route-orbit"
         />
-        <Container className="relative grid gap-12 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
+        <Container className="relative grid grid-cols-1 gap-12 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
           <div>
             <Eyebrow>About / 01</Eyebrow>
             <h1 className="mt-6 font-display text-display font-semibold leading-[0.91] tracking-[-0.065em] text-[var(--ink)]">
@@ -63,7 +63,7 @@ export default function AboutPage() {
         data-field="manual"
         className="border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
       >
-        <Container className="grid gap-12 lg:grid-cols-[0.42fr_1.58fr] lg:gap-20">
+        <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[0.42fr_1.58fr] lg:gap-20">
           <div>
             <Eyebrow>Experience / 02</Eyebrow>
             <h2 className="mt-5 font-display text-heading font-semibold tracking-[-0.045em]">

@@ -23,6 +23,15 @@ jobs:
     timeout-minutes: 20
     env:
       PREVIEW_URL: ${{ github.event.deployment_status.environment_url }}
+      # Vercel Deployment Protection (SSO wall) intercepts every route on
+      # a protected preview with a 302 unless this header is present -
+      # confirmed directly this session (curl -I against a real preview
+      # showed every route redirecting to vercel.com/sso-api). Read by
+      # scripts/ci/verify-*.mjs and playwright.config.ts; a no-op if this
+      # secret isn't configured (matches how VERCEL_PRODUCTION_URL's own
+      # absence is already handled elsewhere in this repo's workflows -
+      # skip gracefully, don't fabricate a pass).
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

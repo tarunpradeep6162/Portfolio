@@ -63,7 +63,7 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toHaveCount(0);
   });
 
-  test("activation boots the panel but does not itself start speech - Speak is a separate control", async ({
+  test("activation boots the panel but does not itself start speech - Speak is a separate control @release-fast", async ({
     page,
   }) => {
     await installFakeSpeech(page);
@@ -193,10 +193,20 @@ test.describe("RC-01 Reliability Companion", () => {
     // content-heavy home page; under this VM's documented CPU contention
     // each Tab+evaluate round-trip can be slow, so this walk gets a longer
     // budget than the default per-test timeout.
+    //
+    // The iteration bound is a separate concern from that timeout: V7 added
+    // several new homepage sections (System Trace, Incident Replay,
+    // Automation Fabric, Proof Ledger, Project Comparison), each
+    // contributing focusable elements before Activate in tab order. Measured
+    // directly against a real build: 62 presses are needed as of this
+    // writing, exceeding the old bound of 60 regardless of speed - this is
+    // not the same failure the CPU-contention comment above describes.
+    // 120 leaves real headroom for further homepage growth rather than
+    // re-tuning this to another exact count.
     test.setTimeout(60_000);
     await page.goto("/");
     let reachedActivate = false;
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 120; i++) {
       await page.keyboard.press("Tab");
       // The Activate button's accessible name comes from its visible text
       // content, not an aria-label attribute (unlike the panel's other
@@ -252,7 +262,12 @@ test.describe("RC-01 Reliability Companion", () => {
 
     // The Recruiter Tour's suggestedRoute only appears on its final step
     // (content/companion.ts) - advance through the rest with Next first.
-    const nextButton = page.getByRole("button", { name: "Next" });
+    // exact: true - IncidentReplay's own Next button (added later this
+    // session) has an aria-label "Next step in this incident's record",
+    // which still substring-matches a non-exact { name: "Next" } query and
+    // makes this locator ambiguous (Playwright strict-mode violation) now
+    // that both are on the same page.
+    const nextButton = page.getByRole("button", { name: "Next", exact: true });
     await nextButton.click();
     await nextButton.click();
     await nextButton.click();
@@ -291,7 +306,50 @@ test.describe("RC-01 Reliability Companion", () => {
     ).toBeVisible();
   });
 
-  test("command console: atlas and proof commands guide without claiming to control the page", async ({
+  test("command console: atlas and proof commands now genuinely control shared state (V7) @release-fast", async ({
+    page,
+  }) => {
+    // V6's "atlas"/"proof" commands only narrated; V7 upgraded them to
+    // dispatch real shared state (spec Section 10.9: "must control real
+    // shared application state, not simulated console output"). This
+    // replaces the old assertion that they *didn't* control the page -
+    // that guarantee was intentionally changed, not regressed.
+    await installFakeSpeech(page);
+    await page.goto("/");
+    await activate(page);
+    await page.getByRole("button", { name: /^console$/i }).click();
+    const input = page.getByLabel("RC-01 console command");
+
+    await input.fill("proof");
+    await input.press("Enter");
+    // "proof" traces every stage - a real dispatch into the same
+    // selectedStageId/traceScope every other V7 surface reads, visible
+    // via System Trace's stable DOM signal.
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "commit",
+    );
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-scope",
+      "all",
+    );
+
+    // "twin" activates the real Operational Twin scene and, via the same
+    // one-canvas mutual exclusion Atlas/RC-01 already share, closes RC-01
+    // itself - not simulated text, an observable state change. RC-01 is
+    // already open from above (the "proof" command doesn't close it) -
+    // re-clicking "Activate RC-01" here would target a button that isn't
+    // rendered while already active, so this reuses the still-open panel
+    // instead of re-activating it.
+    await input.fill("twin");
+    await input.press("Enter");
+    await expect(
+      page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),
+    ).toHaveCount(0);
+    await expect(page.locator("canvas")).toHaveCount(1);
+  });
+
+  test("command console: reset command clears trace state and closes RC-01 itself", async ({
     page,
   }) => {
     await installFakeSpeech(page);
@@ -300,13 +358,22 @@ test.describe("RC-01 Reliability Companion", () => {
     await page.getByRole("button", { name: /^console$/i }).click();
     const input = page.getByLabel("RC-01 console command");
 
-    await input.fill("atlas");
+    await input.fill("spine");
     await input.press("Enter");
-    await expect(page.getByText(/living infrastructure atlas.*architecture time machine/i)).toBeVisible();
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "commit",
+    );
 
-    await input.fill("proof");
-    await input.press("Enter");
-    await expect(page.getByText(/proof mode.*disclosure/i)).toBeVisible();
+    await page.getByLabel("RC-01 console command").fill("reset");
+    await page.getByLabel("RC-01 console command").press("Enter");
+    await expect(page.locator("[data-v7-trace-scope]")).toHaveAttribute(
+      "data-v7-trace-stage",
+      "none",
+    );
+    await expect(
+      page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),
+    ).toHaveCount(0);
   });
 
   test("command console: recruiter/engineer/explorer commands set the visitor path via shared state", async ({
@@ -455,7 +522,9 @@ test.describe("RC-01 Reliability Companion", () => {
     const firstHighlighted = (await firstHandle.jsonValue()) as number[];
     expect(firstHighlighted).toHaveLength(1);
 
-    await page.getByRole("button", { name: "Next" }).click();
+    // exact: true - see the same disambiguation note above against
+    // IncidentReplay's own Next button.
+    await page.getByRole("button", { name: "Next", exact: true }).click();
     const secondHandle = await page.waitForFunction(
       (previousIndex) => {
         const indices = Array.from(document.querySelectorAll("ol > li")).reduce<number[]>(

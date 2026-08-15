@@ -34,7 +34,7 @@ test.describe("Proof Mode: honest evidence separation", () => {
     ).toHaveAttribute("href", /github\.com\/tarunpradeep6162\/ProjectAurora/);
   });
 
-  test("never renders a clickable link for a project with an empty links array", async ({
+  test("never renders a clickable link for a project with an empty links array @release-fast", async ({
     page,
   }) => {
     for (const slug of [

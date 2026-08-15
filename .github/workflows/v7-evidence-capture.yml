@@ -1,0 +1,166 @@
+name: V7 Evidence Capture
+
+# Manual, final-candidate-only - never scheduled, never triggered by a
+# push. Deliberately does not repeat lint/unit tests/the complete
+# Playwright suite: this workflow assumes V7 Full Validation has already
+# passed for candidate_sha (the advisory check below looks for that run
+# and warns, non-blocking, if it can't find one - it does not re-run those
+# checks itself).
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact commit SHA to capture evidence for (must already exist on operational-twin-v7)
+        required: true
+        type: string
+
+concurrency:
+  group: v7-evidence-capture-${{ github.event.inputs.candidate_sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.candidate_sha }}
+
+      - name: Confirm the checked-out commit matches the requested SHA
+        run: |
+          ACTUAL="$(git rev-parse HEAD)"
+          if [ "$ACTUAL" != "${{ github.event.inputs.candidate_sha }}" ]; then
+            echo "::error::Checked out $ACTUAL, requested ${{ github.event.inputs.candidate_sha }}"
+            exit 1
+          fi
+          echo "Capturing evidence for exactly $ACTUAL"
+
+      # Advisory only, never blocks: looks for a prior successful "V7 Full
+      # Validation" run against this exact SHA and warns (does not fail)
+      # if none is found, since this workflow does not re-verify
+      # correctness itself.
+      - name: Check for a prior passing V7 Full Validation run (advisory)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RESULT=$(gh run list --repo "${{ github.repository }}" \
+            --workflow="v7-full-validation.yml" --status=success --limit=50 \
+            --json headSha --jq "[.[] | select(.headSha == \"${{ github.event.inputs.candidate_sha }}\")] | length")
+          if [ "$RESULT" = "0" ]; then
+            echo "::warning::No successful V7 Full Validation run found for ${{ github.event.inputs.candidate_sha }} in the last 50 runs. This workflow does not re-verify correctness - evidence captured here is not a substitute for that gate."
+          else
+            echo "Found $RESULT prior successful V7 Full Validation run(s) for this commit."
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve installed Playwright version
+        id: playwright-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright Chromium (+ OS deps only on a cache miss)
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start local candidate on evidence port
+        run: |
+          nohup npm run start -- -p 3500 > /tmp/evidence-server.log 2>&1 &
+          echo $! > /tmp/evidence-server.pid
+          node scripts/ci/verify-health.mjs http://localhost:3500 60000
+
+      # V7-specific evidence, not the V6-only capture-v6.mjs/
+      # record-v6-experience.mjs scripts (which this workflow used
+      # originally - a real gap found by direct artifact inspection after
+      # the first real run: their route/breakpoint matrix and interaction
+      # walkthrough only ever exercised Atlas, RC-01 tours, and V6's Proof
+      # Mode, never the Operational Twin, System Trace, project topologies,
+      # Deployment Replay, Incident Replay, Automation Fabric, Proof
+      # Ledger, project comparison, or any V7 RC-01 command). capture-v7.mjs
+      # and record-v7-operational-twin-walkthrough.mjs cover all of those
+      # explicitly - see each script's own header for what it demonstrates.
+      - name: V7 screenshot matrix
+        env:
+          V7_BASE_URL: http://localhost:3500
+          V7_SCREENSHOT_DIR: /tmp/v7-evidence/screenshots
+        run: node scripts/capture-v7.mjs
+
+      - name: V7 Operational Twin walkthrough video
+        env:
+          V7_BASE_URL: http://localhost:3500
+          V7_VIDEO_DIR: /tmp/v7-evidence/video
+        run: node scripts/record-v7-operational-twin-walkthrough.mjs
+
+      # Kept as supplementary evidence, not V7-specific by nature (they
+      # measure real one-canvas-exclusion behavior and per-route byte
+      # budgets generically, unrelated to which surface a page happens to
+      # show) - not a claim that these alone demonstrate V7 features.
+      - name: Soak test (15 activation/deactivation cycles)
+        env:
+          V6_BASE_URL: http://localhost:3500
+        run: node scripts/soak-test-v6.mjs | tee /tmp/v7-evidence/soak-test.txt
+
+      - name: Final performance evidence
+        env:
+          V6_BASE_URL: http://localhost:3500
+        run: node scripts/measure-v6-routes.mjs | tee /tmp/v7-evidence/perf-routes.txt
+
+      - name: Stop local candidate
+        if: always()
+        run: node scripts/ci/cleanup.mjs --pid-file /tmp/evidence-server.pid
+
+      - name: Artifact inventory
+        if: always()
+        run: |
+          mkdir -p /tmp/v7-evidence
+          {
+            echo "# V7 evidence inventory"
+            echo
+            echo "Commit: ${{ github.event.inputs.candidate_sha }}"
+            echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "## Screenshots"
+            find /tmp/v7-evidence/screenshots -type f 2>/dev/null | sort | sed 's/^/- /'
+            echo
+            echo "## Video"
+            find /tmp/v7-evidence/video -type f 2>/dev/null | sort | sed 's/^/- /'
+            echo
+            echo "## File sizes"
+            du -ah /tmp/v7-evidence/screenshots /tmp/v7-evidence/video 2>/dev/null | sort -k2
+          } > /tmp/v7-evidence/evidence-inventory.md
+          cat /tmp/v7-evidence/evidence-inventory.md
+
+      - name: Archive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v7-evidence-${{ github.event.inputs.candidate_sha }}
+          path: /tmp/v7-evidence/
+          retention-days: 90
+          if-no-files-found: warn

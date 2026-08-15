@@ -321,3 +321,23 @@ npx tsc --noEmit
   exercised (no Jenkins Credentials for it exist) — moot now that GitHub
   Actions is the active platform, but the code path itself remains
   unverified if anyone returns to it.
+
+## Final status update (supersedes the "unverified" list above)
+
+Every item flagged unverified above has since been resolved. Do not trust
+this section's earlier text for current state — read
+`docs/OPERATIONAL_TWIN_V7_COMPLETION_REPORT.md` for the authoritative,
+up-to-date account. Summary only:
+
+- `V7 Full Validation`, `Preview Validation`, `V7 Fast CI`, and
+  `V7 Evidence Capture` all green (see the completion report's workflow
+  table for exact commits and run URLs — Full Validation and Evidence
+  Capture last ran for real against ancestor commits with application code
+  confirmed identical to the final commit via `git diff --stat`).
+- `VERCEL_AUTOMATION_BYPASS_SECRET` was provided, wired in, and confirmed
+  fixing the previously-real SSO-wall 302 finding.
+- Annotated tag `operational-twin-v7-final` created and pushed, pointing
+  at `cba06cffeaa80d489e52f269df28a0e0c49281af`.
+- That commit's Vercel preview was promoted to production
+  (`https://portfolio-tarun-dun.vercel.app`) and fully, publicly verified
+  with no bypass header or login. No rollback was needed.

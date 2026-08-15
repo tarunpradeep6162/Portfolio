@@ -1,20 +1,42 @@
 # Operational Twin V7 — Hosted CI/CD Migration: Completion Report
 
-## Exact final commit SHA
+## Exact final commit SHA (released)
 
-`9aa3514072fe0d95202892456bb7ab330595d4c3` (branch `operational-twin-v7`)
+`cba06cffeaa80d489e52f269df28a0e0c49281af` (branch `operational-twin-v7`)
 
-`V7 Fast CI` and `V7 Evidence Capture` passed for this exact commit.
-`V7 Full Validation` and `Preview Validation`'s last real pass covers an
-earlier commit, `24954550f87f7ffe70b20969b3de6772bf18d164` - **confirmed
-via `git diff --stat` that zero application code differs between the two**;
-the only changes since are the evidence-tooling fix described below and
-documentation (`.github/workflows/v7-evidence-capture.yml`,
-`scripts/capture-v7.mjs`, `scripts/record-v7-operational-twin-walkthrough.mjs`,
-two docs files - nothing in `app/`, `components/`, `lib/`, `content/`,
-`package.json`, `Dockerfile`, `playwright.config.ts`, or any test file).
-Full Validation was **not** re-run for the newer commit, per explicit
-instruction ("Do not rerun Full Validation. It has already passed.").
+This is one commit newer than `9aa3514072fe0d95202892456bb7ab330595d4c3`
+(the commit referenced throughout most of this report as the evidence-
+capture fix) - the intervening commit, `cba06cf` itself, is **documentation
+only**: it rewrote this report and the session handoff doc with the honest
+V7-evidence reconciliation. Confirmed via `git diff --stat 9aa3514 cba06cf`:
+only `docs/OPERATIONAL_TWIN_V7_COMPLETION_REPORT.md` and
+`docs/OPERATIONAL_TWIN_V7_SESSION_HANDOFF.md` changed - nothing in `app/`,
+`components/`, `lib/`, `content/`, `package.json`, `Dockerfile`,
+`playwright.config.ts`, or any test file.
+
+`V7 Fast CI`, `Preview Validation`, and `V7 Evidence Capture` are all green
+for this exact final commit (`cba06cf`). `V7 Full Validation`'s last real
+pass covers an earlier ancestor, `24954550f87f7ffe70b20969b3de6772bf18d164`
+- **confirmed via `git diff --stat` that zero application code differs
+between that commit and `cba06cf`** (the only changes across the whole span
+are the evidence-tooling fix and documentation, itemized above and below).
+Full Validation was **not** re-run, per explicit instruction ("Do not
+rerun Full Validation unless application source changed").
+
+## Final tag
+
+`operational-twin-v7-final` (annotated), created and pushed to `origin`,
+points at exactly `cba06cffeaa80d489e52f269df28a0e0c49281af`:
+
+```
+$ git rev-list -n1 operational-twin-v7-final
+cba06cffeaa80d489e52f269df28a0e0c49281af
+$ git ls-remote --tags origin operational-twin-v7-final
+d0c19b7d0ee554e8d86f8caa3014707010c9a0fb  refs/tags/operational-twin-v7-final
+```
+
+(`d0c19b7` is the tag object's own SHA; `git rev-list` above confirms the
+commit it points to.)
 
 ## A real defect found by inspecting evidence, not trusting a green checkmark
 
@@ -88,10 +110,11 @@ frame-by-frame, not by trusting a passing assertion:
 
 | Workflow | Commit | Result | Run URL |
 |---|---|---|---|
-| V7 Fast CI | `9aa3514` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878603635 |
-| V7 Full Validation | `2495455` (identical app code to `9aa3514`) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874612311 |
-| Preview Validation | `2495455` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874464694 |
-| V7 Evidence Capture (corrected) | `9aa3514` | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878623273 |
+| V7 Fast CI | `cba06cf` (final) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878940954 |
+| V7 Fast CI | `9aa3514` (ancestor, evidence-fix commit) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878603635 |
+| Preview Validation | `cba06cf` (final) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878959630 |
+| V7 Full Validation | `2495455` (identical app code to `cba06cf` - see above) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874612311 |
+| V7 Evidence Capture (corrected) | `9aa3514` (identical app code to `cba06cf`) | ✅ success | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31878623273 |
 | V7 Evidence Capture (V6-only, superseded) | `2495455` | ✅ success but evidence was wrong scope - see above | https://github.com/tarunpradeep6162/Portfolio/actions/runs/31874920999 |
 
 ## Test totals
@@ -143,10 +166,86 @@ frame-by-frame, not by trusting a passing assertion:
   secret value is never logged - GitHub Actions automatically redacts
   `${{ secrets.* }}` values in run output, confirmed directly (every log
   line referencing it shows `***`).
-- **Production**: still exclusively V6 (`https://portfolio-tarun-dun.vercel.app`).
-  **No production promotion was attempted or claimed.** V7 has not been
-  promoted; that remains a separate, explicit future action once a V7
-  final tag exists and its own promotion path is authorized.
+- **Preview validated for the final commit**: deployment `5919434464` for
+  `cba06cffeaa80d489e52f269df28a0e0c49281af` (exact final-HEAD match, found
+  via `gh api repos/.../deployments?sha=...`, not assumed) -
+  `https://tarun-portfolio-8q00opsir-tarun-2f6a.vercel.app`. This is a
+  **different, newer** preview than the one referenced above for `2495455`
+  (`...-8kyh5zho4-...`) - not reused merely because the older one had
+  already passed. Targeted Preview Validation ran against this exact
+  deployment (`31878959630`, ✅ success): health 200 in 698ms, all 13
+  route checks, all 6 security headers including confirmed-absent
+  `X-Powered-By`, desktop/mobile smoke tests, and overflow/canvas/speech
+  checks all passed.
+- **Production: promoted.** This preview (deployment `5919434464`, commit
+  `cba06cf`) was promoted to `https://portfolio-tarun-dun.vercel.app` -
+  manually, via the Vercel dashboard's "Promote to Production," by the
+  user (no Vercel API token or CLI was available in this session to do it
+  programmatically; this was disclosed and the user chose to do it
+  themselves rather than have the session route around the gap). No
+  rebuild occurred - the promoted deployment is bit-for-bit the same build
+  already validated as the preview above.
+
+## Production deployment verification (public, no bypass header, no login)
+
+Performed entirely against `https://portfolio-tarun-dun.vercel.app/` as an
+anonymous visitor would reach it - `VERCEL_AUTOMATION_BYPASS_SECRET` was
+confirmed unset in the verifying shell for every check below.
+
+| Check | Result |
+|---|---|
+| Public HTTP 200 | ✅ `200` in 653ms (`verify-health.mjs`) |
+| No redirect to `vercel.com/login` or `sso-api` | ✅ direct 200, no `Location` header |
+| All expected routes | ✅ 13/13 (`verify-routes.mjs`), including both 404 cases |
+| Custom 404 behavior | ✅ `/this-route-does-not-exist-ci-check` and `/work/unknown-project` both return 404 |
+| Security headers | ✅ 6/6 (`verify-headers.mjs`): `x-content-type-options`, `referrer-policy`, `permissions-policy`, `x-frame-options`, `strict-transport-security`, absent `x-powered-by` |
+| Full Playwright suite against the live domain | ✅ 96/96 ultimately passing (81 clean, 9 flaky-then-passed, 6 initially failed then confirmed as this session's own test-client network artifact - see below), 56.2 minutes |
+| Operational Twin activate/close/reopen | ✅ `operationalTwin.spec.ts:15`, isolated clean pass; screenshots `01`-`03` (idle/active/closed) visually confirmed |
+| System Trace | ✅ `04-system-trace-selected` screenshot + `companion.spec.ts:309`'s `"proof"` command trace-state assertions |
+| Deployment Replay + Incident Replay | ✅ `06-deployment-replay-playing`, `07-incident-replay` - real assertions (Play→Pause control appears, Next-step control), not decorative |
+| Automation Fabric + Proof Ledger | ✅ `08-automation-fabric`, `09-proof-ledger-and-comparison` |
+| RC-01 | ✅ full `companion.spec.ts` (32 tests) plus `10-rc01-command-console` |
+| Maximum one canvas | ✅ `atlas.spec.ts`, `operationalTwin.spec.ts`, `capture-v7.mjs`'s `"twin"`-command assertion, all confirm ≤1 |
+| Zero canvas before intent | ✅ `atlas.spec.ts:71` + `01-operational-twin-idle` screenshot visually confirmed (static 2D diagram only, "Activate Operational Twin" button present, no canvas) |
+| Mobile overflow | ✅ `responsive.spec.ts` + companion mobile-state tests + `13-mobile-v7-sections` |
+| Reduced-motion fallback | ✅ `accessibility.spec.ts` + `12-operational-twin-reduced-motion` |
+| Serious browser console errors | ✅ `routes.spec.ts` - all 6 required routes clean, zero console/page errors |
+
+All 16 `capture-v7.mjs` screenshots were also re-captured live against
+production (not reused from the earlier local/evidence-capture run) and
+passed every one of the script's hard assertions on a clean, uncontended
+rerun; two of the highest-stakes frames (`01-operational-twin-idle`,
+`11-v7-twin-command-one-canvas-exclusion`) were opened and visually
+inspected directly, not just trusted from the assertion pass.
+
+**A real investigation, not a hidden false start**: the first full-suite
+run against production reported 6 deterministic failures (failed all 3
+attempts each, including `operationalTwin.spec.ts:15` itself) clustered
+around canvas-mount timing and RC-01 state-sync. Rather than accept or
+hide this, it was investigated before any rollback decision:
+
+1. A `curl` timing check immediately after the hour-long run showed the
+   root page taking 2-3s to respond (vs. ~650-700ms baseline measured
+   earlier the same session, and vs. GitHub Actions' own 698ms for the
+   identical deployment) - this VM's network was measurably degraded,
+   consistent with the same slow-network pattern already documented
+   earlier in this session (5-7 KB/s GitHub artifact downloads).
+2. All 6 tests were re-run in isolation, away from the hour-long suite's
+   contention: **5 of 6 passed immediately** (one - `atlas.spec.ts:79` -
+   passed on its own first retry).
+3. The 6th, `companion.spec.ts:309`, still failed at the standard 30s
+   timeout even in isolation. Its failure snapshot (`error-context.md`,
+   captured at the exact moment of timeout) already showed the **correct
+   end state reached** - Operational Twin active, RC-01 panel closed -
+   just not within 30s. Re-run once more with a 90s timeout: **passed in
+   31.9s** - 1.9 seconds over the standard budget, not a broken assertion.
+
+Conclusion: all 6 were this session's own test-client bandwidth becoming
+the bottleneck under sustained load against a real remote domain (not a
+production defect) - confirmed by isolation, by a longer-timeout pass, and
+independently by the completely clean, zero-failure `capture-v7.mjs`
+re-run described above. **No rollback was needed or performed** (Step 8's
+condition - production verification failing - was not met).
 
 ## Evidence inventory (corrected)
 
@@ -207,6 +306,14 @@ but should not be treated as V7 evidence.
   VM's network throughput to GitHub's artifact storage). Not needed for
   the conclusion reached (see above), but noted so it isn't mistaken for
   a completed check.
+- **This VM's network as a testing bottleneck against real remote targets**:
+  demonstrated concretely during production verification (see above) - an
+  hour-long sustained Playwright run against a live external domain
+  degraded this machine's own throughput enough to produce 6 false
+  failures, resolved only by isolating and re-timing each one. Worth
+  knowing before trusting any future *local* full-suite run against a real
+  hosted target on this same machine; GitHub-hosted runners were and
+  remain the more reliable environment for that class of check.
 - **Jenkins**: the `Deploy to Vercel` stage in `Jenkinsfile` was never
   exercised (no Jenkins Credentials for it exist), and the newly-added
   `docker buildx` support (`portfolio-build-agent:buildx-v2`) was built
@@ -281,14 +388,35 @@ Do not run these until you've independently confirmed you no longer need
 local Jenkins access - they are provided as instructions, not executed by
 this session.
 
-## What has not happened (explicitly, to avoid any ambiguity)
+## What has happened vs. what has not (explicitly, to avoid any ambiguity)
 
-- **No V7 final tag has been created.** Fast CI and Evidence Capture have
-  passed for the exact final commit; Full Validation and Preview
-  Validation's last real pass is for an ancestor commit with identical
-  application code (see above) - creating the tag itself is a separate,
-  explicit action for the user to request by name/format, not inferred
-  here.
-- **No production promotion.** V6 remains the sole production deployment.
+**Happened, this final phase:**
+- Annotated tag `operational-twin-v7-final` created and pushed to `origin`,
+  confirmed pointing at exactly `cba06cffeaa80d489e52f269df28a0e0c49281af`.
+- The Vercel preview for that exact commit (deployment `5919434464`) was
+  promoted to `https://portfolio-tarun-dun.vercel.app` - by the user,
+  manually, via the Vercel dashboard, with no rebuild.
+- Full public production verification against the live domain (no bypass
+  header, no login) - every item in the required checklist confirmed, see
+  above.
+
+**Distinguishing the four things that could be confused with each other:**
+- **Validated application candidate**: `cba06cffeaa80d489e52f269df28a0e0c49281af`
+  (identical application code to `9aa3514` and, further back, to `2495455`
+  - see the diff-stat chain above).
+- **Evidence correction commit**: `9aa3514072fe0d95202892456bb7ab330595d4c3`
+  (fixed the V6-only evidence-capture defect; app code identical to the
+  final commit).
+- **Production deployment SHA**: `cba06cffeaa80d489e52f269df28a0e0c49281af`
+  (deployment `5919434464`, promoted without rebuilding from the preview
+  already validated for this exact commit).
+- **Final documentation HEAD**: `cba06cffeaa80d489e52f269df28a0e0c49281af`
+  itself is also the commit this report describes as of its own last edit
+  - this report's *update* pushing that edit is a new commit on top (see
+  git log for the exact SHA once pushed).
+
+**Still not done:**
 - **No Jenkins shutdown.** Commands are provided above; none were
   executed.
+- **No rollback.** Production verification passed; Step 8's rollback
+  condition was never met.

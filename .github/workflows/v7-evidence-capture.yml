@@ -13,16 +13,6 @@ on:
         description: Exact commit SHA to capture evidence for (must already exist on operational-twin-v7)
         required: true
         type: string
-  # TEMPORARY: same one-time-registration requirement documented in
-  # v7-full-validation.yml's history - GitHub won't accept API/CLI
-  # workflow_dispatch calls for a workflow that has never fired. A
-  # push-triggered run of this file will predictably fail at "Confirm the
-  # checked-out commit matches the requested SHA" (candidate_sha is only
-  # populated for workflow_dispatch events) - that's fine, firing once is
-  # all this needs to register with GitHub. Removed in the next commit
-  # once workflow_dispatch itself is confirmed working.
-  push:
-    branches: [operational-twin-v7]
 
 concurrency:
   group: v7-evidence-capture-${{ github.event.inputs.candidate_sha }}

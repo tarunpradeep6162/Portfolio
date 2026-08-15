@@ -16,6 +16,13 @@ on:
     # 21:15 UTC = 02:45 IST (next day) - offset from V6's nightly.yml
     # (20:30 UTC) so the two don't contend for the same runner minute.
     - cron: "15 21 * * *"
+  # TEMPORARY: GitHub will not accept API/CLI workflow_dispatch calls for a
+  # workflow that has never fired - a documented GitHub limitation, not a
+  # bug here. This push trigger exists only to register the workflow and
+  # produce its first real run; removed again in the very next commit once
+  # that's confirmed, restoring the manual/nightly-only design above.
+  push:
+    branches: [operational-twin-v7]
 
 concurrency:
   group: v7-full-validation-${{ github.event.inputs.candidate_ref || 'operational-twin-v7' }}

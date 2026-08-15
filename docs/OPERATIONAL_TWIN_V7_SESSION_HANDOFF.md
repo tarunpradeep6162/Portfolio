@@ -194,15 +194,34 @@ See `docs/OPERATIONAL_TWIN_V7_HOSTED_CICD.md` for full detail. Summary:
   (`setup`, `docker-scan-candidate`, `validate`) succeeded, ~4 minutes
   total wall-clock.
 - `.github/workflows/v7-evidence-capture.yml` - manual, candidate-SHA-
-  scoped, screenshot/video/soak/inventory only. Not yet run - deliberately
-  deferred until the final candidate is chosen, per its own design.
-- **Real finding**: every V7 Vercel preview deployment has returned HTTP
-  302 to `vercel.com/sso-api` on every route across ~19 consecutive
-  `Preview Validation` runs (confirmed with a direct `curl -I`, not
-  inferred) - Vercel's own Deployment Protection setting, not an app
-  defect. Fix chosen: a Protection Bypass for Automation secret
-  (`VERCEL_AUTOMATION_BYPASS_SECRET`), in progress - confirm in the live
-  session whether it has been added and wired into the workflows yet.
+  scoped, screenshot/video/soak/inventory only. **Confirmed passing**
+  for commit `24954550f87f7ffe70b20969b3de6772bf18d164` - 72 files (57
+  route screenshots × 6 breakpoints, 16 interaction screenshots, 1
+  walkthrough video), soak test clean (15 same-page cycles + mutual-
+  exclusion check + 4 cross-route cycles, no leaks/crashes).
+- **Vercel Deployment Protection, resolved**: every V7 preview had
+  returned HTTP 302 to `vercel.com/sso-api` on every route across ~19
+  consecutive `Preview Validation` runs - confirmed via direct `curl -I`,
+  not inferred. Fixed with a user-provided `VERCEL_AUTOMATION_BYPASS_SECRET`
+  repository secret, wired as an `x-vercel-protection-bypass` header into
+  `scripts/ci/verify-*.mjs` and `playwright.config.ts` (never logged -
+  GitHub redacts `${{ secrets.* }}` values automatically, confirmed in the
+  actual run logs showing `***`). **Confirmed passing** - real 200s on
+  every route (was 302), 404s on both intentionally-invalid routes, all
+  security headers correct, against preview
+  `https://tarun-portfolio-8kyh5zho4-tarun-2f6a.vercel.app`.
+- **All four hosted gates now pass for the same exact commit**
+  (`24954550f87f7ffe70b20969b3de6772bf18d164`): V7 Fast CI, V7 Full
+  Validation (96/96 Playwright tests, 0 blocking Trivy findings), Preview
+  Validation, V7 Evidence Capture. See
+  `docs/OPERATIONAL_TWIN_V7_COMPLETION_REPORT.md` for the full report.
+- Two `workflow_dispatch`-only workflows (`v7-full-validation.yml`,
+  `v7-evidence-capture.yml`) hit a real, documented GitHub limitation on
+  first use: the dispatch API returns 404 for a workflow that has never
+  fired on that branch. Worked around both times with a temporary `push`
+  trigger for one registration run, removed again once `workflow_dispatch`
+  itself was confirmed working - a real, minor, fully-reversible detour,
+  not a design flaw in the workflows themselves.
 
 ## Checks actually run (exact results, this session)
 

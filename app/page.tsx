@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Hero } from "@/components/hero/Hero";
+import { PathQueryHydrator } from "@/components/recruiter/PathQueryHydrator";
+import { RecruiterFlightPlan } from "@/components/recruiter/RecruiterFlightPlan";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +32,11 @@ export default function Home() {
   return (
     <>
       <Hero />
+
+      <Suspense fallback={null}>
+        <PathQueryHydrator />
+      </Suspense>
+      <RecruiterFlightPlan />
 
       <section
         id="work"

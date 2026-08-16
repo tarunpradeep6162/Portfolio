@@ -1,0 +1,113 @@
+name: V9 Fast CI
+
+# Scoped to portfolio-v9 only - a separate workflow from ci-fast.yml
+# (living-infrastructure-v6), v7-fast-ci.yml (operational-twin-v7), and
+# v8-fast-ci.yml (portfolio-v8), so none of their already-verified CI
+# behavior is touched by V9 work. Mirrors v8-fast-ci.yml's proven
+# two-job structure exactly - reused, not redesigned (see
+# docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md, Fast CI definition).
+on:
+  push:
+    branches: [portfolio-v9]
+  pull_request:
+    branches: [portfolio-v9]
+
+concurrency:
+  group: v9-fast-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Repository safety check (no secrets/large files staged)
+        run: |
+          if git ls-files | grep -E '^\.env($|\.)' ; then
+            echo "::error::.env file(s) tracked in repository" >&2
+            exit 1
+          fi
+          if git ls-files | grep -E '\.(pem|key)$|credentials\.json$'; then
+            echo "::error::credential-shaped file(s) tracked in repository" >&2
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (deterministic worker settings)
+        run: npm run test:ci
+
+      - name: Production build
+        run: npm run build
+
+  e2e-critical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve installed Playwright version
+        id: playwright-version
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright Chromium (+ OS deps only on a cache miss)
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+
+      - name: Production build
+        run: npm run build
+
+      # Same curated @release-fast slice v7/v8-fast-ci.yml use - the full,
+      # unfiltered suite is a release-candidate-checkpoint activity, not a
+      # per-commit gate (see docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md).
+      - name: Critical Playwright smoke suite (@release-fast)
+        run: npx playwright test --grep @release-fast --workers=1
+
+      - name: Upload traces (failure only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v9-fast-ci-traces
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore

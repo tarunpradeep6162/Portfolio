@@ -225,6 +225,24 @@ body::before {
   }
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(216, 255, 79, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(216, 255, 79, 0.5);
+  }
+}
+
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
 /* RC-01 desktop dock: reserves real page width instead of floating over
    content (jury-refinement v5.1 - "opening it may intentionally resize or
    recompose the hero" rather than overlay it). Below 1024px this is a
@@ -251,6 +269,63 @@ body::before {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Visual effect enhancements */
+#work {
+  position: relative;
+}
+
+#work::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(216, 255, 79, 0.08) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+#spine {
+  position: relative;
+}
+
+#spine::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(116, 140, 255, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+#contact {
+  position: relative;
+}
+
+#contact::before {
+  content: "";
+  position: absolute;
+  bottom: -20%;
+  right: -5%;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(
+    circle,
+    rgba(216, 255, 79, 0.06) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 @media print {

@@ -28,10 +28,11 @@ export function HeroCopyReveal({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      gsap.set(items, { opacity: 0, y: 16 });
+      gsap.set(items, { opacity: 0, y: 16, filter: "blur(4px)" });
       gsap.to(items, {
         opacity: 1,
         y: 0,
+        filter: "blur(0px)",
         duration: motionTokens.heroEntranceMs / 1000,
         ease: motionTokens.ease.gsapSpine,
         stagger: motionTokens.stagger.hero,

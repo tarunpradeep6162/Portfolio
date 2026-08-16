@@ -28,11 +28,11 @@ export function Hero() {
 
             <h1
               data-reveal
-              className="mt-7 font-display text-name font-bold uppercase leading-[0.78] tracking-[-0.075em] text-[var(--ink)]"
+              className="mt-7 font-display text-name font-bold uppercase leading-[0.78] tracking-[-0.075em] gradient-text"
             >
               Tarun
               <br />
-              <span className="text-[var(--accent)]">Pradeep</span>
+              <span>Pradeep</span>
             </h1>
 
             <p

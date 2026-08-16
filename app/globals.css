@@ -323,6 +323,31 @@ body::before {
   }
 }
 
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(90deg,
+    var(--color-signal-lime) 0%,
+    var(--color-packet-blue) 50%,
+    var(--color-signal-lime) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
+
 /* RC-01 desktop dock: reserves real page width instead of floating over
    content (jury-refinement v5.1 - "opening it may intentionally resize or
    recompose the hero" rather than overlay it). Below 1024px this is a

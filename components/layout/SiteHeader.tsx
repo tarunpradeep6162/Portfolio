@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { CommandPalette } from "@/components/command/CommandPalette";
 import { cn } from "@/lib/cn";
 
 const links = [
@@ -74,7 +75,10 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <MobileNav />
+        <div className="flex items-center gap-2">
+          <CommandPalette />
+          <MobileNav />
+        </div>
       </Container>
     </header>
   );

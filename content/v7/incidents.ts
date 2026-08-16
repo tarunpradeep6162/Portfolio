@@ -11,6 +11,11 @@ import type { Incident } from "@/lib/v7/incidentModel";
  * none of those are real facts about a portfolio site's own build
  * process - inventing them to look more dramatic would violate the
  * honesty requirements this whole site is built to demonstrate.
+ *
+ * TODO(tarun): these are all incidents from building this site itself.
+ * The 7-step structure below is real and worth reusing for 1-2 real,
+ * appropriately anonymized incidents from actual production work
+ * (Stackly / Vaata Smart) - see CONTENT_GAPS.md. Don't invent one.
  */
 export const incidents: Incident[] = [
   {

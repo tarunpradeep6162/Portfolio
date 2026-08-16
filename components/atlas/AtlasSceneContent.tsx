@@ -4,6 +4,11 @@ import { useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { computeAtlasSceneGeometry } from "@/lib/v8/atlasSceneGeometry";
+import { atlasNodeRimFragmentShader, atlasNodeRimVertexShader } from "@/lib/v9/shaders/atlasNodeRim";
+
+const NODE_IDLE_COLOR = new THREE.Color("#232e3a");
+const NODE_ACTIVE_COLOR = new THREE.Color("#d8ff4f");
+const NODE_RIM_COLOR = new THREE.Color("#d8ff4f");
 
 /**
  * Atlas's real node/edge geometry - moved unchanged from
@@ -25,17 +30,23 @@ function AtlasNode({
   onSelect: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.MeshLambertMaterial>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const emissiveIntensityRef = useRef(0.15);
 
   useFrame((_, delta) => {
-    if (materialRef.current) {
-      materialRef.current.emissiveIntensity = THREE.MathUtils.damp(
-        materialRef.current.emissiveIntensity,
-        active ? 0.9 : 0.15,
-        6,
-        delta,
-      );
-    }
+    const material = materialRef.current;
+    if (!material) return;
+
+    emissiveIntensityRef.current = THREE.MathUtils.damp(
+      emissiveIntensityRef.current,
+      active ? 0.9 : 0.15,
+      6,
+      delta,
+    );
+
+    const uniforms = material.uniforms;
+    uniforms.uColor.value.copy(active ? NODE_ACTIVE_COLOR : NODE_IDLE_COLOR);
+    uniforms.uEmissiveIntensity.value = emissiveIntensityRef.current;
   });
 
   return (
@@ -48,11 +59,20 @@ function AtlasNode({
         }}
       >
         <boxGeometry args={[0.62, 0.62, 0.62]} />
-        <meshLambertMaterial
+        {/* A small, reviewed fresnel rim-light shader
+            (docs/PORTFOLIO_V9_ARCHITECTURE.md polyglot addendum, Phase
+            10) - a view-angle-dependent glow meshLambertMaterial cannot
+            produce. Base color and emissive pulse are unchanged from
+            the previous meshLambertMaterial; only the rim term is new. */}
+        <shaderMaterial
           ref={materialRef}
-          color={active ? "#d8ff4f" : "#232e3a"}
-          emissive="#d8ff4f"
-          emissiveIntensity={active ? 0.9 : 0.15}
+          vertexShader={atlasNodeRimVertexShader}
+          fragmentShader={atlasNodeRimFragmentShader}
+          uniforms={{
+            uColor: { value: NODE_IDLE_COLOR.clone() },
+            uEmissiveColor: { value: NODE_RIM_COLOR.clone() },
+            uEmissiveIntensity: { value: 0.15 },
+          }}
         />
       </mesh>
     </group>

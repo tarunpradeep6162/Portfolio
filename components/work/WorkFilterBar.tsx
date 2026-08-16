@@ -43,13 +43,22 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
               aria-pressed={active === category}
               onClick={() => setActive(category)}
               className={cn(
-                "min-h-11 border-b font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition-colors",
+                "relative min-h-11 border-b font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition-colors",
                 active === category
                   ? "border-[var(--accent)] text-[var(--accent)]"
                   : "border-transparent text-[var(--ink-muted)] hover:border-[var(--ink-muted)] hover:text-[var(--ink)]",
               )}
             >
               {category}
+              {active === category && (
+                <span
+                  className="absolute bottom-0 left-0 h-0.5 bg-[var(--accent)]"
+                  style={{
+                    animation: "underline-slide 0.5s ease-out forwards",
+                  }}
+                  aria-hidden
+                />
+              )}
             </button>
           ))}
         </div>
@@ -62,7 +71,7 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
       </div>
 
       {flagships.length > 0 && (
-        <section className="mt-16" aria-labelledby="case-studies-heading">
+        <section className="mt-16 animate-fade-in" aria-labelledby="case-studies-heading">
           <div className="flex items-end justify-between gap-6">
             <h2
               id="case-studies-heading"
@@ -76,7 +85,7 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
           </div>
           <ScrollReveal
             key={`flagships-${active}`}
-            className="mt-8 grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:gap-y-24"
+            className="mt-8 grid gap-x-8 gap-y-16 sm:grid-cols-2 lg:gap-y-24 animate-fade-in"
           >
             {flagships.map((project, index) => (
               <div key={project.slug} data-reveal>
@@ -89,7 +98,10 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
 
       {labs.length > 0 && (
         <section
-          className={flagships.length > 0 ? "mt-28" : "mt-16"}
+          className={cn(
+            flagships.length > 0 ? "mt-28" : "mt-16",
+            "animate-fade-in",
+          )}
           aria-labelledby="lab-heading"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[0.7fr_1.3fr] sm:items-end">
@@ -104,7 +116,7 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
               stay private until they are verified.
             </p>
           </div>
-          <ScrollReveal key={`labs-${active}`} className="mt-8">
+          <ScrollReveal key={`labs-${active}`} className="mt-8 animate-fade-in">
             <LabProjectList projects={labs} />
           </ScrollReveal>
         </section>

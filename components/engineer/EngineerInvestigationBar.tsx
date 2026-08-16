@@ -26,6 +26,7 @@ export function EngineerInvestigationBar() {
   const stops = [
     { href: "/work", label: "Architecture & decisions" },
     { href: "#evidence-graph", label: "Evidence graph" },
+    { href: "#scenario-simulator", label: "Scenario simulator" },
     { href: "#incident-replay", label: "Incident reconstruction" },
     { href: "#automation-fabric", label: "Deployment history" },
     { href: "#proof-ledger", label: "Security & performance proof" },

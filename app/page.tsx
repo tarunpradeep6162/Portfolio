@@ -6,6 +6,7 @@ import { PathQueryHydrator } from "@/components/recruiter/PathQueryHydrator";
 import { RecruiterFlightPlan } from "@/components/recruiter/RecruiterFlightPlan";
 import { EngineerInvestigationBar } from "@/components/engineer/EngineerInvestigationBar";
 import { EvidenceGraph } from "@/components/evidence/EvidenceGraph";
+import { ScenarioSimulator } from "@/components/simulator/ScenarioSimulator";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Button } from "@/components/ui/Button";
@@ -87,6 +88,7 @@ export default function Home() {
       </section>
 
       <EvidenceGraph />
+      <ScenarioSimulator />
 
       <section
         id="spine"

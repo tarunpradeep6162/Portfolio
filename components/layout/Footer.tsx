@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { site } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { ExternalLink } from "@/components/ui/ExternalLink";
@@ -28,6 +29,12 @@ export function Footer() {
           >
             Email
           </a>
+          <Link
+            href="/engineering-log"
+            className="underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]"
+          >
+            How this site is built
+          </Link>
           <a
             href="#main-content"
             className="hover:text-[var(--color-signal-lime)]"

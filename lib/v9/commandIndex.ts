@@ -24,6 +24,13 @@ const ROUTES: CommandEntry[] = [
   { id: "route-about", kind: "route", label: "About", href: "/about" },
   { id: "route-resume", kind: "route", label: "Résumé", href: "/resume" },
   { id: "route-contact", kind: "route", label: "Contact", href: "/contact" },
+  {
+    id: "route-engineering-log",
+    kind: "route",
+    label: "Engineering log",
+    hint: "How this site itself is built - CI/CD and real incidents",
+    href: "/engineering-log",
+  },
 ];
 
 const PATHS: CommandEntry[] = [

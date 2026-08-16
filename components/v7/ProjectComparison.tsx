@@ -14,15 +14,24 @@ const flagships = projects.filter((p): p is FlagshipProject => p.kind === "flags
  * project fields; nothing here is computed or displayed by this
  * component itself beyond selecting which two projects to show.
  */
+const UNDOCUMENTED = "Not documented for this project.";
+
 export function ProjectComparison() {
   const [leftSlug, setLeftSlug] = useState(flagships[0].slug);
   const [rightSlug, setRightSlug] = useState(flagships[1]?.slug ?? flagships[0].slug);
+  const [showUndocumented, setShowUndocumented] = useState(false);
   const leftId = useId();
   const rightId = useId();
 
   const left = flagships.find((p) => p.slug === leftSlug) ?? flagships[0];
   const right = flagships.find((p) => p.slug === rightSlug) ?? flagships[0];
-  const rows = compareProjects(left, right);
+  const allRows = compareProjects(left, right);
+  const undocumentedCount = allRows.filter(
+    (row) => row.left === UNDOCUMENTED && row.right === UNDOCUMENTED,
+  ).length;
+  const rows = showUndocumented
+    ? allRows
+    : allRows.filter((row) => !(row.left === UNDOCUMENTED && row.right === UNDOCUMENTED));
 
   return (
     <div className="mt-10 border-t border-[var(--line)] pt-8">
@@ -101,6 +110,18 @@ export function ProjectComparison() {
             ))}
           </tbody>
         </table>
+        {undocumentedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowUndocumented((v) => !v)}
+            aria-expanded={showUndocumented}
+            className="mt-4 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)] underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]"
+          >
+            {showUndocumented
+              ? "Hide undocumented dimensions"
+              : `Show ${undocumentedCount} undocumented dimension${undocumentedCount === 1 ? "" : "s"}`}
+          </button>
+        )}
       </div>
     </div>
   );

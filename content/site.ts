@@ -13,6 +13,11 @@ export const site = {
   linkedin: "https://www.linkedin.com/in/tarun-pradeep-b-/",
 } as const;
 
+// TODO(tarun): copy tone pass. The homepage's closing line ("Bring me the
+// system that cannot stay manual.", app/page.tsx's final section) is
+// sharper and more specific than primaryLine/supportingCopy below - a
+// judgment call on voice, not a factual gap, so flagged here rather than
+// rewritten automatically. See CONTENT_GAPS.md.
 export const hero = {
   eyebrow: "Cloud Engineer · DevOps · Chennai",
   primaryLine: "I engineer reliable paths from commit to cloud.",

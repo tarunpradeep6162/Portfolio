@@ -40,6 +40,8 @@ export function ProjectCard({
             <img
               src={project.screenshot.value.src}
               alt={project.screenshot.value.alt}
+              loading="lazy"
+              decoding="async"
               className="aspect-[16/10] w-full object-cover transition-transform duration-700 ease-[var(--ease-spine)] group-hover:scale-[1.02]"
             />
           ) : (

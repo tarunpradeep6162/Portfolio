@@ -39,20 +39,20 @@ export function ProjectCard({
         </div>
       )}
 
-      <div className="grid grid-cols-[1fr_auto] gap-4 border-t border-[var(--line)] pt-5">
+      <div className="relative grid grid-cols-[1fr_auto] gap-4 border-t border-[var(--line)] pt-5 transition-all duration-300">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--accent-secondary)]">
             {project.categories.join(" / ")}
           </p>
-          <h3 className="mt-3 max-w-[28ch] font-display text-heading font-semibold leading-[1.05] tracking-[-0.045em] text-[var(--ink)]">
+          <h3 className="mt-3 max-w-[28ch] font-display text-heading font-semibold leading-[1.05] tracking-[-0.045em] text-[var(--ink)] transition-colors duration-300 group-hover:text-[var(--accent)]">
             {project.title}
           </h3>
-          <p className="mt-3 max-w-[58ch] text-sm leading-6 text-[var(--ink-muted)]">
+          <p className="mt-3 max-w-[58ch] text-sm leading-6 text-[var(--ink-muted)] transition-colors duration-300 group-hover:text-[var(--ink)]">
             {project.summary}
           </p>
         </div>
         {href && (
-          <span className="project-card-arrow flex h-11 w-11 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition-transform duration-300 ease-[var(--ease-spine)]">
+          <span className="project-card-arrow flex h-11 w-11 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition-all duration-300 ease-[var(--ease-spine)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:shadow-[0_0_16px_rgba(216,255,79,0.2)]">
             <ArrowUpRight size={17} aria-hidden />
           </span>
         )}

@@ -49,7 +49,7 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]",
+                      "group relative flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]",
                       active
                         ? "text-[var(--color-signal-lime)]"
                         : "text-[var(--color-cloud-linen)]",
@@ -67,6 +67,12 @@ export function SiteHeader() {
                       0{index + 1}
                     </span>
                     <span>{link.label}</span>
+                    <span
+                      className={cn(
+                        "absolute bottom-0 left-0 h-[1px] bg-[var(--color-signal-lime)] transition-all duration-300 ease-[var(--ease-spine)]",
+                        active ? "w-full" : "w-0 group-hover:w-full",
+                      )}
+                    />
                   </Link>
                 </li>
               );

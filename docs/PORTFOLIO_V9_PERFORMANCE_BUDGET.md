@@ -135,6 +135,31 @@ Phases 0–7.
   dependency caching (Cargo, Go modules) so this cost is paid once per
   dependency change, not once per commit.
 
+### Real measured results (Phase 11 closure)
+
+Re-measured with all of Phases 8–10 integrated
+(`scripts/measure-v9-baseline.mjs`, same method as every prior checkpoint):
+
+| Route | V8 baseline | Phase 6 checkpoint | Phase 11 (polyglot addendum) | Growth vs. V8 | +15% ceiling |
+|---|---:|---:|---:|---:|---:|
+| `/` | 751,647 B | 779,901 B | 788,877 B | +4.95% | 864,394 B |
+| `/work`, `/work/project-aurora` | 769,591 B | 797,845 B | 806,821 B | +4.83% | 885,030 B |
+
+Comfortably inside budget - the polyglot addendum's entire visible-JS
+footprint (Command Interface panel, Scenario Simulator's deterministic-
+engine UI, missionEngine/missionEngineFallback/missionEngineParams
+modules) added roughly 9 KB to `/`, none of it WASM (confirmed 0 bytes
+before intent, see above) and none of it Go (the audit tool never ships
+to the browser). Atlas/Operational Twin/RC-01 per-system activation costs
+are unchanged from Phase 6 within normal chunk-hash noise, confirming the
+two new GLSL shaders (Phase 10) added no meaningful bytes. Zero canvas
+before intent still holds on all 6 tracked routes.
+
+CI timings, measured for real on the first hosted runs (Phase 8/9):
+Rust build + test (`v9-rust-wasm.yml`) ~1m52s, Go build + test +
+`govulncheck` (`v9-go-audit.yml`) ~1m25s - both well under the target
+ceilings above.
+
 ### Not a goal, extended
 
 - No WASM-vs-JS speed benchmark or marketing claim. The engine's value is

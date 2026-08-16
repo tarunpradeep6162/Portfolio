@@ -1,0 +1,17 @@
+{
+  "name": "mission-simulator",
+  "type": "module",
+  "description": "Deterministic Mission Scenario Engine for Portfolio V9's Scenario Simulator - educational, client-side, never a claim about live infrastructure.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "mission_simulator_bg.wasm",
+    "mission_simulator.js",
+    "mission_simulator.d.ts"
+  ],
+  "main": "mission_simulator.js",
+  "types": "mission_simulator.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

@@ -8,6 +8,7 @@ import { spineStages } from "@/content/spine";
 import { projects } from "@/content/projects";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { DeterministicEnginePanel } from "@/components/simulator/DeterministicEnginePanel";
 import { cn } from "@/lib/cn";
 
 const stageLabelById = new Map(spineStages.map((stage) => [stage.id, stage.label]));
@@ -142,14 +143,14 @@ function ScenarioCard({
             ))}
           </ul>
 
-          {selectedChoice && <ChoiceOutcome choice={selectedChoice} />}
+          {selectedChoice && <ChoiceOutcome scenarioSlug={scenario.slug} choice={selectedChoice} />}
         </div>
       )}
     </li>
   );
 }
 
-function ChoiceOutcome({ choice }: { choice: ScenarioChoice }) {
+function ChoiceOutcome({ scenarioSlug, choice }: { scenarioSlug: string; choice: ScenarioChoice }) {
   const projectTitle = projectTitleBySlug.get(choice.relatedProjectSlug);
   return (
     <div className="mt-4 border-t border-[var(--line)] pt-4">
@@ -181,6 +182,7 @@ function ChoiceOutcome({ choice }: { choice: ScenarioChoice }) {
           </Link>
         )}
       </p>
+      <DeterministicEnginePanel key={choice.id} scenarioSlug={scenarioSlug} choiceId={choice.id} />
     </div>
   );
 }

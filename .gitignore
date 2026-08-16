@@ -62,3 +62,13 @@ credentials.json
 # existing convention (V5_1_SCREENSHOT_DIR/V6_SCREENSHOT_DIR default to
 # paths under /tmp or /home/tarun/screenshots/, never an in-repo directory).
 /reports/
+
+# Rust build artifacts (crates/mission-simulator) - large, regenerable,
+# never committed. The compiled WASM artifact itself
+# (crates/mission-simulator/pkg/) IS committed intentionally - see
+# docs/PORTFOLIO_V9_ARCHITECTURE.md's "Build/deploy separation".
+crates/*/target/
+
+# Go build artifacts (tools/portfolio-audit) - regenerable, never committed.
+tools/*/portfolio-audit
+tools/*/*.exe

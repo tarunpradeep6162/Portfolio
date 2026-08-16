@@ -1,0 +1,111 @@
+name: V9 Rust/WASM (Mission Scenario Engine)
+
+# Path-filtered per docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md's polyglot
+# addendum: a normal TypeScript-only commit against portfolio-v9 never
+# triggers this job, only changes under crates/mission-simulator/ do.
+# Full Validation (the release-gate workflow) always rebuilds this crate
+# regardless of path filters - see that workflow for the unconditional
+# rebuild.
+on:
+  push:
+    branches: [portfolio-v9]
+    paths:
+      - "crates/mission-simulator/**"
+      - ".github/workflows/v9-rust-wasm.yml"
+  pull_request:
+    branches: [portfolio-v9]
+    paths:
+      - "crates/mission-simulator/**"
+      - ".github/workflows/v9-rust-wasm.yml"
+
+concurrency:
+  group: v9-rust-wasm-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust (stable + wasm32 target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # Cached independently of the npm/Go caches in v9-fast-ci.yml /
+      # v9-go-audit.yml, keyed on this crate's own lockfile so a change in
+      # one language's dependencies never invalidates another's cache.
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            crates/mission-simulator/target
+          key: cargo-mission-simulator-${{ runner.os }}-${{ hashFiles('crates/mission-simulator/Cargo.lock') }}
+          restore-keys: |
+            cargo-mission-simulator-${{ runner.os }}-
+
+      - name: Run Rust unit tests (native target - the calculation logic itself)
+        working-directory: crates/mission-simulator
+        run: cargo test --locked
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      # apt's binaryen is too old to recognize the WASM features rustc
+      # enables by default for wasm32-unknown-unknown; the npm binaryen
+      # package ships a current wasm-opt binary instead.
+      - name: Install a current wasm-opt (npm binaryen)
+        run: |
+          npm install --global binaryen
+          echo "$(npm root -g)/binaryen/bin" >> "$GITHUB_PATH"
+
+      - name: Setup Node (for the functional-equivalence check below)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Captured BEFORE rebuilding, from the artifact as committed.
+      - name: Compute outputs from the committed artifact
+        run: node scripts/verify-mission-simulator-wasm.mjs /tmp/committed-outputs.json
+
+      - name: Build the WASM artifact
+        working-directory: crates/mission-simulator
+        run: wasm-pack build --target web --release --out-dir pkg
+
+      # The integrity guarantee described in
+      # docs/PORTFOLIO_V9_ARCHITECTURE.md: the committed pkg/ output is
+      # only trustworthy because this job rebuilds it from the reviewed
+      # Rust source on every relevant change and verifies it behaves the
+      # same as the committed artifact - functional equivalence, not
+      # byte-for-byte equality. wasm-bindgen/wasm-opt do not guarantee
+      # byte-stable output across runs (internal ordering can differ
+      # without changing behavior - see
+      # docs/PORTFOLIO_V9_PHASE8_MISSION_SCENARIO_ENGINE.md for the real
+      # CI failure that surfaced this), so a raw `git diff` on the
+      # artifact is the wrong check; comparing computed results is the
+      # guarantee that actually matters.
+      - name: Verify the fresh rebuild computes the same results
+        run: |
+          node scripts/verify-mission-simulator-wasm.mjs /tmp/rebuilt-outputs.json
+          if ! diff -u /tmp/committed-outputs.json /tmp/rebuilt-outputs.json; then
+            echo "::error::The rebuilt WASM artifact computes different results than the committed crates/mission-simulator/pkg/ output - this is a real behavioral drift, not just a byte-ordering difference." >&2
+            echo "::error::Rebuild locally (wasm-pack build --target web --release --out-dir pkg, from crates/mission-simulator/) and commit the result." >&2
+            exit 1
+          fi
+          echo "Functional outputs match. (Byte-level diff, informational only, does not fail this check:)"
+          git diff --stat -- crates/mission-simulator/pkg/ || true
+
+      - name: Report compressed artifact size
+        run: |
+          size=$(gzip -9c crates/mission-simulator/pkg/mission_simulator_bg.wasm | wc -c)
+          echo "Compressed (gzip -9) mission_simulator_bg.wasm: ${size} bytes"
+          echo "### Mission Scenario Engine WASM size" >> "$GITHUB_STEP_SUMMARY"
+          echo "Compressed (gzip -9): ${size} bytes" >> "$GITHUB_STEP_SUMMARY"

@@ -192,3 +192,169 @@ failure trace, not by assuming and re-running).
 - No V9 Fast CI workflow file created yet (specified above, created at
   Phase 0 of implementation, not during preparation).
 - No V9 implementation begun.
+
+## Addendum — Phases 8–11: mandatory polyglot language architecture
+
+**Status.** Phases 0–7 above are complete and shipped — merged into
+`portfolio-v9` as `a1b9773b472f6b67f4f3e9b0005c2b300d02ae4d`, promoted to
+production. Everything below is new, separately-authorized scope building
+the mandatory Rust/Go/GLSL architecture defined in this addendum's
+companion sections in `docs/PORTFOLIO_V9_DISCOVERY.md`,
+`docs/PORTFOLIO_V9_ARCHITECTURE.md`, and
+`docs/PORTFOLIO_V9_PERFORMANCE_BUDGET.md`. This section is **planning
+only** — no Rust, Go, or GLSL source lands until all four documents are
+updated (this pass, now complete) and reviewed.
+
+### Phase 8 — Rust + WebAssembly: Mission Scenario Engine
+
+- New crate `crates/mission-simulator/`: one module per required
+  calculation family (traffic spikes, deployment failures, service
+  degradation, credential compromise, recovery decisions), plus a
+  reliability-scoring function reporting against the existing Reliability
+  Spine taxonomy (`content/spine.ts`).
+- Compiled via `wasm-pack build --target web`; committed `pkg/` output
+  alongside the authoritative Rust source (Architecture doc's "Build/
+  deploy separation").
+- New `lib/v9/wasmOwnership.ts` intent-loading guard, mirroring
+  `lib/v8/canvasOwnership.ts`'s contract for a WASM module instead of a
+  Canvas — dynamically `import()`-ed only when a visitor opts into the
+  deterministic engine from inside the existing Scenario Simulator, never
+  on route load.
+- New `lib/v9/missionEngineFallback.ts`: a pure-TypeScript reference
+  implementation producing equivalent results for no-WASM/reduced-data
+  cases.
+- Rust unit tests covering deterministic outputs (identical inputs
+  produce identical outputs; any randomness is explicitly seeded and
+  tested as such).
+- New Playwright coverage: zero `.wasm` network requests before the
+  opt-in control is used, on every tracked route — extends the existing
+  zero-canvas-before-intent test pattern to the WASM modality.
+- Real compressed WASM size measured against the placeholder budget in
+  `docs/PORTFOLIO_V9_PERFORMANCE_BUDGET.md`; the budget is tightened to
+  the real number once known, not left as unused slack.
+**Gate**: Fast CI (path-filtered Rust job). Full Validation at this
+phase's RC checkpoint, including the rebuilt-vs-committed-artifact hash
+check.
+
+### Phase 9 — Go: portfolio-audit CI tool
+
+- New module `tools/portfolio-audit/` (own `go.mod`, standard library
+  preferred): route-inventory validation, content/evidence manifest
+  inspection, security-header verification, broken/missing proof
+  reference detection, screenshot/video artifact-count reconciliation.
+- Table-driven tests for every validator; targeted fuzz tests on the
+  content/manifest parsing paths.
+- Outputs machine-readable JSON (CI gating) and human-readable Markdown
+  (job summary) from one run.
+- `govulncheck` wired into the security workflow for this module.
+- Runs alongside every Node/TS check it overlaps with (Architecture doc's
+  duplication table) for at least one full Full Validation cycle; outputs
+  are diffed and shown equivalent before any specific Node duplicate is
+  retired, and that retirement is an explicit decision made at this
+  phase's RC checkpoint, never silent and never assumed.
+**Gate**: Fast CI (path-filtered Go job) + `govulncheck`. Full Validation
+at RC checkpoint, including the Node/Go output-equivalence diff.
+
+### Phase 10 — GLSL: reviewed shader pass on existing 3D systems
+
+- Small, targeted vertex/fragment shaders applied as material
+  enhancements to Atlas, Operational Twin, and RC-01 — no new canvas, no
+  new `SceneKind`, no new intent-loading surface (reuses the existing
+  one).
+- Each shader ships with a documented rationale (why the system's current
+  standard Three.js material can't achieve the selected Direction B art
+  direction there) and a verified fallback to that standard material
+  under reduced motion, low-power conditions, and WebGL failure.
+- Re-runs the exact reduced-motion/no-WebGL Playwright coverage each of
+  these three systems already has, extended to also cover the shader
+  path. This phase touches already-stable, already-hardened V8 code, so
+  it gets the same scrutiny V8 Phase 6 gave those systems the first time
+  — this is the highest-regression-risk phase of the addendum precisely
+  because it's the only one modifying existing, shipped rendering code
+  rather than adding an isolated new module.
+**Gate**: Fast CI. Full Validation at RC checkpoint, including full
+reduced-motion/no-WebGL parity re-verification on all three systems.
+
+### Phase 11 — Polyglot hardening, final validation, and completion report
+
+- Full Validation rebuilds and verifies all language outputs together:
+  `cargo build --release && cargo test`, `wasm-pack build` (with the
+  Phase 8 hash-integrity check), `go build ./... && go test ./... && go
+  vet ./...`, `govulncheck`, and Trivy — all blocking at this final
+  release gate, matching the explicit instruction that these stay
+  blocking regardless of how lenient per-commit Fast CI is.
+- CI timing re-measured for real against the Performance Budget
+  addendum's target ceilings; budgets revised to match reality if the
+  real numbers differ.
+- Evidence capture extended, not replaced: `scripts/capture-v9.mjs` /
+  `scripts/soak-test-v9.mjs` re-run to confirm zero regression in the
+  already-shipped Phases 0–7 pillars, plus new evidence specific to this
+  addendum — WASM load-on-intent proof, the Go tool's own JSON/Markdown
+  output as a CI artifact, and before/after screenshots of any
+  GLSL-enhanced system.
+- **Completion report requirements** (restated here so they aren't lost
+  between now and Phase 11): language responsibilities; real lines/files
+  of authored source per language; what each language materially
+  contributes, demonstrated rather than asserted; Rust and Go test
+  results; real WASM size and loading behavior; real CI timings;
+  security-scan results (Trivy, `govulncheck`, and the existing npm-audit
+  equivalent); why each language was selected, confirmed or revised
+  against what was actually learned building it; limitations and
+  maintenance cost — the honest ongoing cost of four languages/toolchains
+  instead of one, not glossed over.
+- No production promotion happens automatically at this phase either —
+  same explicit, separate, user-performed step as every prior closure in
+  this project.
+**Gate**: Full Validation + Evidence Capture (once) + the blocking
+Trivy/`govulncheck` release gate.
+
+### CI wiring for the new languages
+
+- New path-filtered triggers so Rust checks run only when
+  `crates/mission-simulator/**` changes and Go checks run only when
+  `tools/portfolio-audit/**` changes — a normal TypeScript-only commit
+  pays for neither toolchain, matching the explicit instruction.
+- Cargo, Go module, and npm dependency caches are keyed and restored
+  independently (`actions/cache`, separate keys per `Cargo.lock`,
+  `go.sum`, `package-lock.json`), so a change in one language's
+  dependencies never invalidates another's cache.
+- Full Validation / the final release-gate workflow always rebuilds and
+  verifies all four languages together regardless of path filters, since
+  that gate exists precisely to catch what per-commit path-filtering is
+  designed to skip day-to-day.
+
+### Explicit non-goals for this addendum
+
+- No always-on backend, database, Kubernetes cluster, VPS, or paid
+  service introduced for any of this. The Rust/WASM engine is a static
+  asset loaded client-side; the Go tool is a CI-only binary; GLSL shaders
+  run on the GPU inside an already-existing intent-loaded Canvas. Nothing
+  here adds a server.
+- No artificial GitHub language-percentage targeting. Every file added
+  must trace to one of the responsibilities in the Architecture doc's
+  addendum; this plan sets no line-count or percentage target.
+- Zero-3D-before-intent and the one-canvas invariant, both already
+  established by V8 and preserved through Phases 0–7, extend unchanged
+  through Phases 8–10 — GLSL shaders attach to existing intent-loaded
+  systems, they do not create a new one.
+
+### Rollback (extended)
+
+- Phases 8–10 are each independently revertable, same contract as Phases
+  0–7: a `git revert` of a phase's commits removes that language's
+  surface without breaking the others, since the Rust engine, Go tool,
+  and GLSL shaders don't depend on each other.
+- If the Rust/WASM artifact-hash integrity check ever fails in CI
+  (rebuilt hash ≠ committed hash), the correct response is to fail the
+  build, not to silently trust either version — the committed artifact is
+  never authoritative over what the reviewed source actually compiles to.
+
+### Explicitly not done in this addendum's preparation pass
+
+- No Rust, Go, or GLSL source added.
+- No `crates/mission-simulator/` or `tools/portfolio-audit/` directories
+  created.
+- No CI workflow changes made.
+- No runtime or toolchain dependencies installed.
+- Phase 8 implementation begins only after this updated plan is reviewed,
+  matching the explicit instruction governing this addendum.

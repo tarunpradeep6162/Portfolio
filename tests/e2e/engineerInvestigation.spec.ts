@@ -16,11 +16,11 @@ test.describe("Engineer Investigation", () => {
     await expect(bar.getByRole("link", { name: /architecture & decisions/i })).toHaveAttribute("href", "/work");
     await expect(bar.getByRole("link", { name: /incident reconstruction/i })).toHaveAttribute(
       "href",
-      "#incident-replay",
+      "/engineering-log#incident-replay",
     );
     await expect(bar.getByRole("link", { name: /deployment history/i })).toHaveAttribute(
       "href",
-      "#automation-fabric",
+      "/engineering-log#automation-fabric",
     );
     await expect(bar.getByRole("link", { name: /security & performance proof/i })).toHaveAttribute(
       "href",
@@ -37,16 +37,20 @@ test.describe("Engineer Investigation", () => {
     const bar = page.getByRole("region", { name: /engineer investigation/i });
 
     await bar.getByRole("link", { name: /incident reconstruction/i }).click();
+    await expect(page).toHaveURL(/\/engineering-log#incident-replay$/);
     await expect(page.locator("#incident-replay")).toBeInViewport();
-    await expect(page).toHaveURL(/#incident-replay$/);
 
+    await page.goto("/?path=engineer");
     await bar.getByRole("link", { name: /deployment history/i }).click();
+    await expect(page).toHaveURL(/\/engineering-log#automation-fabric$/);
     await expect(page.locator("#automation-fabric")).toBeInViewport();
 
-    await bar.getByRole("link", { name: /security & performance proof/i }).click();
+    await page.goto("/?path=engineer");
+    const bar2 = page.getByRole("region", { name: /engineer investigation/i });
+    await bar2.getByRole("link", { name: /security & performance proof/i }).click();
     await expect(page.locator("#proof-ledger")).toBeInViewport();
 
-    await bar.getByRole("link", { name: /compare systems/i }).click();
+    await bar2.getByRole("link", { name: /compare systems/i }).click();
     await expect(page.locator("#project-comparison")).toBeInViewport();
   });
 

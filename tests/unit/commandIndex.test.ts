@@ -3,10 +3,12 @@ import { buildCommandIndex, filterCommandIndex } from "@/lib/v9/commandIndex";
 import { projects } from "@/content/projects";
 
 describe("commandIndex", () => {
-  it("indexes exactly the 5 real routes", () => {
+  it("indexes exactly the 6 real routes", () => {
     const index = buildCommandIndex();
     const routeHrefs = index.filter((e) => e.kind === "route").map((e) => e.href);
-    expect(routeHrefs.sort()).toEqual(["/", "/about", "/contact", "/resume", "/work"].sort());
+    expect(routeHrefs.sort()).toEqual(
+      ["/", "/about", "/contact", "/engineering-log", "/resume", "/work"].sort(),
+    );
   });
 
   it("indexes only flagship projects, never lab projects (no case-study page exists for labs)", () => {

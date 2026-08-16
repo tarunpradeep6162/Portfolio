@@ -143,6 +143,8 @@ export function CompanionRoot() {
     <button
       ref={buttonRef}
       type="button"
+      title="RC-01 — an interactive voice-guided tour of this portfolio"
+      aria-label="Activate RC-01, an interactive voice-guided tour of this portfolio"
       onClick={() => dispatch({ type: "SCENE_CHANGED", scene: "rc01" })}
       onPointerEnter={armPrefetch}
       onFocus={armPrefetch}

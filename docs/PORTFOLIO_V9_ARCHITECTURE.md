@@ -120,3 +120,146 @@ substantially lower than a from-scratch build would be — the state
 management and persistence layer is proven; the work is UI, sequencing,
 and a11y, all of which take targeted Playwright coverage rather than a
 new architecture to validate.
+
+## Addendum — polyglot architecture
+
+Everything above describes the shipped Phases 0–7 (Direction B, unchanged
+by this addendum). This section maps the newly-mandatory Rust, Go, and
+GLSL responsibilities onto that same, already-stable system, using the
+same rule the rest of this document follows: reuse what exists, extend
+only where there's a real gap, never build a second copy of something
+that already works.
+
+### Language responsibility boundary
+
+- **TypeScript** — unchanged as the primary application language. Next.js
+  App Router, React components, accessibility, state management, content
+  types, and browser integration all stay exactly where they are today.
+- **Rust + WebAssembly** — `crates/mission-simulator/`, a new, isolated
+  deterministic engine (below). Owns calculation, owns nothing about
+  rendering or routing.
+- **Go** — `tools/portfolio-audit/`, a new, isolated CI binary (below).
+  Owns validation and reporting, never runs in the browser, never touches
+  the Next.js build graph.
+- **GLSL** — small shader programs attached to material slots inside the
+  three *existing* Three.js systems (below). Owns visual refinement only;
+  removing a shader must never remove information or functionality.
+
+### Mission Scenario Engine (Rust/WASM) — how it attaches to the shipped Scenario Simulator
+
+The already-shipped `ScenarioSimulator.tsx` (Phase 5) and its 5 scripted
+scenarios in `content/v9/scenarios.ts` are not replaced or rewritten by
+this engine — they remain the honest, narrative, always-available default.
+The engine is an **additional, opt-in layer** inside that same UI: a
+disclosure (e.g. "Run the deterministic engine") that, only once actually
+opened, dynamically `import()`s the compiled WASM module and lets the
+visitor adjust real parameters (load level, node count, latency budget,
+credential-compromise blast radius, etc.) and see a computed — not
+scripted — state transition and reliability score.
+
+- **Crate layout**: `crates/mission-simulator/`, one module per required
+  calculation family — traffic spikes, deployment failures, service
+  degradation, credential compromise, recovery decisions — plus a
+  reliability-scoring function that reports against the existing
+  Reliability Spine taxonomy (`content/spine.ts`) rather than inventing a
+  parallel scoring system. Every function is a pure, deterministic
+  computation: same inputs always produce the same outputs. Any
+  randomness the simulation needs (e.g. a stochastic traffic-spike model)
+  must use an explicit, visible seed so results stay reproducible and
+  testable — never wall-clock or unseeded entropy.
+- **Compilation**: `wasm-pack build --target web`, producing the
+  browser-loadable glue + `.wasm` binary.
+- **Intent-loading**: new `lib/v9/wasmOwnership.ts`, deliberately mirroring
+  `lib/v8/canvasOwnership.ts`'s contract — tracks whether the module has
+  been requested, ensures it is fetched at most once per session, and
+  guarantees it is never imported on initial route load, matching
+  "zero WASM bytes before intent" in the Performance Budget addendum.
+- **Fallback**: `lib/v9/missionEngineFallback.ts`, a pure-TypeScript
+  reference implementation producing equivalent results for browsers
+  without WASM support or with a reduced-data preference — the
+  deterministic engine is an enhancement to the Scenario Simulator, never
+  a hard dependency of it.
+- **Honesty constraint carried over unchanged from Phase 5**: whatever the
+  engine computes must be visibly labeled as a simulation in the rendered
+  UI, using the same "Simulation" badge convention Phase 5 already
+  established — the engine makes the simulation *more real as a skill
+  demonstration*, it must never make the UI look more like live
+  infrastructure.
+
+### Go audit tool — architecture and duplication-retirement plan
+
+`tools/portfolio-audit/` is a standalone Go module (its own `go.mod`) that
+never touches the Next.js build graph and never ships to the browser. It
+runs only in GitHub Actions and, optionally, locally.
+
+Responsibilities, mapped to what they are expected to eventually replace:
+
+| Go tool responsibility | Existing overlapping check |
+|---|---|
+| Validate the route inventory | `lib/v9/commandIndex.ts`'s real-routes list; the routing assertions already scattered across `tests/e2e/*.spec.ts` |
+| Inspect content/evidence manifests | `tests/unit/evidenceGraph.test.ts`, `tests/unit/scenarios.test.ts`, and similar content-integrity assertions |
+| Verify security-header expectations | The `curl -I` + Playwright response-header check described in `docs/PORTFOLIO_V9_PHASE6_HARDENING.md` |
+| Detect broken/missing proof references | The `Field<T>` `needs-input` scanning already done ad hoc per component |
+| Reconcile screenshot/video artifact counts | `scripts/capture-v9.mjs`'s manual per-capture assertion count |
+
+**Retirement is a decision, not an assumption.** The Go tool lands
+alongside every one of these Node/TS checks first, not instead of them.
+Both run in CI for at least one full Full Validation cycle; their outputs
+are diffed and shown equivalent before any specific Node duplicate is
+retired, and that retirement happens explicitly at the relevant phase's
+RC checkpoint — never silently, and never before the Go tool has proven
+itself on a real run against this real content.
+
+Output: machine-readable JSON (consumed by CI to gate merges) and
+human-readable Markdown (posted as a job summary), from the same run —
+never two separate code paths that could drift from each other.
+
+### GLSL shader attachment points
+
+No new canvas and no new `SceneKind` is required or permitted for GLSL.
+Shaders are optional **material-level** enhancements to Atlas, Operational
+Twin, and RC-01, applied through the existing `ControlRoomScene.tsx` host
+and its existing intent-loading contract — the shader compiles at the same
+moment that system's Canvas already mounts, not before.
+
+- Decorative and nonessential by construction: every shader-enhanced
+  material must have the system's current standard Three.js material
+  (`MeshStandardMaterial` / `MeshPhysicalMaterial`, whichever the system
+  already uses) as its fallback, so removing the shader removes only
+  visual polish, never information or functionality.
+- Reduced motion, low-power conditions, and WebGL failure all resolve to
+  that same standard-material fallback — re-running the exact
+  reduced-motion/no-WebGL Playwright coverage each of these three systems
+  already has (`tests/e2e/atlas.spec.ts`, `companion.spec.ts`,
+  `operationalTwin.spec.ts`), extended to also cover the shader path.
+- No full-screen post-processing passes "merely to claim shader usage."
+  Every shader is scoped to one specific, reviewed material application
+  (e.g. a rim-light effect on Atlas's globe, a scanline effect on RC-01's
+  companion surface), each with a written rationale for why the system's
+  current standard material can't achieve the selected Direction B art
+  direction at that specific spot.
+
+### Build/deploy separation — why Vercel stays fast
+
+- The WASM artifact (`wasm-pack`'s `pkg/` output) is committed to the
+  repository alongside its authoritative Rust source, treated exactly
+  like any other compiled static asset. Vercel's `next build` never
+  invokes `cargo` or `wasm-pack` — it only bundles the already-built
+  `.wasm`/glue files, the same as any other file under version control.
+- A dedicated, path-filtered GitHub Actions job (Rust toolchain +
+  wasm-pack, cached, triggered only by `crates/mission-simulator/**`
+  changes) rebuilds the crate on every relevant change and compares the
+  rebuilt artifact's hash against the committed one. A mismatch fails
+  CI — this hash check is what makes a committed binary artifact
+  trustworthy without requiring Vercel to rebuild it from source on every
+  deploy.
+- The Go binary is CI-only: it is never imported by Next.js and adds zero
+  runtime bytes to any route.
+
+### Removed / consolidated (addendum)
+
+Nothing is removed by this addendum on day one. The Node/TS checks the Go
+tool overlaps with are retired only after the equivalence proof described
+above — matching the same "additive, then subtractive only after the
+replacement is proven" discipline the rest of this document already
+follows for every other system.

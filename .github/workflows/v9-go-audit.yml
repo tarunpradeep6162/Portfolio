@@ -1,0 +1,93 @@
+name: V9 Go Audit Tool
+
+# Path-filtered per docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md's polyglot
+# addendum: a normal TypeScript-only commit against portfolio-v9 never
+# triggers this job, only changes under tools/portfolio-audit/ do. Full
+# Validation (the release-gate workflow) always rebuilds this tool
+# regardless of path filters.
+on:
+  push:
+    branches: [portfolio-v9]
+    paths:
+      - "tools/portfolio-audit/**"
+      - ".github/workflows/v9-go-audit.yml"
+  pull_request:
+    branches: [portfolio-v9]
+    paths:
+      - "tools/portfolio-audit/**"
+      - ".github/workflows/v9-go-audit.yml"
+
+concurrency:
+  group: v9-go-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/portfolio-audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          # Cached independently of the npm/Cargo caches in
+          # v9-fast-ci.yml / v9-rust-wasm.yml. This module has zero
+          # external dependencies (standard library only, per the
+          # addendum's "prefer the Go standard library"), so there's no
+          # go.sum to key on - go.mod is the right cache-busting input
+          # instead.
+          cache-dependency-path: tools/portfolio-audit/go.mod
+
+      - name: Format check (gofmt)
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt found unformatted files:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build -o /tmp/portfolio-audit .
+
+      - name: Unit + table-driven tests
+        run: go test ./... -v
+
+      - name: Fuzz (short, regression-style run - not a full fuzzing campaign)
+        run: |
+          go test ./internal/audit/ -run=NONE -fuzz=FuzzParseProjects -fuzztime=15s
+          go test ./internal/audit/ -run=NONE -fuzz=FuzzCheckProofReferences -fuzztime=15s
+
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" ./...
+
+      # The real, load-bearing run: audits this exact repository, not a
+      # fixture. Fails the build if the audit itself fails (missing
+      # route, missing security header, broken Scenario Simulator proof
+      # reference) - a real gate, not a demonstration.
+      - name: Audit this repository
+        run: |
+          /tmp/portfolio-audit --repo-root ../.. --json /tmp/audit-report.json --markdown "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-audit-report
+          path: /tmp/audit-report.json
+          retention-days: 14
+          if-no-files-found: ignore

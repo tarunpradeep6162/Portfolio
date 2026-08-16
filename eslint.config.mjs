@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // wasm-pack/wasm-bindgen generated glue - never hand-edited, committed
+    // as a build artifact (docs/PORTFOLIO_V9_ARCHITECTURE.md polyglot
+    // addendum's "Build/deploy separation").
+    "crates/**/pkg/**",
   ]),
 ]);
 

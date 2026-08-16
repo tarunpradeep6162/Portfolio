@@ -1,0 +1,111 @@
+name: V9 Release Gate (all languages)
+
+# Not path-filtered, unlike v9-rust-wasm.yml / v9-go-audit.yml - this is
+# the "Full Validation always rebuilds and verifies all language outputs"
+# gate from docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md's polyglot addendum.
+# Runs on every push to portfolio-v9, regardless of which files changed,
+# specifically to catch what per-commit path-filtering is designed to
+# skip day-to-day. Trivy and govulncheck are both blocking here, per the
+# addendum's explicit instruction, even though neither blocks the
+# lighter-weight per-commit workflows.
+on:
+  push:
+    branches: [portfolio-v9]
+  workflow_dispatch: {}
+
+concurrency:
+  group: v9-release-gate-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:ci
+      - run: npm run build
+
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            crates/mission-simulator/target
+          key: cargo-mission-simulator-${{ runner.os }}-${{ hashFiles('crates/mission-simulator/Cargo.lock') }}
+          restore-keys: |
+            cargo-mission-simulator-${{ runner.os }}-
+      - working-directory: crates/mission-simulator
+        run: cargo test --locked
+      - run: cargo install wasm-pack --locked
+      - run: |
+          npm install --global binaryen
+          echo "$(npm root -g)/binaryen/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node scripts/verify-mission-simulator-wasm.mjs /tmp/committed-outputs.json
+      - working-directory: crates/mission-simulator
+        run: wasm-pack build --target web --release --out-dir pkg
+      - run: |
+          node scripts/verify-mission-simulator-wasm.mjs /tmp/rebuilt-outputs.json
+          diff -u /tmp/committed-outputs.json /tmp/rebuilt-outputs.json
+
+  go:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/portfolio-audit
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache-dependency-path: tools/portfolio-audit/go.mod
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go build -o /tmp/portfolio-audit .
+      - run: go test ./...
+      - run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          "$(go env GOPATH)/bin/govulncheck" ./...
+      - run: /tmp/portfolio-audit --repo-root ../.. --json /tmp/audit-report.json --markdown "$GITHUB_STEP_SUMMARY"
+
+  # Blocking at this final gate, per the addendum's explicit instruction -
+  # scans the whole repository's dependency manifests (npm, Cargo, Go
+  # modules) for known vulnerabilities, not just this session's own code.
+  trivy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table

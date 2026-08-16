@@ -4,6 +4,10 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { computeSpineInstruments, type SpineInstrument } from "@/lib/v7/spineInstruments";
+import {
+  operationalTwinDeckGridFragmentShader,
+  operationalTwinDeckGridVertexShader,
+} from "@/lib/v9/shaders/operationalTwinDeckGrid";
 
 /**
  * The Instrument Deck's real content - moved unchanged from the old
@@ -210,7 +214,23 @@ export function OperationalTwinSceneContent({
       <StatusPips instruments={instruments} selectedStageId={selectedStageId} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[12, 6]} />
-        <meshLambertMaterial color="#0d1218" />
+        {/* A small, reviewed procedural grid-line shader
+            (docs/PORTFOLIO_V9_ARCHITECTURE.md polyglot addendum, Phase
+            10) - grid lines from the plane's own UV coordinates, which
+            a flat meshLambertMaterial cannot render without an external
+            texture asset (this codebase's 3D systems deliberately use
+            none). Static, no per-frame updates - the plane itself was
+            never animated before this shader either. */}
+        <shaderMaterial
+          vertexShader={operationalTwinDeckGridVertexShader}
+          fragmentShader={operationalTwinDeckGridFragmentShader}
+          uniforms={{
+            uBaseColor: { value: new THREE.Color("#0d1218") },
+            uLineColor: { value: new THREE.Color("#4a5563") },
+            uGridSize: { value: 24 },
+            uLineWidth: { value: 1.5 },
+          }}
+        />
       </mesh>
     </>
   );

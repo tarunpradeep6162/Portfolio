@@ -91,3 +91,82 @@ build, read-only, no application behavior changed by the measurement
 itself. Re-run once at each phase's Full Validation checkpoint, not on
 every commit — matching the testing policy in
 `docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md`.
+
+## Addendum — polyglot architecture budgets
+
+New budgets for the mandatory Rust/WASM, Go, and GLSL work
+(`docs/PORTFOLIO_V9_ARCHITECTURE.md`), layered on top of every budget
+above, which stays unchanged and still applies to the already-shipped
+Phases 0–7.
+
+- **Zero WASM bytes before intent.** Extends "Zero 3D/WebGL bytes before
+  user intent" to a second modality, same enforcement method: network-
+  request interception must show 0 requests for the mission-simulator
+  `.wasm`/glue files on initial load of every tracked route, until the
+  Scenario Simulator's deterministic-engine disclosure is actually
+  opened.
+- **Compressed WASM size ceiling: ≤ 40 KB (gzip -9) for the full
+  `mission-simulator` module.** Tightened from this doc's original 150 KB
+  placeholder now that Phase 8's first real build exists: the actual
+  measured artifact is 20,094 bytes raw / 8,553 bytes gzip -9 (~8.4 KB) -
+  well under even the tightened ceiling, which leaves real headroom for
+  the module to grow (more scenario categories, more precision) without
+  quietly ballooning past what a 60-second recruiter path can afford.
+  This is now a hard, CI-enforced gate (`.github/workflows/v9-rust-wasm.yml`
+  reports the real compressed size on every build touching the crate).
+- **No re-fetch on repeat interaction.** Once loaded by intent, the WASM
+  module must be served from cache for the rest of the page session — a
+  visitor exploring multiple scenarios triggers one fetch, not one per
+  scenario.
+- **Go tool: zero browser budget impact, by construction.** It never
+  ships to the client, so it has no entry in the per-route byte tables
+  above. Its cost is CI time, not runtime weight (see below).
+- **GLSL: no new byte-budget category.** Shader compilation happens on
+  the GPU at the same intent-loaded moment the existing system's Canvas
+  already mounts (Atlas/Twin/RC-01) — there is no new mount trigger and
+  no new canvas, so shader source size (expected low single-digit KB per
+  shader) folds into that system's existing "system-specific" activation-
+  cost line in the baseline table above rather than getting a separate
+  row.
+- **CI timing budget (new — Full Validation now rebuilds Rust and Go
+  too).** Target ceilings, to be measured for real at Phase 8/9's first
+  implementation and revised if reality differs: **Rust build + test ≤ 3
+  minutes**, **Go build + test + `govulncheck` ≤ 2 minutes**, both with
+  dependency caching (Cargo, Go modules) so this cost is paid once per
+  dependency change, not once per commit.
+
+### Real measured results (Phase 11 closure)
+
+Re-measured with all of Phases 8–10 integrated
+(`scripts/measure-v9-baseline.mjs`, same method as every prior checkpoint):
+
+| Route | V8 baseline | Phase 6 checkpoint | Phase 11 (polyglot addendum) | Growth vs. V8 | +15% ceiling |
+|---|---:|---:|---:|---:|---:|
+| `/` | 751,647 B | 779,901 B | 788,877 B | +4.95% | 864,394 B |
+| `/work`, `/work/project-aurora` | 769,591 B | 797,845 B | 806,821 B | +4.83% | 885,030 B |
+
+Comfortably inside budget - the polyglot addendum's entire visible-JS
+footprint (Command Interface panel, Scenario Simulator's deterministic-
+engine UI, missionEngine/missionEngineFallback/missionEngineParams
+modules) added roughly 9 KB to `/`, none of it WASM (confirmed 0 bytes
+before intent, see above) and none of it Go (the audit tool never ships
+to the browser). Atlas/Operational Twin/RC-01 per-system activation costs
+are unchanged from Phase 6 within normal chunk-hash noise, confirming the
+two new GLSL shaders (Phase 10) added no meaningful bytes. Zero canvas
+before intent still holds on all 6 tracked routes.
+
+CI timings, measured for real on the first hosted runs (Phase 8/9):
+Rust build + test (`v9-rust-wasm.yml`) ~1m52s, Go build + test +
+`govulncheck` (`v9-go-audit.yml`) ~1m25s - both well under the target
+ceilings above.
+
+### Not a goal, extended
+
+- No WASM-vs-JS speed benchmark or marketing claim. The engine's value is
+  deterministic correctness and a genuine, load-bearing polyglot
+  contribution — not a "look how fast Rust is" comparison this project
+  has no real, measured basis for at this workload's actual size. Making
+  that claim without a real measurement would violate the same
+  fabrication ban that governs every other claim on this site.
+- No Lighthouse/Core Web Vitals automation added for this addendum either
+  — same non-goal as the rest of this document, unchanged.

@@ -50,12 +50,15 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group flex items-center gap-2 py-3 transition-[color,text-shadow] hover:text-[var(--color-signal-lime)] hover:drop-shadow-[0_0_8px_rgba(216,255,79,0.4)]",
+                      "group relative flex items-center gap-2 py-3 transition-[color,text-shadow] hover:text-[var(--color-signal-lime)] hover:drop-shadow-[0_0_8px_rgba(216,255,79,0.4)]",
                       active
                         ? "text-[var(--color-signal-lime)]"
                         : "text-[var(--color-cloud-linen)]",
                     )}
                   >
+                    {active && (
+                      <span className="absolute bottom-0 left-0 h-0.5 bg-[var(--color-signal-lime)] animate-pulse" style={{animation: "underline-slide 0.6s ease-out forwards, underline-fade 0.8s ease-out forwards"}}></span>
+                    )}
                     <span
                       aria-hidden
                       className={cn(

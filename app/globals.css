@@ -188,6 +188,25 @@ body::before {
   transform: translate(4px, -4px);
 }
 
+.section-glow {
+  animation: section-glow-pulse 6s ease-in-out infinite;
+}
+
+.nav-link-underline {
+  position: relative;
+}
+
+.nav-link-underline::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, transparent, var(--color-signal-lime), transparent);
+  animation: underline-slide 0.6s ease-out forwards;
+}
+
 .route-orbit {
   animation: orbit-spin 40s linear infinite;
 }
@@ -263,6 +282,37 @@ body::before {
   }
   50% {
     box-shadow: 0 0 16px rgba(216, 255, 79, 0.2);
+  }
+}
+
+@keyframes underline-slide {
+  0% {
+    width: 0;
+    left: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes underline-fade {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes section-glow-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 40px rgba(216, 255, 79, 0.05), 0 0 60px rgba(216, 255, 79, 0.03);
+  }
+  50% {
+    box-shadow: inset 0 0 50px rgba(216, 255, 79, 0.08), 0 0 80px rgba(216, 255, 79, 0.05);
   }
 }
 

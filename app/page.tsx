@@ -44,7 +44,7 @@ export default function Home() {
       <section
         id="work"
         data-field="manual"
-        className="manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
+        className="section-glow manual-grid bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
       >
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
@@ -91,7 +91,7 @@ export default function Home() {
 
       <section
         id="spine"
-        className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
+        className="section-glow control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
       >
         <Container>
           <div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
@@ -158,7 +158,7 @@ export default function Home() {
 
       <section
         data-field="manual"
-        className="bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
+        className="section-glow bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
       >
         <Container className="grid grid-cols-1 gap-14 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
           <div>
@@ -194,7 +194,7 @@ export default function Home() {
 
       <section
         data-field="manual"
-        className="border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
+        className="section-glow border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
       >
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
@@ -219,7 +219,7 @@ export default function Home() {
 
       <section
         data-field="manual"
-        className="border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
+        className="section-glow border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28"
       >
         <Container className="grid grid-cols-1 gap-14 lg:grid-cols-2 lg:gap-20">
           <div>

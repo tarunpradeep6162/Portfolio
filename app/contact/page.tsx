@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <section className="control-grid relative flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-control-black)] py-20">
+    <section className="section-glow control-grid relative flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-control-black)] py-20">
       <div
         aria-hidden
         className="absolute right-[-17rem] top-1/2 h-[48rem] w-[48rem] -translate-y-1/2 rounded-full border border-dashed border-white/10 route-orbit"

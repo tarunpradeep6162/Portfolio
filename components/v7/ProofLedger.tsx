@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { cn } from "@/lib/cn";
 import { computeEvidenceRecords, type EvidenceStatus } from "@/lib/v7/evidenceMapper";
@@ -30,6 +31,8 @@ const STATUS_COLOR: Record<EvidenceStatus, string> = {
  */
 export function ProofLedger() {
   const [statusFilter, setStatusFilter] = useState<EvidenceStatus | "all">("all");
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   const { selectedStageId } = useExperienceState();
   const allRecords = useMemo(() => computeEvidenceRecords(), []);
 
@@ -47,15 +50,28 @@ export function ProofLedger() {
 
   return (
     <div className="mt-10 border-t border-[var(--line)] pt-8">
-      <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--accent-secondary)]">
-        Proof Ledger
-      </p>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--accent-secondary)]"
+      >
+        <ChevronDown
+          size={13}
+          aria-hidden
+          className={cn("transition-transform", open && "rotate-180")}
+        />
+        Proof Ledger — show verification detail
+      </button>
       <p className="mt-1.5 max-w-[62ch] text-[11px] leading-5 text-[var(--ink-muted)]">
         Every claim across every real project, resolved to verified,
         explained, or missing - never left ambiguous.
         {selectedStageId && " Filtered to the currently traced stage."}
       </p>
 
+      {open && (
+      <div id={panelId}>
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter the Proof Ledger by evidence status">
         {STATUS_FILTERS.map((filter) => {
           const isActive = statusFilter === filter.value;
@@ -119,6 +135,8 @@ export function ProofLedger() {
           ))
         )}
       </ul>
+      </div>
+      )}
     </div>
   );
 }

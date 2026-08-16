@@ -14,6 +14,11 @@ export const experience: ExperienceRole[] = [
     location: "Chennai",
     achievements: {
       status: "needs-input",
+      // TODO(tarun): supply 3-5 real, verified accomplishment bullets for
+      // this role, matching the specificity of the Vaata Smart entry below
+      // (concrete systems touched, concrete outcomes) - do not invent them
+      // here. Once supplied, flip this field to { status: "ready", value:
+      // [...] } and remove the corresponding CONTENT_GAPS.md line.
       note: "Detailed responsibilities and verified achievements for this role have not been supplied yet.",
     },
   },

@@ -17,10 +17,9 @@ import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SystemTrace } from "@/components/v7/SystemTrace";
-import { IncidentReplay } from "@/components/v7/IncidentReplay";
-import { AutomationFabric } from "@/components/v7/AutomationFabric";
 import { ProofLedger } from "@/components/v7/ProofLedger";
 import { ProjectComparison } from "@/components/v7/ProjectComparison";
+import { RecruiterGate } from "@/components/shared/RecruiterGate";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -142,17 +141,15 @@ export default function Home() {
                   mapped systems
                 </div>
               </div>
-              <div id="incident-replay">
-                <IncidentReplay />
-              </div>
-              <div id="automation-fabric">
-                <AutomationFabric />
-              </div>
               <div id="proof-ledger">
-                <ProofLedger />
+                <RecruiterGate label="Proof Ledger">
+                  <ProofLedger />
+                </RecruiterGate>
               </div>
               <div id="project-comparison">
-                <ProjectComparison />
+                <RecruiterGate label="Project comparison">
+                  <ProjectComparison />
+                </RecruiterGate>
               </div>
             </div>
           </div>

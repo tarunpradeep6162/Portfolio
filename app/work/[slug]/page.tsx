@@ -113,6 +113,8 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                 <img
                   src={project.screenshot.value.src}
                   alt={project.screenshot.value.alt}
+                  decoding="async"
+                  fetchPriority="high"
                   className="aspect-[12/7] w-full object-cover"
                 />
               ) : (

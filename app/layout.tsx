@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CompanionRoot } from "@/components/companion/CompanionRoot";
 import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
+import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
 import { site } from "@/content/site";
@@ -43,17 +44,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <SmoothScroll />
-        <CustomCursor />
-        <ExperienceProvider>
-          <SkipLink />
-          <SiteHeader />
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <CompanionRoot />
-        </ExperienceProvider>
+        <ThemeProvider>
+          <SmoothScroll />
+          <CustomCursor />
+          <ExperienceProvider>
+            <SkipLink />
+            <SiteHeader />
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <CompanionRoot />
+          </ExperienceProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

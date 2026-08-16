@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Moon, Sun } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { CommandPalette } from "@/components/command/CommandPalette";
+import { useTheme } from "@/lib/theme/ThemeProvider";
 import { cn } from "@/lib/cn";
 
 const links = [
@@ -16,6 +18,7 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/92 backdrop-blur-xl">
@@ -79,6 +82,17 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center border border-white/15 transition-[color,border-color] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? (
+              <Sun size={18} aria-hidden />
+            ) : (
+              <Moon size={18} aria-hidden />
+            )}
+          </button>
           <CommandPalette />
           <MobileNav />
         </div>

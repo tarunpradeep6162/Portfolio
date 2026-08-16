@@ -93,6 +93,12 @@ html {
      real dev server, before this fix - not assumed from the CSS alone. */
   overflow-x: clip;
   scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  background: var(--color-cloud-white);
 }
 
 body {
@@ -102,6 +108,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body::before {
@@ -331,6 +338,32 @@ body::before {
   .control-grid {
     background-size: 40px 40px;
   }
+}
+
+/* Light mode overrides for components */
+html[data-theme="light"] {
+  --surface: var(--color-cloud-linen);
+  --surface-raised: var(--color-cloud-white);
+  --ink: var(--color-systems-ink);
+  --ink-muted: color-mix(
+    in srgb,
+    var(--color-systems-ink) 66%,
+    var(--color-telemetry-steel)
+  );
+  --line: color-mix(in srgb, var(--color-systems-ink) 17%, transparent);
+  --accent: #456000;
+  --accent-secondary: #3456df;
+  --signal-warm: #c83d22;
+  --focus-ring: #3456df;
+  --evidence-verified: #456000;
+  --evidence-explained: #0a6070;
+  --evidence-missing: #8a5a12;
+  --state-recovery: #5b3fd1;
+}
+
+html[data-theme="light"] header {
+  background-color: color-mix(in srgb, var(--color-cloud-white) 92%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-systems-ink) 7%, transparent) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

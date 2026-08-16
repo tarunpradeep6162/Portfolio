@@ -87,11 +87,13 @@ export function ProjectCard({
       "outline outline-1 outline-offset-4 outline-[var(--color-signal-lime)]",
   );
 
+  const cardClassName = cn("project-card group block", traceClassName, className);
+
   if (href) {
     return (
       <Link
         href={href}
-        className={cn("project-card group block", traceClassName, className)}
+        className={cardClassName}
         {...traceProps}
       >
         {body}
@@ -100,7 +102,7 @@ export function ProjectCard({
   }
 
   return (
-    <div className={cn(traceClassName, className)} {...traceProps}>
+    <div className={cardClassName} {...traceProps}>
       {body}
     </div>
   );

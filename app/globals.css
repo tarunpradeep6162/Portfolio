@@ -190,6 +190,16 @@ body::before {
   transform: scale(1.015);
 }
 
+.project-card {
+  transition: transform 0.4s ease-[var(--ease-spine)], box-shadow 0.4s ease-[var(--ease-spine)];
+}
+
+.project-card:hover,
+.project-card:focus-visible {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(216, 255, 79, 0.12);
+}
+
 .project-card:hover .project-card-arrow,
 .project-card:focus-visible .project-card-arrow {
   transform: translate(4px, -4px);

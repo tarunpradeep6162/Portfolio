@@ -132,6 +132,35 @@ depends on the same fix.
   unit suite 144/144 (134 existing + 10 new), full Playwright suite
   **155/155** (149 existing + 6 new), both clean on a single run.
 
+## A real CI failure, found and fixed after opening the PR
+
+`.github/workflows/v9-rust-wasm.yml`'s first hosted run genuinely failed:
+the rebuilt WASM artifact's bytes (`mission_simulator_bg.wasm`, and the
+`.d.ts` field ordering inside `mission_simulator.js`) differed from what
+was committed, even though nothing about the Rust source had changed
+between the local build and the CI rebuild. Root cause: neither `npm
+install --global binaryen` (unpinned) nor `wasm-bindgen-cli`'s internal
+codegen are guaranteed to produce byte-identical output across separate
+runs/environments - `wasm-opt` version drift and non-deterministic
+internal ordering inside `wasm-bindgen`'s code generation can both change
+the compiled bytes without changing behavior at all.
+
+The original CI check (`git diff --exit-code` on the raw artifact bytes)
+was the wrong test for the guarantee this workflow actually needs -
+**does the committed artifact still behave like what the reviewed Rust
+source currently compiles to**, not **are the bytes identical to some
+specific prior build**. Fixed by replacing the byte diff with a
+functional-equivalence check: `scripts/verify-mission-simulator-wasm.mjs`
+loads a compiled `pkg/` directly from raw bytes (bypassing `fetch()`,
+which doesn't support `file://` URLs in Node) and calls every exported
+function with fixed inputs. The workflow now runs this once against the
+artifact as committed, rebuilds, runs it again, and fails only if the
+*computed results* differ - a real behavioral-drift signal, not
+incidental byte-ordering noise. Verified locally: rebuilding the crate
+twice in a row produced byte-identical output in this sandbox (no
+drift to observe locally), but the functional-equivalence script still
+correctly reports a match either way, which is what actually matters.
+
 ## Not done in this phase (explicitly, not silently)
 
 - The Mission Scenario Engine is scoped to the 5 categories/formulas
@@ -141,9 +170,9 @@ depends on the same fix.
   dropped.
 - No change to Phase 5's scripted scenario content
   (`content/v9/scenarios.ts`) - the engine is strictly additive.
-- `.github/workflows/v9-rust-wasm.yml` has not yet run on a hosted
-  GitHub Actions runner as of writing this doc - it will run for the
-  first time when this phase's branch is pushed and the PR opened, and
-  its result is reconciled in that PR, not asserted here in advance.
+- No further changes to the CI workflow beyond the functional-equivalence
+  fix above - it's been reconciled against one real hosted run (the
+  failure) and this fix, not yet against a second clean run, which
+  happens automatically when this commit is pushed.
 - No production promotion, no V9 final tag touched - unaffected by this
   phase.

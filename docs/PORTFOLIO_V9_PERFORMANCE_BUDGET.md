@@ -91,3 +91,54 @@ build, read-only, no application behavior changed by the measurement
 itself. Re-run once at each phase's Full Validation checkpoint, not on
 every commit — matching the testing policy in
 `docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md`.
+
+## Addendum — polyglot architecture budgets
+
+New budgets for the mandatory Rust/WASM, Go, and GLSL work
+(`docs/PORTFOLIO_V9_ARCHITECTURE.md`), layered on top of every budget
+above, which stays unchanged and still applies to the already-shipped
+Phases 0–7.
+
+- **Zero WASM bytes before intent.** Extends "Zero 3D/WebGL bytes before
+  user intent" to a second modality, same enforcement method: network-
+  request interception must show 0 requests for the mission-simulator
+  `.wasm`/glue files on initial load of every tracked route, until the
+  Scenario Simulator's deterministic-engine disclosure is actually
+  opened.
+- **Compressed WASM size ceiling: ≤ 150 KB (brotli/gzip) for the full
+  `mission-simulator` module.** This is a placeholder ceiling — it cannot
+  be set meaningfully before the crate exists. It becomes a hard,
+  measured gate at Phase 8's first real build; if the real first build
+  comes in meaningfully under 150 KB, the budget is tightened to match
+  rather than left as unused slack.
+- **No re-fetch on repeat interaction.** Once loaded by intent, the WASM
+  module must be served from cache for the rest of the page session — a
+  visitor exploring multiple scenarios triggers one fetch, not one per
+  scenario.
+- **Go tool: zero browser budget impact, by construction.** It never
+  ships to the client, so it has no entry in the per-route byte tables
+  above. Its cost is CI time, not runtime weight (see below).
+- **GLSL: no new byte-budget category.** Shader compilation happens on
+  the GPU at the same intent-loaded moment the existing system's Canvas
+  already mounts (Atlas/Twin/RC-01) — there is no new mount trigger and
+  no new canvas, so shader source size (expected low single-digit KB per
+  shader) folds into that system's existing "system-specific" activation-
+  cost line in the baseline table above rather than getting a separate
+  row.
+- **CI timing budget (new — Full Validation now rebuilds Rust and Go
+  too).** Target ceilings, to be measured for real at Phase 8/9's first
+  implementation and revised if reality differs: **Rust build + test ≤ 3
+  minutes**, **Go build + test + `govulncheck` ≤ 2 minutes**, both with
+  dependency caching (Cargo, Go modules) so this cost is paid once per
+  dependency change, not once per commit.
+
+### Not a goal, extended
+
+- No WASM-vs-JS speed benchmark or marketing claim. The engine's value is
+  deterministic correctness and a genuine, load-bearing polyglot
+  contribution — not a "look how fast Rust is" comparison this project
+  has no real, measured basis for at this workload's actual size. Making
+  that claim without a real measurement would violate the same
+  fabrication ban that governs every other claim on this site.
+- No Lighthouse/Core Web Vitals automation added for this addendum either
+  — same non-goal as the rest of this document, unchanged.

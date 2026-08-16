@@ -108,3 +108,46 @@ separate phase.
   the live `portfolio-tarun-dun.vercel.app` deployment stay untouched
   until a V9 promotion decision is explicitly made, the same way V7
   stayed untouched throughout all of V8's development.
+
+## Addendum — mandatory polyglot language architecture
+
+**Status context.** Phases 0–7 above are complete: merged into
+`portfolio-v9` (`a1b9773b472f6b67f4f3e9b0005c2b300d02ae4d`) and promoted to
+production. This addendum is a new, separately-authorized requirement
+layered on top of that shipped baseline — it does not reopen or revise
+anything Phases 0–7 already closed. Per the instruction governing this
+addendum, it is **planning-only**: no Rust, Go, or GLSL source lands until
+this document, `docs/PORTFOLIO_V9_ARCHITECTURE.md`,
+`docs/PORTFOLIO_V9_PERFORMANCE_BUDGET.md`, and
+`docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md` are all updated (this pass).
+
+**Why now, and why this isn't a reversal.** The original discovery pass
+above scoped V9 as additive TypeScript work because that was the honest
+answer to the actual gap found in V8 — a missing narrative/connective
+layer, not a missing capability requiring a different language. That
+finding still stands; nothing about it was wrong. This addendum is a
+distinct, explicitly-authorized requirement to make the repository a
+genuine polyglot project — not a license to add filler files in Rust, Go,
+or GLSL merely to shift GitHub's language chart. Every new language must
+carry real, load-bearing responsibility, evaluated with the same honesty
+standard applied to every other claim on this site: if it isn't real, it
+doesn't get added.
+
+**Audit against what already exists**, using the same method the original
+seven-pillar table used:
+
+| Requirement | What already exists that's relevant | What's genuinely new |
+|---|---|---|
+| Rust/WASM Mission Scenario Engine | `content/v9/scenarios.ts` + `components/simulator/ScenarioSimulator.tsx` (Phase 5): 5 scripted scenarios, each a fixed set of choices with pre-written outcome text. Real and honest, but it doesn't *calculate* anything — every outcome is static content. | A deterministic engine that takes parameters and computes state transitions/reliability scores. A genuinely different capability, not a rewrite of Phase 5's content — Phase 5's scripted scenarios stay exactly as they are. |
+| Go CI/release tool | `scripts/measure-v9-baseline.mjs`, `scripts/capture-v9.mjs`, `scripts/soak-test-v9.mjs`, plus ad hoc content-integrity assertions inside `tests/unit/*.test.ts` (e.g. `evidenceGraph.test.ts`, `scenarios.test.ts`). All Node/TS, each doing a slice of what the Go tool is now asked to do in one place. | A single, portable, machine-readable audit binary — a real consolidation opportunity, not a second implementation running in parallel forever (see the Architecture doc's duplication-retirement plan). |
+| GLSL shaders | Atlas, Operational Twin, and RC-01 (`components/v8/*`) already use Three.js's built-in materials on the existing, intent-loaded Canvas host. No custom shader exists today. | Small, reviewed custom vertex/fragment shaders applied *to those existing systems*. Direction B (already selected, unchanged) adds no new 3D shell, so GLSL has no new canvas to attach to — it must enhance what's already there, not create a fourth 3D surface. |
+| TypeScript migration | All application code is already TypeScript; only build/tooling scripts (`scripts/*.mjs`) are plain JS. | Case-by-case evaluation of each script for a measurable type-safety benefit. No mechanical rewrite mandate — a script that's stable and simple stays JS if converting it wouldn't change anything real. |
+
+**What this addendum does not change.** The seven-pillar assessment, the
+V8-audit findings, and the explicit non-goals above are all unaffected.
+Kubernetes remains out of scope for the same reason it always was — this
+addendum adds languages with real, scoped jobs, not new always-on
+infrastructure. See `docs/PORTFOLIO_V9_ARCHITECTURE.md` for how each
+language attaches to the existing system, and
+`docs/PORTFOLIO_V9_IMPLEMENTATION_PLAN.md` for the phased build-out
+(Phases 8–11, sequenced after the already-shipped Phases 0–7).

@@ -1,6 +1,12 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Hero } from "@/components/hero/Hero";
+import { PathQueryHydrator } from "@/components/recruiter/PathQueryHydrator";
+import { RecruiterFlightPlan } from "@/components/recruiter/RecruiterFlightPlan";
+import { EngineerInvestigationBar } from "@/components/engineer/EngineerInvestigationBar";
+import { EvidenceGraph } from "@/components/evidence/EvidenceGraph";
+import { ScenarioSimulator } from "@/components/simulator/ScenarioSimulator";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +35,12 @@ export default function Home() {
   return (
     <>
       <Hero />
+
+      <Suspense fallback={null}>
+        <PathQueryHydrator />
+      </Suspense>
+      <RecruiterFlightPlan />
+      <EngineerInvestigationBar />
 
       <section
         id="work"
@@ -74,6 +86,9 @@ export default function Home() {
           </ScrollReveal>
         </Container>
       </section>
+
+      <EvidenceGraph />
+      <ScenarioSimulator />
 
       <section
         id="spine"
@@ -127,10 +142,18 @@ export default function Home() {
                   mapped systems
                 </div>
               </div>
-              <IncidentReplay />
-              <AutomationFabric />
-              <ProofLedger />
-              <ProjectComparison />
+              <div id="incident-replay">
+                <IncidentReplay />
+              </div>
+              <div id="automation-fabric">
+                <AutomationFabric />
+              </div>
+              <div id="proof-ledger">
+                <ProofLedger />
+              </div>
+              <div id="project-comparison">
+                <ProjectComparison />
+              </div>
             </div>
           </div>
         </Container>

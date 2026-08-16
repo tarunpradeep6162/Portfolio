@@ -16,6 +16,7 @@ import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { SkillTags } from "@/components/skills/SkillTags";
 import { SystemTrace } from "@/components/v7/SystemTrace";
 import { ProofLedger } from "@/components/v7/ProofLedger";
 import { ProjectComparison } from "@/components/v7/ProjectComparison";
@@ -175,17 +176,19 @@ export default function Home() {
             {skillDomains.map((domain, index) => (
               <div
                 key={domain.domain}
-                className="grid grid-cols-1 gap-3 border-b border-[var(--line)] py-6 sm:grid-cols-[3rem_0.55fr_1.45fr] sm:gap-6"
+                className="grid grid-cols-1 gap-4 border-b border-[var(--line)] py-8 sm:grid-cols-[3rem_1fr] sm:gap-6"
               >
                 <dt className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
                   0{index + 1}
                 </dt>
-                <dt className="font-display text-lg font-semibold tracking-[-0.025em]">
-                  {domain.domain}
-                </dt>
-                <dd className="text-sm leading-6 text-[var(--ink-muted)]">
-                  {domain.items.join(" · ")}
-                </dd>
+                <div>
+                  <dt className="font-display text-lg font-semibold tracking-[-0.025em] mb-4">
+                    {domain.domain}
+                  </dt>
+                  <dd>
+                    <SkillTags items={domain.items} />
+                  </dd>
+                </div>
               </div>
             ))}
           </dl>

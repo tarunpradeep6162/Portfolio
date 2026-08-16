@@ -105,12 +105,15 @@ Phases 0–7.
   `.wasm`/glue files on initial load of every tracked route, until the
   Scenario Simulator's deterministic-engine disclosure is actually
   opened.
-- **Compressed WASM size ceiling: ≤ 150 KB (brotli/gzip) for the full
-  `mission-simulator` module.** This is a placeholder ceiling — it cannot
-  be set meaningfully before the crate exists. It becomes a hard,
-  measured gate at Phase 8's first real build; if the real first build
-  comes in meaningfully under 150 KB, the budget is tightened to match
-  rather than left as unused slack.
+- **Compressed WASM size ceiling: ≤ 40 KB (gzip -9) for the full
+  `mission-simulator` module.** Tightened from this doc's original 150 KB
+  placeholder now that Phase 8's first real build exists: the actual
+  measured artifact is 20,094 bytes raw / 8,553 bytes gzip -9 (~8.4 KB) -
+  well under even the tightened ceiling, which leaves real headroom for
+  the module to grow (more scenario categories, more precision) without
+  quietly ballooning past what a 60-second recruiter path can afford.
+  This is now a hard, CI-enforced gate (`.github/workflows/v9-rust-wasm.yml`
+  reports the real compressed size on every build touching the crate).
 - **No re-fetch on repeat interaction.** Once loaded by intent, the WASM
   module must be served from cache for the rest of the page session — a
   visitor exploring multiple scenarios triggers one fetch, not one per

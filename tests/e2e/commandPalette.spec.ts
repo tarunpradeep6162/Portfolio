@@ -1,5 +1,24 @@
 import { test, expect } from "@playwright/test";
 
+/**
+ * Settle wait after every goto() that's immediately followed by
+ * Ctrl+K: the shortcut listener is attached inside a useEffect (see
+ * components/command/CommandPalette.tsx), so it does not exist until
+ * React has committed and run effects for that component. Playwright's
+ * default goto() wait ("load") only guarantees resources have loaded,
+ * not that hydration has completed - dispatching a synthetic key event
+ * before the listener is attached is silently swallowed (nothing is
+ * listening yet), not queued. Confirmed as a genuine, real timing race
+ * (not flakiness) via a hosted-CI failure, matching the exact same class
+ * of bug docs/PORTFOLIO_V8_PHASE6_HARDENING.md already documented and
+ * fixed for Operational Twin's context-loss test - same fix shape
+ * (explicit settle wait), applied here at the point it's actually
+ * needed rather than everywhere reflexively.
+ */
+async function settle(page: import("@playwright/test").Page) {
+  await page.waitForTimeout(500);
+}
+
 test.describe("Command Palette", () => {
   test("trigger button opens the dialog, Escape closes it and returns focus @release-fast", async ({
     page,
@@ -20,6 +39,7 @@ test.describe("Command Palette", () => {
 
   test("Ctrl+K opens the dialog from anywhere on the page @release-fast", async ({ page }) => {
     await page.goto("/about");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await expect(dialog).toBeVisible();
@@ -29,6 +49,7 @@ test.describe("Command Palette", () => {
     page,
   }) => {
     await page.goto("/");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await dialog.getByRole("combobox").fill("Aurora");
@@ -43,6 +64,7 @@ test.describe("Command Palette", () => {
     page,
   }) => {
     await page.goto("/");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await dialog.getByRole("combobox").fill("Kubernetes");
@@ -53,6 +75,7 @@ test.describe("Command Palette", () => {
     page,
   }) => {
     await page.goto("/work");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await dialog.getByRole("combobox").fill("Read as Recruiter");
@@ -70,6 +93,7 @@ test.describe("Command Palette", () => {
     page,
   }) => {
     await page.goto("/");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await dialog.getByRole("combobox").fill("Read as");
@@ -80,6 +104,7 @@ test.describe("Command Palette", () => {
 
   test("clicking the backdrop closes the dialog", async ({ page }) => {
     await page.goto("/");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await expect(dialog).toBeVisible();
@@ -92,6 +117,7 @@ test.describe("Command Palette", () => {
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
+    await settle(page);
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: /command palette/i });
     await expect(dialog).toBeVisible();

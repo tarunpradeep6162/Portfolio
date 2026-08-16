@@ -5,6 +5,7 @@ import { Hero } from "@/components/hero/Hero";
 import { PathQueryHydrator } from "@/components/recruiter/PathQueryHydrator";
 import { RecruiterFlightPlan } from "@/components/recruiter/RecruiterFlightPlan";
 import { EngineerInvestigationBar } from "@/components/engineer/EngineerInvestigationBar";
+import { EvidenceGraph } from "@/components/evidence/EvidenceGraph";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Button } from "@/components/ui/Button";
@@ -84,6 +85,8 @@ export default function Home() {
           </ScrollReveal>
         </Container>
       </section>
+
+      <EvidenceGraph />
 
       <section
         id="spine"

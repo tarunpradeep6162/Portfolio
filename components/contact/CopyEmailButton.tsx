@@ -24,7 +24,7 @@ export function CopyEmailButton({ email }: { email: string }) {
         type="button"
         onClick={handleCopy}
         className={cn(
-          "inline-flex min-h-12 max-w-full items-center gap-2 border border-[var(--line)] px-4 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]",
+          "inline-flex min-h-12 max-w-full items-center gap-2 border border-[var(--line)] px-4 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)] transition-[color,border-color,box-shadow] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-[0_0_12px_rgba(216,255,79,0.2)] active:shadow-[0_0_16px_rgba(216,255,79,0.4)]",
         )}
       >
         {copied ? (

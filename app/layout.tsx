@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { CompanionRoot } from "@/components/companion/CompanionRoot";
 import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
+import { SmoothScroll } from "@/components/shared/SmoothScroll";
+import { CustomCursor } from "@/components/shared/CustomCursor";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -35,12 +37,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-field="control" className="h-full">
-      <body className="flex min-h-full flex-col font-body antialiased">
+    <html lang="en" data-field="control" className="h-full scroll-smooth">
+      <body className="flex min-h-full flex-col font-body antialiased cursor-none">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
+        <SmoothScroll />
+        <CustomCursor />
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />

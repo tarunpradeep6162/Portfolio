@@ -69,7 +69,7 @@ export function ProjectCard({
           </p>
         </div>
         {href && (
-          <span className="project-card-arrow flex h-11 w-11 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition-transform duration-300 ease-[var(--ease-spine)]">
+          <span className="project-card-arrow flex h-11 w-11 items-center justify-center border border-[var(--line)] text-[var(--ink)] transition-[transform,color,box-shadow,border-color] duration-300 ease-[var(--ease-spine)] group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] group-hover:shadow-[0_0_12px_rgba(216,255,79,0.3)]">
             <ArrowUpRight size={17} aria-hidden />
           </span>
         )}

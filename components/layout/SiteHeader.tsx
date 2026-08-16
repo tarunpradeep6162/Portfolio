@@ -50,7 +50,7 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]",
+                      "group flex items-center gap-2 py-3 transition-[color,text-shadow] hover:text-[var(--color-signal-lime)] hover:drop-shadow-[0_0_8px_rgba(216,255,79,0.4)]",
                       active
                         ? "text-[var(--color-signal-lime)]"
                         : "text-[var(--color-cloud-linen)]",

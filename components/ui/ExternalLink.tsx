@@ -15,7 +15,7 @@ export function ExternalLink({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]",
+        "underline decoration-[var(--line)] underline-offset-4 transition-[color,text-shadow,text-decoration-color] hover:decoration-[var(--accent)] hover:text-[var(--accent)] hover:drop-shadow-[0_0_8px_rgba(216,255,79,0.3)]",
         className,
       )}
     >

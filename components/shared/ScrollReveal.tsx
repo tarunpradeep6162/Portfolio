@@ -36,10 +36,11 @@ export function ScrollReveal({
         return;
       }
 
-      gsap.set(items, { opacity: 0, y: 24 });
+      gsap.set(items, { opacity: 0, y: 24, filter: "blur(6px)" });
       gsap.to(items, {
         opacity: 1,
         y: 0,
+        filter: "blur(0px)",
         duration: motionTokens.sectionRevealMs / 1000,
         ease: motionTokens.ease.gsapSpine,
         stagger: motionTokens.stagger.section,

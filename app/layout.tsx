@@ -7,6 +7,7 @@ import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
+import { FloatingCTA } from "@/components/shared/FloatingCTA";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <SmoothScroll />
           <CustomCursor />
+          <FloatingCTA />
           <ExperienceProvider>
             <SkipLink />
             <SiteHeader />

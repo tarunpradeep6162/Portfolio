@@ -13,6 +13,7 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
+  // Generate static params for all blog posts to enable SSG
   return blogPosts.map((post) => ({
     slug: post.slug,
   }));

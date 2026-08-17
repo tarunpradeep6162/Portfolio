@@ -17,23 +17,23 @@ export async function triggerEmailAutomation(trigger: AutomationTrigger) {
   try {
     switch (trigger.type) {
       case "newsletter_signup":
-        await handleNewsletterSignup(trigger.data);
+        await handleNewsletterSignup(trigger.data as any);
         break;
 
       case "consultation_booked":
-        await handleConsultationBooked(trigger.data);
+        await handleConsultationBooked(trigger.data as any);
         break;
 
       case "payment_received":
-        await handlePaymentReceived(trigger.data);
+        await handlePaymentReceived(trigger.data as any);
         break;
 
       case "invoice_sent":
-        await handleInvoiceSent(trigger.data);
+        await handleInvoiceSent(trigger.data as any);
         break;
 
       case "project_started":
-        await handleProjectStarted(trigger.data);
+        await handleProjectStarted(trigger.data as any);
         break;
     }
   } catch (error) {

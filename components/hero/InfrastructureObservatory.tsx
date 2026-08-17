@@ -73,8 +73,8 @@ export function InfrastructureObservatory() {
       >
         <defs>
           <radialGradient id="coreGlow">
-            <stop offset="0" stopColor="#d8ff4f" stopOpacity="0.22" />
-            <stop offset="1" stopColor="#d8ff4f" stopOpacity="0" />
+            <stop offset="0" stopColor="#d4af37" stopOpacity="0.22" />
+            <stop offset="1" stopColor="#d4af37" stopOpacity="0" />
           </radialGradient>
           <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="7" />
@@ -98,7 +98,7 @@ export function InfrastructureObservatory() {
         <path
           d={route}
           fill="none"
-          stroke="#d8ff4f"
+          stroke="#d4af37"
           strokeOpacity="0.16"
           strokeWidth="12"
           filter="url(#softGlow)"
@@ -106,7 +106,7 @@ export function InfrastructureObservatory() {
         <path
           d={route}
           fill="none"
-          stroke="#d8ff4f"
+          stroke="#d4af37"
           strokeWidth="2"
           className="observatory-trace"
         />
@@ -117,7 +117,7 @@ export function InfrastructureObservatory() {
             cy="350"
             r="84"
             fill="#0a1118"
-            stroke="#d8ff4f"
+            stroke="#d4af37"
             strokeOpacity="0.55"
           />
           <circle
@@ -125,7 +125,7 @@ export function InfrastructureObservatory() {
             cy="350"
             r="69"
             fill="none"
-            stroke="#748cff"
+            stroke="#c9a961"
             strokeOpacity="0.32"
             strokeDasharray="4 7"
             className="observatory-orbit"
@@ -156,7 +156,7 @@ export function InfrastructureObservatory() {
             x="350"
             y="385"
             textAnchor="middle"
-            fill="#d8ff4f"
+            fill="#d4af37"
             fontFamily="var(--font-mono)"
             fontSize="8"
             letterSpacing="2"
@@ -195,7 +195,7 @@ export function InfrastructureObservatory() {
                 cx={node.x}
                 cy={node.y}
                 r="16"
-                fill="#d8ff4f"
+                fill="#d4af37"
                 fillOpacity="0.08"
                 className="observatory-pulse"
                 style={{ animationDelay: `${index * 180}ms` }}
@@ -206,10 +206,10 @@ export function InfrastructureObservatory() {
                 r="6"
                 fill={
                   index % 3 === 0
-                    ? "#ff6847"
+                    ? "#b88a82"
                     : index % 2 === 0
-                      ? "#748cff"
-                      : "#d8ff4f"
+                      ? "#c9a961"
+                      : "#d4af37"
                 }
               />
               <text

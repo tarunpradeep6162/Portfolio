@@ -26,23 +26,23 @@ export function UnresolvedEndpoint() {
       >
         <path
           d="M88 300 H 224"
-          stroke="#d8ff4f"
+          stroke="#d4af37"
           strokeWidth="2"
           className="cover-flow"
         />
         <path
           d="M376 300 H 512"
-          stroke="#ff6847"
+          stroke="#b88a82"
           strokeWidth="2"
           strokeDasharray="5 10"
         />
-        <circle cx="78" cy="300" r="12" fill="#d8ff4f" />
+        <circle cx="78" cy="300" r="12" fill="#d4af37" />
         <circle
           cx="300"
           cy="300"
           r="76"
           fill="#0d151d"
-          stroke="#748cff"
+          stroke="#c9a961"
           strokeWidth="2"
         />
         <circle
@@ -50,13 +50,13 @@ export function UnresolvedEndpoint() {
           cy="300"
           r="18"
           fill="none"
-          stroke="#ff6847"
+          stroke="#b88a82"
           strokeWidth="2"
           strokeDasharray="4 4"
         />
         <path
           d="M512 290 L532 310 M532 290 L512 310"
-          stroke="#ff6847"
+          stroke="#b88a82"
           strokeWidth="2"
         />
         <text
@@ -96,7 +96,7 @@ export function UnresolvedEndpoint() {
           x="522"
           y="340"
           textAnchor="middle"
-          fill="#ff6847"
+          fill="#b88a82"
           fontFamily="var(--font-mono)"
           fontSize="9"
           letterSpacing="1.5"

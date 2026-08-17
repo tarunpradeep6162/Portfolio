@@ -46,13 +46,13 @@ export function CompanionConsole({ onCommand, onUnknownCommand, onClose }: Compa
   return (
     <div className="border-t border-white/10 pt-3">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-telemetry-steel)]">
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-slate-gray)]">
           Command console
         </p>
         <button
           type="button"
           onClick={onClose}
-          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)] hover:text-[var(--color-signal-lime)]"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)] hover:text-[var(--color-gold-primary)]"
         >
           Close
         </button>
@@ -61,15 +61,15 @@ export function CompanionConsole({ onCommand, onUnknownCommand, onClose }: Compa
       <div
         role="log"
         aria-label="RC-01 console output"
-        className="mt-2 max-h-28 overflow-y-auto rounded border border-white/10 bg-black/30 p-2 font-mono text-[10px] leading-5 text-[var(--color-cloud-linen)]"
+        className="mt-2 max-h-28 overflow-y-auto rounded border border-white/10 bg-black/30 p-2 font-mono text-[10px] leading-5 text-[var(--color-cream)]"
       >
         {log.map((entry, index) => (
           <p
             key={index}
             className={cn(
               entry.kind === "input"
-                ? "text-[var(--color-packet-blue)]"
-                : "text-[var(--color-telemetry-steel)]",
+                ? "text-[var(--color-rose-gold)]"
+                : "text-[var(--color-slate-gray)]",
             )}
           >
             {entry.kind === "input" ? "> " : ""}
@@ -95,11 +95,11 @@ export function CompanionConsole({ onCommand, onUnknownCommand, onClose }: Compa
           onChange={(event) => setValue(event.target.value)}
           placeholder="help"
           autoComplete="off"
-          className="flex-1 rounded border border-white/15 bg-black/40 px-2 py-1.5 font-mono text-[11px] text-[var(--color-cloud-linen)] outline-none focus-visible:border-[var(--color-signal-lime)]"
+          className="flex-1 rounded border border-white/15 bg-black/40 px-2 py-1.5 font-mono text-[11px] text-[var(--color-cream)] outline-none focus-visible:border-[var(--color-gold-primary)]"
         />
         <button
           type="submit"
-          className="rounded border border-white/15 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="rounded border border-white/15 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           Run
         </button>

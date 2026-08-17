@@ -136,7 +136,7 @@ export function AtlasCanvasHost({
     return (
       <div className="mt-4">
         <div
-          className="h-72 w-full overflow-hidden rounded border border-[var(--color-signal-lime)]/30 bg-[var(--color-control-black)] sm:h-96"
+          className="h-72 w-full overflow-hidden rounded border border-[var(--color-gold-primary)]/30 bg-[var(--color-dark-navy)] sm:h-96"
           role="img"
           aria-label={`Interactive 3D rendering of ${projectLabel}'s architecture - the same nodes as the diagram above, selectable in 3D`}
         >
@@ -156,7 +156,7 @@ export function AtlasCanvasHost({
             activeRef.current = false;
             dispatch({ type: "SCENE_CHANGED", scene: null });
           }}
-          className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"
+          className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-gold-primary)]"
         >
           Close 3D view
         </button>
@@ -178,7 +178,7 @@ export function AtlasCanvasHost({
       onPointerEnter={armPrefetch}
       onFocus={armPrefetch}
       onTouchStart={armPrefetch}
-      className="mt-4 inline-flex items-center gap-2 rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+      className="mt-4 inline-flex items-center gap-2 rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
     >
       <Boxes size={13} aria-hidden />
       Enter 3D view

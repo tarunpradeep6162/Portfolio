@@ -184,7 +184,7 @@ export function ClientPortal() {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6"
+                  className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -300,7 +300,7 @@ export function ClientPortal() {
               {documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] hover:border-[var(--accent)]/50 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] hover:border-[var(--accent)]/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <FileText
@@ -340,7 +340,7 @@ export function ClientPortal() {
                   key={msg.id}
                   className={`p-4 rounded-lg border ${
                     msg.read
-                      ? "border-[var(--line)] bg-[var(--color-control-raised)]"
+                      ? "border-[var(--line)] bg-[var(--color-charcoal)]"
                       : "border-[var(--accent)] bg-[var(--accent)]/5"
                   }`}
                 >

@@ -14,18 +14,18 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <section className="control-grid relative flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-control-black)] py-20">
+    <section className="control-grid relative flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-dark-navy)] py-20">
       <div
         aria-hidden
         className="absolute right-[-17rem] top-1/2 h-[48rem] w-[48rem] -translate-y-1/2 rounded-full border border-dashed border-white/10 route-orbit"
       />
       <div
         aria-hidden
-        className="absolute right-[-7rem] top-1/2 h-[28rem] w-[28rem] -translate-y-1/2 rounded-full border border-[var(--color-signal-lime)]/20"
+        className="absolute right-[-7rem] top-1/2 h-[28rem] w-[28rem] -translate-y-1/2 rounded-full border border-[var(--color-gold-primary)]/20"
       />
       <div
         aria-hidden
-        className="absolute right-[6.5rem] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[var(--color-signal-lime)] shadow-[0_0_30px_var(--color-signal-lime)]"
+        className="absolute right-[6.5rem] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[var(--color-gold-primary)] shadow-[0_0_30px_var(--color-gold-primary)]"
       />
 
       <Container className="relative">

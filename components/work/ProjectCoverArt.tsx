@@ -539,7 +539,7 @@ export function ProjectCoverArt({
   return (
     <div
       className={cn(
-        "project-card-art aspect-[12/7] w-full overflow-hidden bg-[var(--color-control-black)] transition-transform duration-700 ease-[var(--ease-spine)]",
+        "project-card-art aspect-[12/7] w-full overflow-hidden bg-[var(--color-dark-navy)] transition-transform duration-700 ease-[var(--ease-spine)]",
         bordered && "border border-[var(--line)]",
       )}
     >

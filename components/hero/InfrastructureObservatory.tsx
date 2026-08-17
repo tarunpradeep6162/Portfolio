@@ -250,7 +250,7 @@ export function InfrastructureObservatory() {
       </svg>
 
       <div className="absolute left-[9%] top-1/2 flex -translate-y-1/2 -rotate-90 items-center gap-3 font-mono text-[8px] uppercase tracking-[0.28em] text-white/35">
-        <span className="h-px w-10 bg-[var(--color-signal-lime)]" /> Live system
+        <span className="h-px w-10 bg-[var(--color-gold-primary)]" /> Live system
         map
       </div>
     </figure>

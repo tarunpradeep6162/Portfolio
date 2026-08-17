@@ -51,7 +51,7 @@ export function ProofMode({ project }: { project: FlagshipProject }) {
       {open && (
         <div id={panelId} className="mt-5 grid gap-8 sm:grid-cols-3">
           <section>
-            <h3 className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-signal-lime)]">
+            <h3 className="font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-gold-primary)]">
               Verified evidence
             </h3>
             <ul className="mt-3 space-y-2 text-xs leading-5 text-[var(--ink-muted)]">

@@ -33,7 +33,7 @@ export function MobileNav() {
         aria-controls="mobile-nav-panel"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 w-11 items-center justify-center border border-white/15 text-[var(--color-cloud-linen)] transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+        className="flex h-11 w-11 items-center justify-center border border-white/15 text-[var(--color-cream)] transition-colors hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
       >
         {open ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
       </button>
@@ -42,9 +42,9 @@ export function MobileNav() {
         <nav
           id="mobile-nav-panel"
           aria-label="Mobile"
-          className="absolute inset-x-0 top-full min-h-[calc(100svh-4.5rem)] border-t border-white/10 bg-[var(--color-control-black)] px-4 py-8"
+          className="absolute inset-x-0 top-full min-h-[calc(100svh-4.5rem)] border-t border-white/10 bg-[var(--color-dark-navy)] px-4 py-8"
         >
-          <p className="mb-8 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
+          <p className="mb-8 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--color-slate-gray)]">
             Navigate the system
           </p>
           <ul className="flex flex-col">
@@ -61,14 +61,14 @@ export function MobileNav() {
                     className={cn(
                       "flex min-h-16 items-center justify-between border-b border-white/10 font-display text-2xl font-semibold",
                       active
-                        ? "text-[var(--color-signal-lime)]"
-                        : "text-[var(--color-cloud-linen)]",
+                        ? "text-[var(--color-gold-primary)]"
+                        : "text-[var(--color-cream)]",
                     )}
                   >
                     <span>{link.label}</span>
                     <span
                       aria-hidden
-                      className="font-mono text-[10px] text-[var(--color-signal-lime)]"
+                      className="font-mono text-[10px] text-[var(--color-gold-primary)]"
                     >
                       0{index + 1}
                     </span>
@@ -77,7 +77,7 @@ export function MobileNav() {
               );
             })}
           </ul>
-          <p className="mt-10 max-w-[28ch] text-sm leading-6 text-[var(--color-telemetry-steel)]">
+          <p className="mt-10 max-w-[28ch] text-sm leading-6 text-[var(--color-slate-gray)]">
             Reliable infrastructure, automation, secure delivery, and
             operational recovery.
           </p>

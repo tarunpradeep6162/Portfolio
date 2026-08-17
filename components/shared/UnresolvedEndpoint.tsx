@@ -104,7 +104,7 @@ export function UnresolvedEndpoint() {
           UNRESOLVED
         </text>
       </svg>
-      <p className="absolute inset-x-[16%] bottom-[12%] truncate border-t border-white/10 pt-4 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)]">
+      <p className="absolute inset-x-[16%] bottom-[12%] truncate border-t border-white/10 pt-4 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)]">
         {pathname}
       </p>
     </div>

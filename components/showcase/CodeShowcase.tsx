@@ -47,7 +47,7 @@ export function CodeShowcase({ language, title, code }: CodeShowcaseProps) {
   return (
     <div
       ref={containerRef}
-      className="group overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--color-control-black)]/40 transition-all hover:border-[var(--accent)]/50"
+      className="group overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--color-dark-navy)]/40 transition-all hover:border-[var(--accent)]/50"
     >
       <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3 sm:px-6">
         <div>

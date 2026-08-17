@@ -493,7 +493,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       // [data-rc01-docked] rule in globals.css reserves - structurally
       // unable to cover the header, hero, CTA, or Observatory.
       className={cn(
-        "fixed inset-x-3 bottom-3 z-50 flex flex-col overflow-hidden rounded-lg border border-[var(--color-signal-lime)]/15 bg-[var(--color-control-black)]/96 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[22rem]",
+        "fixed inset-x-3 bottom-3 z-50 flex flex-col overflow-hidden rounded-lg border border-[var(--color-gold-primary)]/15 bg-[var(--color-dark-navy)]/96 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[22rem]",
         mobileExpanded
           ? "max-h-[calc(100dvh-1.5rem)] pb-[env(safe-area-inset-bottom)]"
           : "max-h-[min(calc(100vh-6.5rem),34rem)]",
@@ -509,20 +509,20 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           hidden by Minimise. */}
       <div className="flex shrink-0 items-start justify-between gap-3 border-b border-white/10 p-4">
         <div>
-          <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
+          <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cream)]">
             RC-01
           </p>
-          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)]">
             Reliability Companion / Interactive Systems Guide
           </p>
-          <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--color-packet-blue)]">
+          <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-[var(--color-rose-gold)]">
             {pathname === "/" && activeSection
               ? `Observing · ${SECTION_LABELS[activeSection] ?? activeSection}`
               : `Route · ${pathname}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded border border-white/10 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-signal-lime)]">
+          <span className="rounded border border-white/10 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-[var(--color-gold-primary)]">
             {companionState}
           </span>
           <button
@@ -533,7 +533,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             }}
             aria-pressed={minimised}
             aria-label={minimised ? "Restore RC-01" : "Minimise RC-01"}
-            className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+            className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
           >
             {minimised ? <ChevronUp size={16} aria-hidden /> : <Minus size={16} aria-hidden />}
           </button>
@@ -543,7 +543,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
               onClick={() => setMobileExpanded((value) => !value)}
               aria-pressed={mobileExpanded}
               aria-label={mobileExpanded ? "Collapse RC-01 to medium size" : "Expand RC-01"}
-              className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] lg:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)] lg:hidden"
             >
               {mobileExpanded ? (
                 <Minimize2 size={14} aria-hidden />
@@ -560,7 +560,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
               onDeactivate();
             }}
             aria-label="Deactivate RC-01"
-            className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-coral)] hover:text-[var(--color-signal-coral)]"
+            className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-rose-gold)] hover:text-[var(--color-rose-gold)]"
           >
             <X size={16} aria-hidden />
           </button>
@@ -568,7 +568,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       </div>
 
       {minimised && (
-        <p className="p-4 pt-0 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-telemetry-steel)] lg:pt-4">
+        <p className="p-4 pt-0 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-slate-gray)] lg:pt-4">
           Minimised — select Restore to reopen.
         </p>
       )}
@@ -601,7 +601,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         <button
           type="button"
           onClick={handleSpeak}
-          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <Mic size={13} aria-hidden /> Speak
         </button>
@@ -617,7 +617,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
                 ? "Resume captions"
                 : "Pause captions"
           }
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           {(usingRealSpeech ? speech.playbackState === "speaking" : !paused) ? (
             <Pause size={14} aria-hidden />
@@ -629,7 +629,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           type="button"
           onClick={handleStop}
           aria-label="Stop RC-01"
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-coral)] hover:text-[var(--color-signal-coral)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-rose-gold)] hover:text-[var(--color-rose-gold)]"
         >
           <Square size={13} aria-hidden />
         </button>
@@ -637,7 +637,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           type="button"
           onClick={handleReplay}
           aria-label="Replay current script"
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <RotateCcw size={13} aria-hidden />
         </button>
@@ -646,7 +646,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           onClick={() => update({ muted: !preferences.muted })}
           aria-pressed={preferences.muted}
           aria-label={preferences.muted ? "Unmute RC-01" : "Mute RC-01"}
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           {preferences.muted ? <VolumeX size={14} aria-hidden /> : <Volume2 size={14} aria-hidden />}
         </button>
@@ -655,7 +655,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           onClick={() => update({ captionsOn: !preferences.captionsOn })}
           aria-pressed={preferences.captionsOn}
           aria-label={preferences.captionsOn ? "Turn captions off" : "Turn captions on"}
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <Captions size={14} aria-hidden />
         </button>
@@ -667,7 +667,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           }}
           aria-pressed={preferences.lowPowerMode}
           aria-label={preferences.lowPowerMode ? "Turn off low-power mode" : "Turn on low-power mode"}
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <BatteryLow size={14} aria-hidden />
         </button>
@@ -676,7 +676,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           onClick={() => update({ soundOn: !preferences.soundOn })}
           aria-pressed={preferences.soundOn}
           aria-label={preferences.soundOn ? "Turn off interface sounds" : "Turn on interface sounds"}
-          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex h-8 w-8 items-center justify-center rounded border border-white/15 text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <Bell size={14} aria-hidden />
         </button>
@@ -687,7 +687,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             setMobileExpanded(true); // Tours need the room - move straight to expanded on mobile.
           }}
           aria-pressed={subpanel === "tours"}
-          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <Compass size={13} aria-hidden /> Tours
         </button>
@@ -698,21 +698,21 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             setMobileExpanded(true);
           }}
           aria-pressed={subpanel === "console"}
-          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
+          className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]"
         >
           <TerminalSquare size={13} aria-hidden /> Console
         </button>
       </div>
 
       {!speech.supported && (
-        <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--color-telemetry-steel)]">
+        <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--color-slate-gray)]">
           Voice synthesis unavailable in this browser — captions continue below.
         </p>
       )}
 
       {preferences.captionsOn && currentScript && (
         <div className="mt-3 rounded-lg border border-white/10 bg-black/30 p-3">
-          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-packet-blue)]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-rose-gold)]">
             {currentScript.title}
           </p>
           <p aria-live="polite" className="sr-only">
@@ -725,8 +725,8 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
                 className={cn(
                   "text-[12px] leading-5",
                   index === captionIndex
-                    ? "text-[var(--color-cloud-linen)]"
-                    : "text-[var(--color-telemetry-steel)]",
+                    ? "text-[var(--color-cream)]"
+                    : "text-[var(--color-slate-gray)]",
                 )}
               >
                 {line}
@@ -738,7 +738,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
       {activeTour && activeStep && (
         <div className="mt-3 flex items-center justify-between rounded-lg border border-white/10 bg-black/20 p-2.5">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-telemetry-steel)]">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--color-slate-gray)]">
             {activeTour.label} — step {tourStepIndex + 1} / {activeTour.steps.length}
           </p>
           <div className="flex gap-1.5">
@@ -746,7 +746,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
               type="button"
               onClick={() => advanceTour(-1)}
               disabled={tourStepIndex === 0}
-              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] disabled:opacity-30"
+              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] disabled:opacity-30"
             >
               Prev
             </button>
@@ -754,14 +754,14 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
               type="button"
               onClick={() => advanceTour(1)}
               disabled={tourStepIndex === activeTour.steps.length - 1}
-              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] disabled:opacity-30"
+              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] disabled:opacity-30"
             >
               Next
             </button>
             <button
               type="button"
               onClick={exitTour}
-              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-coral)]"
+              className="rounded border border-white/15 px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[var(--color-cream)] hover:border-[var(--color-rose-gold)]"
             >
               Exit
             </button>
@@ -772,7 +772,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
         <button
           type="button"
           onClick={() => confirmNavigate(activeStep.suggestedRoute!.href)}
-          className="mt-2 w-full rounded border border-[var(--color-signal-lime)]/40 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--color-signal-lime)] hover:bg-[var(--color-signal-lime)]/10"
+          className="mt-2 w-full rounded border border-[var(--color-gold-primary)]/40 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--color-gold-primary)] hover:bg-[var(--color-gold-primary)]/10"
         >
           {activeStep.suggestedRoute.label} →
         </button>

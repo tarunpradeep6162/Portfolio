@@ -9,7 +9,7 @@ import { hero, site } from "@/content/site";
 
 export function Hero() {
   return (
-    <section className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
+    <section className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-dark-navy)]">
       <ParallaxLayers />
 
       <Container className="relative grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">

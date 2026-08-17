@@ -78,11 +78,11 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
 
   return (
     <article>
-      <header className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20 lg:py-24">
+      <header className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-dark-navy)] py-16 sm:py-20 lg:py-24">
         <Container>
           <Link
             href="/work"
-            className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)] transition-colors hover:text-[var(--color-signal-lime)]"
+            className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)] transition-colors hover:text-[var(--color-gold-primary)]"
           >
             <ArrowLeft size={13} aria-hidden /> Work index
           </Link>
@@ -222,13 +222,13 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
         </Container>
       </div>
 
-      <section className="border-t border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20">
+      <section className="border-t border-white/10 bg-[var(--color-dark-navy)] py-16 sm:py-20">
         <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--color-telemetry-steel)]">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--color-slate-gray)]">
               Next system
             </p>
-            <h2 className="mt-4 max-w-[22ch] font-display text-heading font-semibold leading-tight tracking-[-0.045em] text-[var(--color-cloud-linen)]">
+            <h2 className="mt-4 max-w-[22ch] font-display text-heading font-semibold leading-tight tracking-[-0.045em] text-[var(--color-cream)]">
               {nextProject.title}
             </h2>
           </div>

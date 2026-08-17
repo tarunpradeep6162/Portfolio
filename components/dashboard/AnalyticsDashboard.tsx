@@ -84,7 +84,7 @@ export function AnalyticsDashboard() {
                 className={`px-4 py-2 rounded text-sm font-semibold transition-all ${
                   dateRange === range
                     ? "bg-[var(--accent)] text-white"
-                    : "bg-[var(--color-control-raised)] text-[var(--ink)] hover:border-[var(--accent)]"
+                    : "bg-[var(--color-charcoal)] text-[var(--ink)] hover:border-[var(--accent)]"
                 }`}
               >
                 {range === "7d" ? "7 Days" : range === "30d" ? "30 Days" : "90 Days"}
@@ -123,7 +123,7 @@ export function AnalyticsDashboard() {
 
         {/* Conversion Funnel */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6">
+          <div className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6">
             <h2 className="font-display text-xl font-bold text-[var(--ink)] mb-6">
               Conversion Funnel
             </h2>
@@ -155,7 +155,7 @@ export function AnalyticsDashboard() {
           </div>
 
           {/* Traffic Sources */}
-          <div className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6">
+          <div className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6">
             <h2 className="font-display text-xl font-bold text-[var(--ink)] mb-6">
               Traffic Sources
             </h2>
@@ -185,7 +185,7 @@ export function AnalyticsDashboard() {
         </div>
 
         {/* Cohort Analysis */}
-        <div className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6">
+        <div className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6">
           <h2 className="font-display text-xl font-bold text-[var(--ink)] mb-6">
             Cohort Analysis
           </h2>
@@ -252,7 +252,7 @@ export function AnalyticsDashboard() {
           {metrics.deviceTypes.map((device, index) => (
             <div
               key={index}
-              className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6"
+              className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6"
             >
               <h3 className="font-semibold text-[var(--ink)] mb-4 capitalize">
                 {device.device}
@@ -288,7 +288,7 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon, change }: MetricCardProps) {
   return (
-    <div className="rounded-lg border border-[var(--line)] bg-[var(--color-control-raised)] p-6">
+    <div className="rounded-lg border border-[var(--line)] bg-[var(--color-charcoal)] p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="text-[var(--accent)]">{icon}</div>
         <div className={`text-xs font-semibold ${change >= 0 ? "text-green-600" : "text-red-600"}`}>

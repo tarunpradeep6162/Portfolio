@@ -38,11 +38,11 @@ function CompanionLoadingSkeleton() {
     <div
       role="status"
       aria-label="RC-01 is starting up"
-      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-white/10 bg-[var(--color-control-black)]/97 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.55)] print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[23rem]"
+      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-white/10 bg-[var(--color-dark-navy)]/97 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.55)] print:hidden sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[23rem]"
     >
       <div className="flex items-center gap-2">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-signal-lime)] motion-reduce:animate-none" />
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)]">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-gold-primary)] motion-reduce:animate-none" />
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)]">
           RC-01 initializing…
         </p>
       </div>
@@ -60,7 +60,7 @@ function CompanionLoadingSkeleton() {
         <div className="relative flex h-full items-center justify-center opacity-60">
           <CompanionPortrait variant="sleep" className="h-28 w-28" />
         </div>
-        <div className="absolute inset-x-0 top-0 h-px rc01-scan bg-[var(--color-signal-lime)]/70 motion-reduce:hidden" />
+        <div className="absolute inset-x-0 top-0 h-px rc01-scan bg-[var(--color-gold-primary)]/70 motion-reduce:hidden" />
       </div>
     </div>
   );
@@ -147,17 +147,17 @@ export function CompanionRoot() {
       onPointerEnter={armPrefetch}
       onFocus={armPrefetch}
       onTouchStart={armPrefetch}
-      className="fixed bottom-4 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[var(--color-control-black)]/95 px-4 text-[var(--color-cloud-linen)] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors print:hidden hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] sm:h-11"
+      className="fixed bottom-4 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[var(--color-dark-navy)]/95 px-4 text-[var(--color-cream)] shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-colors print:hidden hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)] sm:h-11"
     >
       <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
         <span
           className={
             prefetchArmed
-              ? "absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-signal-lime)] opacity-40 motion-reduce:animate-none"
+              ? "absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-gold-primary)] opacity-40 motion-reduce:animate-none"
               : ""
           }
         />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-signal-lime)]" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-gold-primary)]" />
       </span>
       <Bot size={16} aria-hidden />
       <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em]">

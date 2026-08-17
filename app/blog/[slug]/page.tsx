@@ -6,34 +6,27 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { blogPosts } from "@/content/blog";
 
-// Use dynamic rendering on Vercel - fetch at request time instead of build time
-export const dynamic = 'auto';
+function getBlogPost(slug: string) {
+  return blogPosts.find((p) => p.slug === slug);
+}
+
+export function generateStaticParams() {
+  return blogPosts.map((post) => ({ slug: post.slug }));
+}
 
 export async function generateMetadata(
   props: PageProps<"/blog/[slug]">,
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const post = blogPosts.find((p) => p.slug === slug);
-
-  if (!post) {
-    return {};
-  }
-
-  return {
-    title: post.title,
-    description: post.description,
-  };
+  const post = getBlogPost(slug);
+  if (!post) return {};
+  return { title: post.title, description: post.description };
 }
 
-export default async function BlogPostPage(
-  props: PageProps<"/blog/[slug]">,
-) {
+export default async function BlogPostPage(props: PageProps<"/blog/[slug]">) {
   const { slug } = await props.params;
-  const post = blogPosts.find((p) => p.slug === slug);
-
-  if (!post) {
-    notFound();
-  }
+  const post = getBlogPost(slug);
+  if (!post) notFound();
 
   // Format date for display
   const formattedDate = new Date(post.date).toLocaleDateString("en-US", {

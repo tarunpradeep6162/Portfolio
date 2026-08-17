@@ -33,6 +33,14 @@ const nextConfig: NextConfig = {
   // `npm run start` behavior for local/Vercel use, both of which ignore
   // this option.
   output: "standalone",
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {

@@ -1,3 +1,4 @@
+// Blog listing page - displaying engineering articles
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";

@@ -521,3 +521,140 @@ textarea:focus {
     scroll-behavior: auto !important;
   }
 }
+
+/* Enhanced Scroll Reveal Animations */
+[data-scroll-reveal] {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+[data-scroll-reveal].opacity-100 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Parallax Effects */
+@keyframes parallax-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.parallax-element {
+  animation: parallax-float 6s ease-in-out infinite;
+}
+
+/* Cinematic Effects */
+.cinematic-blur {
+  backdrop-filter: blur(10px);
+  background: rgba(15, 20, 25, 0.8);
+}
+
+/* Sound Toggle Button */
+.audio-toggle {
+  @apply fixed top-6 right-6 z-50 p-3 rounded-full;
+  @apply bg-[var(--accent)] text-[var(--surface)];
+  @apply hover:bg-[var(--accent-secondary)] hover:shadow-lg;
+  @apply transition-all duration-300;
+}
+
+/* 3D Canvas Container */
+.canvas-3d-container {
+  position: fixed;
+  inset: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Luxury Button Styles */
+.btn-luxury {
+  @apply font-display font-semibold tracking-wider;
+  @apply bg-[var(--accent)] text-[var(--surface)];
+  @apply hover:bg-[var(--accent-secondary)] hover:shadow-lg hover:shadow-[var(--accent)]/30;
+  @apply transition-all duration-300 px-6 py-3 rounded-lg;
+  @apply active:scale-95;
+}
+
+/* Premium Text Styling */
+.text-premium-heading {
+  font-family: var(--font-display);
+  letter-spacing: -0.05em;
+  font-weight: 700;
+}
+
+.text-premium-body {
+  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+  line-height: 1.6;
+}
+
+/* Scroll Progress Indicator */
+@keyframes scroll-progress {
+  0% {
+    width: 0%;
+  }
+}
+
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+  animation: scroll-progress linear forwards;
+  z-index: 1000;
+}
+
+/* Enhanced Link Hover */
+.link-luxury {
+  position: relative;
+  color: var(--ink);
+  transition: color 0.3s ease;
+}
+
+.link-luxury::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.link-luxury:hover {
+  color: var(--accent);
+}
+
+.link-luxury:hover::after {
+  width: 100%;
+}
+
+/* Stagger animation enhancement */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-child {
+  animation: stagger-fade-in 0.6s ease-out forwards;
+}
+
+.stagger-child:nth-child(1) { animation-delay: 0.1s; }
+.stagger-child:nth-child(2) { animation-delay: 0.2s; }
+.stagger-child:nth-child(3) { animation-delay: 0.3s; }
+.stagger-child:nth-child(4) { animation-delay: 0.4s; }
+.stagger-child:nth-child(5) { animation-delay: 0.5s; }
+.stagger-child:nth-child(6) { animation-delay: 0.6s; }

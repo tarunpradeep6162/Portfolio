@@ -43,17 +43,19 @@ const workImages = [
 
 export function WorkGallery() {
   return (
-    <section className="relative py-20 sm:py-28 lg:py-36 bg-[var(--surface)]">
+    <section className="relative py-16 sm:py-24 lg:py-32 bg-[var(--surface)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center" data-scroll-reveal>
-          <h2 className="text-4xl sm:text-5xl font-display font-bold text-[var(--ink)] mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-[var(--ink)] mb-3 sm:mb-4">
             Project Gallery
           </h2>
-          <p className="text-lg text-[var(--ink-muted)] max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-[var(--ink-muted)] max-w-2xl mx-auto leading-relaxed">
             Visual documentation of cloud systems, infrastructure design, and deployment architecture
           </p>
         </div>
-        <PhotoGallery images={workImages} columns={3} />
+        <div className="mt-8 sm:mt-12">
+          <PhotoGallery images={workImages} columns={3} />
+        </div>
       </div>
     </section>
   );

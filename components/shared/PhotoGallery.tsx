@@ -44,9 +44,18 @@ export function PhotoGallery({ images, columns = 3 }: PhotoGalleryProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImage]);
 
+  const getGridClass = () => {
+    const baseClass = 'grid gap-6 grid-cols-1 md:grid-cols-2';
+    switch(columns) {
+      case 2: return `${baseClass} lg:grid-cols-2`;
+      case 4: return `${baseClass} lg:grid-cols-4`;
+      default: return `${baseClass} lg:grid-cols-3`;
+    }
+  };
+
   return (
     <>
-      <div className={`grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns}`}>
+      <div className={getGridClass()}>
         {images.map((image) => (
           <div
             key={image.id}

@@ -1,0 +1,142 @@
+---
+title: Mastering GSAP Animations in React
+description: Deep dive into GSAP features, hooks, and patterns for creating smooth animations in React applications.
+date: 2024-08-10
+author: Tarun Pradeep
+tags: ["gsap", "react", "animation"]
+---
+
+# Mastering GSAP Animations in React
+
+GSAP (GreenSock Animation Platform) is a powerful JavaScript animation library. When combined with React, it opens up possibilities for sophisticated animations that feel smooth and professional.
+
+## Why GSAP Over CSS Animations
+
+While CSS animations are great for simple transitions, GSAP excels at:
+
+- **Complex Timelines**: Control multiple animations in sequence or parallel
+- **Advanced Easing**: Over 30 built-in easing functions plus custom easing
+- **Powerful Tweening**: Animate any property, not just CSS-standard ones
+- **ScrollTrigger**: Trigger animations based on scroll position
+- **Performance**: Optimized for 60fps animations even on lower-end devices
+
+## Setting Up GSAP in React
+
+First, install GSAP and the React plugin:
+
+```bash
+npm install gsap @gsap/react
+```
+
+## Core Concepts
+
+### Tweens
+A tween is a single animation from one state to another:
+
+```typescript
+gsap.to(element, {
+  duration: 1,
+  opacity: 1,
+  y: 0,
+  ease: "power2.out"
+});
+```
+
+### Timelines
+Timelines group multiple tweens and control their timing:
+
+```typescript
+const tl = gsap.timeline();
+tl.to(element1, { x: 100 }, 0)
+  .to(element2, { x: 100 }, 0.2);
+```
+
+### ScrollTrigger
+Trigger animations when elements enter the viewport:
+
+```typescript
+gsap.to(element, {
+  scrollTrigger: {
+    trigger: element,
+    start: "top center",
+    end: "center center",
+  },
+  opacity: 1,
+  duration: 0.8,
+});
+```
+
+## Best Practices
+
+### 1. Use the useGSAP Hook
+The `@gsap/react` plugin provides a convenient hook:
+
+```typescript
+import { useGSAP } from "@gsap/react";
+
+export function MyComponent() {
+  const containerRef = useRef(null);
+  
+  useGSAP(
+    () => {
+      gsap.to(".box", { rotation: 360, duration: 1 });
+    },
+    { scope: containerRef }
+  );
+
+  return <div ref={containerRef}><div className="box" /></div>;
+}
+```
+
+### 2. Respect Motion Preferences
+Always check for `prefers-reduced-motion`:
+
+```typescript
+const prefersReducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)"
+).matches;
+
+if (!prefersReducedMotion) {
+  // Apply animations
+}
+```
+
+### 3. Clean Up Properly
+Ensure animations are reverted when components unmount to prevent memory leaks.
+
+## Advanced Patterns
+
+### Staggered Animations
+Animate multiple elements with a delay between each:
+
+```typescript
+gsap.to(".item", {
+  y: 0,
+  opacity: 1,
+  duration: 0.5,
+  stagger: 0.1,
+  ease: "back.out"
+});
+```
+
+### Parallax Effects
+Create depth by moving elements at different speeds:
+
+```typescript
+document.addEventListener("mousemove", (e) => {
+  const x = (e.clientX - window.innerWidth / 2) * 0.01;
+  gsap.to(".layer-1", { x: x * 20, duration: 0.1 });
+  gsap.to(".layer-2", { x: x * 12, duration: 0.1 });
+});
+```
+
+## Performance Tips
+
+- **Use transforms**: Animate `x`, `y`, `rotation`, and `opacity` for GPU acceleration
+- **Batch animations**: Group similar animations together
+- **Lazy load**: Only animate when elements are visible
+- **Monitor FPS**: Use browser DevTools to ensure 60fps performance
+
+## Conclusion
+
+GSAP empowers you to create animations that feel native and responsive. The key is understanding its core concepts and applying them thoughtfully to enhance your user experience without sacrificing performance.

@@ -21,12 +21,15 @@ import { SystemTrace } from "@/components/v7/SystemTrace";
 import { ProofLedger } from "@/components/v7/ProofLedger";
 import { ProjectComparison } from "@/components/v7/ProjectComparison";
 import { RecruiterGate } from "@/components/shared/RecruiterGate";
+import { Project3DCard } from "@/components/gallery/Project3DCard";
+import { TestimonialCarousel } from "@/components/testimonials/TestimonialCarousel";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
 import { certifications } from "@/content/certifications";
 import { education } from "@/content/education";
 import { site } from "@/content/site";
+import { testimonials } from "@/content/testimonials";
 
 const flagships = projects.filter((project) => project.kind === "flagship");
 const labProjects = projects.filter((project) => project.kind === "lab");
@@ -262,6 +265,49 @@ export default function Home() {
             <Button href="/work" variant="secondary" className="mt-8">
               Enter the engineering lab
             </Button>
+          </div>
+        </Container>
+      </section>
+
+      <section
+        data-field="manual"
+        className="section-glow manual-grid border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
+      >
+        <Container className="space-y-16">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
+            <div>
+              <Eyebrow>Client success</Eyebrow>
+              <h2 className="mt-5 max-w-[12ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
+                Words from those who've worked with me.
+              </h2>
+            </div>
+            <div>
+              <TestimonialCarousel testimonials={testimonials} />
+            </div>
+          </div>
+
+          <div>
+            <Eyebrow>Interactive showcase</Eyebrow>
+            <h3 className="mt-5 font-display text-heading font-semibold tracking-[-0.045em] mb-8">
+              3D project gallery
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Project3DCard
+                title="Cloud Infrastructure"
+                description="Scalable Kubernetes deployments"
+                color="#d8ff4f"
+              />
+              <Project3DCard
+                title="DevOps Pipeline"
+                description="Automated CI/CD workflows"
+                color="#748cff"
+              />
+              <Project3DCard
+                title="Monitoring Stack"
+                description="Real-time observability solutions"
+                color="#ff6847"
+              />
+            </div>
           </div>
         </Container>
       </section>

@@ -6,7 +6,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Button } from "@/components/ui/Button";
 import { ProjectCard } from "@/components/work/ProjectCard";
 import { ReliabilitySpine } from "@/components/spine/ReliabilitySpine";
-import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
+import { InteractiveTimeline } from "@/components/about/InteractiveTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
@@ -161,7 +161,7 @@ export default function Home() {
               </Link>
             </div>
             <ScrollReveal>
-              <ExperienceTimeline roles={experience} />
+              <InteractiveTimeline roles={experience} />
             </ScrollReveal>
           </div>
         </Container>

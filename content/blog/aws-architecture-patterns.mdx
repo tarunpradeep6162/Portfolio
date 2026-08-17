@@ -1,0 +1,135 @@
+---
+title: AWS Architecture Patterns for Scale
+description: Design scalable, resilient AWS architectures using proven patterns for compute, storage, and networking.
+date: 2024-07-31
+author: Tarun Pradeep
+tags: ["aws", "architecture", "cloud"]
+---
+
+# AWS Architecture Patterns for Scale
+
+Building on AWS requires understanding architectural patterns that enable scale, resilience, and cost-effectiveness. This guide covers proven patterns for production systems.
+
+## Compute Patterns
+
+### Auto-Scaling Web Applications
+
+Pattern: Load Balancer → Auto Scaling Group → EC2 instances
+
+Benefits:
+- Automatically add capacity when demand increases
+- Remove instances when demand decreases
+- Distribute traffic evenly
+- Self-healing (terminated instances are replaced)
+
+Configuration:
+- Min/Max instance counts
+- Target CPU threshold (typically 70%)
+- Scale up/down cooldown periods
+
+### Serverless with Lambda
+
+Advantages:
+- No infrastructure to manage
+- Automatic scaling (millions of concurrent invocations)
+- Pay only for execution time
+- Faster deployment
+
+Limitations:
+- Cold starts (first invocation slower)
+- Execution timeout limits (15 minutes max)
+- Memory constrained
+- Best for event-driven workloads
+
+## Storage Patterns
+
+### S3 for Object Storage
+
+- Unlimited scalability
+- 11 nines of durability
+- Multiple storage classes for cost optimization
+- Versioning and lifecycle policies
+
+Best practices:
+- Use CloudFront for caching
+- Lifecycle policies to archive old objects
+- Encryption at rest and in transit
+- Bucket policies for access control
+
+### RDS for Relational Data
+
+- Managed database service
+- Automated backups and failover
+- Multi-AZ for high availability
+- Read replicas for scaling reads
+
+Configuration:
+- Instance type sizing (CPU, memory, I/O)
+- Storage type (gp3 recommended)
+- Backup retention period
+- Maintenance window
+
+## Networking Patterns
+
+### VPC Design
+
+Organize resources across Availability Zones:
+- Public subnets: NAT gateways, load balancers
+- Private subnets: Application servers
+- Database subnets: RDS instances
+
+Benefits:
+- High availability across AZs
+- Network isolation
+- Controlled traffic flow
+- Disaster recovery capability
+
+### CloudFront for Content Delivery
+
+- Cache content globally
+- DDoS protection
+- AWS WAF integration
+- Lambda@Edge for dynamic content
+
+## Reliability Patterns
+
+### Multi-AZ Deployments
+
+Distribute resources across Availability Zones:
+- Automatic failover
+- Synchronous replication for databases
+- Load balancing across AZs
+- Protects against zone failures
+
+### Health Checks & Auto-Remediation
+
+- ELB/ALB health checks
+- Auto Scaling replacement
+- CloudWatch alarms
+- Lambda-based remediation
+
+## Cost Optimization
+
+### Reserved Instances
+
+- 30-72% discount over on-demand
+- Commitment: 1 or 3 years
+- Flexible instance families
+
+### Spot Instances
+
+- Up to 90% discount
+- Interruption risk
+- Ideal for fault-tolerant workloads
+- Blend with on-demand for reliability
+
+### Rightsizing
+
+- Monitor CloudWatch metrics
+- Right-size instances to actual usage
+- Use AWS Compute Optimizer
+- Regular reviews (quarterly)
+
+## Conclusion
+
+AWS provides numerous patterns for building scalable systems. Success requires understanding your workload characteristics and choosing appropriate patterns for compute, storage, networking, and reliability.

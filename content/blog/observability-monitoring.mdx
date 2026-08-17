@@ -1,0 +1,72 @@
+---
+title: Building Observability into Your Systems
+description: Comprehensive guide to metrics, logs, and traces—the three pillars of observability for production systems.
+date: 2024-07-27
+author: Tarun Pradeep
+tags: ["observability", "monitoring", "production"]
+---
+
+# Building Observability into Your Systems
+
+Observability is the ability to understand your system's state by examining its outputs. It requires collecting and analyzing metrics, logs, and traces.
+
+## The Three Pillars
+
+### Metrics
+
+Quantitative measurements collected over time:
+- CPU, memory, disk usage
+- Request rate, latency, error rate
+- Custom application metrics
+
+Tools: Prometheus, Datadog, New Relic
+
+### Logs
+
+Discrete events with context:
+- Application logs
+- System logs
+- Audit logs
+
+Structured logging (JSON) enables efficient querying.
+
+Tools: ELK Stack, Splunk, Loki
+
+### Traces
+
+Request flow through system:
+- See how requests traverse services
+- Identify performance bottlenecks
+- Debug distributed systems
+
+Tools: Jaeger, Zipkin, DataDog
+
+## Golden Signals
+
+Monitor four key metrics for application health:
+
+1. **Latency**: Time to serve request
+2. **Traffic**: Requests per second
+3. **Errors**: Failed request rate
+4. **Saturation**: Resource utilization
+
+## Alerting Strategy
+
+Effective alerting prevents alert fatigue:
+- Alert on symptoms, not causes
+- Actionable alerts only
+- Include runbooks with alerts
+- Regularly review alert effectiveness
+
+## Implementation
+
+Start with:
+1. Export metrics from application
+2. Collect logs in central location
+3. Add distributed tracing
+4. Set up dashboards
+5. Create alerting rules
+
+## Conclusion
+
+Observability is foundational for running systems in production. Invest in collecting and analyzing metrics, logs, and traces to maintain visibility and respond quickly to issues.

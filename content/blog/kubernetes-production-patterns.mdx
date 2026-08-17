@@ -1,0 +1,105 @@
+---
+title: Kubernetes Production Patterns & Best Practices
+description: Essential patterns for running Kubernetes reliably in production including health checks, resource management, and observability.
+date: 2024-08-12
+author: Tarun Pradeep
+tags: ["kubernetes", "devops", "production"]
+---
+
+# Kubernetes Production Patterns & Best Practices
+
+Running Kubernetes in production requires more than just deploying containers. It demands careful attention to reliability patterns, observability, and operational excellence.
+
+## Health Checks & Lifecycle Management
+
+### Readiness & Liveness Probes
+
+Kubernetes health checks are your first line of defense against cascading failures:
+
+**Liveness Probe**: Restarts unhealthy containers
+- Detects deadlocks or hung processes
+- Prevents containers from running indefinitely in broken state
+- Must be tuned carefully to avoid thrashing
+
+**Readiness Probe**: Routes traffic only to ready pods
+- Prevents traffic to initializing containers
+- Handles graceful drain during deployments
+- Critical for zero-downtime updates
+
+### Startup Probes
+
+For applications with slow initialization:
+- Give applications time to bootstrap
+- Separate startup time from liveness checks
+- Prevent premature restarts
+
+## Resource Management
+
+### Requests & Limits
+
+Proper resource requests enable Kubernetes scheduler to make intelligent decisions:
+
+**CPU Requests**: Guaranteed minimum CPU
+- Used for scheduler decisions
+- Enables pod eviction during node pressure
+- Should reflect actual usage during normal operation
+
+**Memory Limits**: Hard cap on memory usage
+- OOMKilled if exceeded
+- Set to ~120% of observed usage
+- Prevents one pod from consuming all node memory
+
+## Observability in Production
+
+### Three Pillars
+
+**Metrics**: Quantitative measurements
+- CPU, memory, network usage
+- Application-specific metrics (request rate, latency)
+- Collected via Prometheus
+
+**Logs**: Discrete events
+- Structured logging (JSON)
+- Correlation IDs for request tracing
+- Centralized collection (ELK, Splunk)
+
+**Traces**: Request flow through system
+- Distributed tracing (Jaeger, Zipkin)
+- Understand performance bottlenecks
+- Debug production issues
+
+### Golden Signals
+
+Monitor these four metrics for application health:
+
+1. **Latency**: Time to handle request
+2. **Traffic**: Requests per second
+3. **Errors**: Request failure rate
+4. **Saturation**: Resource utilization
+
+## Deployment Strategies
+
+### Rolling Updates
+
+Default Kubernetes strategy:
+- Gradually replace old pods with new
+- Zero downtime if health checks work
+- Must handle backward-compatible changes
+
+### Blue-Green Deployments
+
+Complete environment switchover:
+- Lower risk for breaking changes
+- Instant rollback capability
+- Requires 2x resources during deployment
+
+### Canary Deployments
+
+Gradual rollout to percentage of traffic:
+- Detect issues affecting subset of users
+- Automatic rollback on errors
+- Tools: Flagger, Argo Rollouts
+
+## Conclusion
+
+Production Kubernetes requires discipline in design, implementation, and monitoring. The patterns described here—health checks, resource management, and comprehensive observability—form the foundation of reliable Kubernetes operations.

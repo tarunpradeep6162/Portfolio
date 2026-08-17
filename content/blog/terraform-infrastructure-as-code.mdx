@@ -1,0 +1,104 @@
+---
+title: Terraform & Infrastructure as Code Best Practices
+description: Practical guide to managing infrastructure as code using Terraform, including state management, modules, and team workflows.
+date: 2024-08-08
+author: Tarun Pradeep
+tags: ["terraform", "infrastructure", "iac"]
+---
+
+# Terraform & Infrastructure as Code Best Practices
+
+Infrastructure as Code (IaC) transforms how we provision and manage cloud resources. Terraform has become the standard tool for this transformation, but its power comes with responsibility.
+
+## Why Infrastructure as Code Matters
+
+### Traditional Infrastructure Problems
+
+Manual infrastructure provisioning leads to:
+- **Inconsistency**: Environments drift over time
+- **Lack of Version Control**: No audit trail of changes
+- **Limited Scalability**: Difficult to manage complex environments
+- **Disaster Recovery Challenges**: Recovering requires recreating manually
+
+### IaC Solutions
+
+With code-driven infrastructure:
+- **Reproducibility**: Same code produces identical infrastructure
+- **Auditability**: Git history shows all changes
+- **Scalability**: Create 100 identical environments effortlessly
+- **Disaster Recovery**: Reapply code to recover
+
+## Terraform State Management
+
+### State Files
+
+State is Terraform's source of truth for current infrastructure:
+- Maps configuration to real resources
+- Enables Terraform to determine what changed
+- Must be protected—it contains sensitive data
+
+### Remote State Best Practices
+
+Never use local state in production:
+
+1. **Use Remote Backends** (S3, Terraform Cloud)
+   - Shared across team
+   - Automatically backed up
+   - Enables locking to prevent concurrent modifications
+
+2. **Enable State Locking**
+   - Prevents concurrent modifications
+   - Protects state consistency
+   - Essential for teams
+
+3. **Encrypt State Files**
+   - At rest: Use backend encryption
+   - In transit: Use TLS/HTTPS
+   - Restrict access via IAM policies
+
+## Modular Terraform
+
+### Module Structure
+
+Organize code into reusable modules:
+
+```hcl
+modules/
+  └── vpc/
+      ├── main.tf
+      ├── variables.tf
+      └── outputs.tf
+```
+
+### Benefits
+
+- **DRY**: Write once, use everywhere
+- **Testable**: Test modules independently
+- **Maintainable**: Changes propagate to all uses
+- **Reusable**: Share across teams/projects
+
+## Version Control Workflow
+
+### Managing Terraform Code
+
+```bash
+# Structure for teams
+infrastructure/
+  ├── environments/
+  │   ├── dev/
+  │   ├── staging/
+  │   └── prod/
+  ├── modules/
+  └── README.md
+```
+
+### Code Review Process
+
+1. Create feature branch for infrastructure changes
+2. Plan: `terraform plan` shows proposed changes
+3. Review: Team reviews and approves
+4. Apply: `terraform apply` after approval
+
+## Conclusion
+
+Terraform enables infrastructure management at scale. Success requires respecting state files, using remote backends, organizing code into modules, and treating infrastructure changes with same rigor as application code.

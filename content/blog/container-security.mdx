@@ -1,0 +1,86 @@
+---
+title: Container Security Best Practices
+description: Secure your container infrastructure with image scanning, runtime security, and least privilege principles.
+date: 2024-07-23
+author: Tarun Pradeep
+tags: ["security", "containers", "devops"]
+---
+
+# Container Security Best Practices
+
+Containers introduce new security challenges. This guide covers essential practices for securing container images, registries, and runtime environments.
+
+## Image Security
+
+### Image Scanning
+
+Scan images for known vulnerabilities:
+- Use tools like Trivy, Grype, Snyk
+- Scan in CI/CD pipeline
+- Fail builds on high-severity findings
+- Regularly rescan deployed images
+
+### Base Image Selection
+
+- Use minimal base images (Alpine, Distroless)
+- Regular patching of base images
+- Scan base images themselves
+- Document base image choices
+
+### Image Building
+
+- Run containers as non-root
+- Remove unnecessary packages
+- Don't include secrets in images
+- Multi-stage builds to reduce size
+
+## Registry Security
+
+### Docker Registry Protection
+
+- Private registries only
+- Authentication required
+- Encryption in transit (TLS)
+- Access logging
+
+### Image Signing
+
+- Sign images for authenticity
+- Enforce signature verification
+- Binary Authorization in Kubernetes
+
+## Runtime Security
+
+### Kubernetes Pod Security
+
+- Network policies (deny-all default)
+- Resource limits and requests
+- Security contexts (read-only filesystems)
+- Pod Security Standards
+
+### Container Isolation
+
+- Limit syscalls with seccomp
+- AppArmor or SELinux profiles
+- Container runtime options
+- Avoid privileged containers
+
+## Supply Chain Security
+
+### Dependency Management
+
+- Scan dependencies for vulnerabilities
+- Use dependency management tools
+- Lock dependency versions
+- Regular updates
+
+### Image provenance
+
+- Document build pipeline
+- Audit image sources
+- Track image genealogy
+- Supply chain attacks prevention
+
+## Conclusion
+
+Container security requires defense-in-depth: secure images, protected registries, restricted runtime, and supply chain oversight. Start with image scanning and work through each layer.

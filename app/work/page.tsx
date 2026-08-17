@@ -19,7 +19,7 @@ const labCount = projects.filter((project) => project.kind === "lab").length;
 export default function WorkPage() {
   return (
     <>
-      <section className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36">
+      <section className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-dark-navy)] py-20 sm:py-28 lg:py-36">
         <div
           aria-hidden
           className="absolute right-[-8rem] top-[-16rem] h-[42rem] w-[42rem] rounded-full border border-dashed border-white/10 route-orbit"

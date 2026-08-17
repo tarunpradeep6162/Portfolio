@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <section className="control-grid relative overflow-hidden bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36">
+      <section className="control-grid relative overflow-hidden bg-[var(--color-dark-navy)] py-20 sm:py-28 lg:py-36">
         <div
           aria-hidden
           className="absolute -right-48 top-12 h-[36rem] w-[36rem] rounded-full border border-dashed border-white/10 route-orbit"

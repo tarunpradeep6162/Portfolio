@@ -5,7 +5,7 @@ import { UnresolvedEndpoint } from "@/components/shared/UnresolvedEndpoint";
 
 export default function NotFound() {
   return (
-    <section className="control-grid flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-control-black)] py-16">
+    <section className="control-grid flex min-h-[calc(100svh-4.5rem)] items-center overflow-hidden bg-[var(--color-dark-navy)] py-16">
       <Container className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
         <div>
           <Eyebrow>Error / 404</Eyebrow>

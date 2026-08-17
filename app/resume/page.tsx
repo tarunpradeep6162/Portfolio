@@ -22,14 +22,14 @@ export default function ResumePage() {
       className="manual-grid bg-[var(--surface)] py-10 text-[var(--ink)] sm:py-16 lg:py-20"
     >
       <Container className="max-w-[76rem]">
-        <header className="relative overflow-hidden bg-[var(--color-control-black)] p-6 text-[var(--color-cloud-linen)] sm:p-10 lg:p-14">
+        <header className="relative overflow-hidden bg-[var(--color-dark-navy)] p-6 text-[var(--color-cream)] sm:p-10 lg:p-14">
           <div
             aria-hidden
             className="absolute -right-20 -top-36 h-[28rem] w-[28rem] rounded-full border border-dashed border-white/10 route-orbit"
           />
           <div className="relative grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div>
-              <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-signal-lime)]">
+              <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-gold-primary)]">
                 Web résumé / current record
               </p>
               <h1 className="mt-5 font-display text-[clamp(2.8rem,2rem+4vw,6.25rem)] font-semibold uppercase leading-[0.82] tracking-[-0.075em]">
@@ -37,16 +37,16 @@ export default function ResumePage() {
                 <br />
                 Pradeep B
               </h1>
-              <p className="mt-6 text-lead text-[var(--color-telemetry-steel)]">
+              <p className="mt-6 text-lead text-[var(--color-slate-gray)]">
                 {hero.eyebrow}
               </p>
             </div>
-            <ul className="space-y-3 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--color-telemetry-steel)]">
+            <ul className="space-y-3 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--color-slate-gray)]">
               <li>{site.location}</li>
               <li>
                 <a
                   href={`mailto:${site.email}`}
-                  className="text-[var(--color-cloud-linen)] hover:text-[var(--color-signal-lime)]"
+                  className="text-[var(--color-cream)] hover:text-[var(--color-gold-primary)]"
                 >
                   {site.email}
                 </a>
@@ -56,7 +56,7 @@ export default function ResumePage() {
                   href={site.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[var(--color-signal-lime)]"
+                  className="hover:text-[var(--color-gold-primary)]"
                 >
                   GitHub / tarunpradeep6162
                 </a>
@@ -66,7 +66,7 @@ export default function ResumePage() {
                   href={site.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[var(--color-signal-lime)]"
+                  className="hover:text-[var(--color-gold-primary)]"
                 >
                   LinkedIn / Tarun Pradeep B
                 </a>

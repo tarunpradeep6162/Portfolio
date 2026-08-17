@@ -22,13 +22,13 @@ export function CompanionTourPanel({
   return (
     <div className="border-t border-white/10 pt-3">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-telemetry-steel)]">
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--color-slate-gray)]">
           Choose a tour
         </p>
         <button
           type="button"
           onClick={onClose}
-          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-telemetry-steel)] hover:text-[var(--color-signal-lime)]"
+          className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-slate-gray)] hover:text-[var(--color-gold-primary)]"
         >
           Skip / browse normally
         </button>
@@ -43,14 +43,14 @@ export function CompanionTourPanel({
               className={cn(
                 "flex w-full flex-col rounded border px-3 py-2 text-left transition-colors",
                 activeTourId === tour.id
-                  ? "border-[var(--color-signal-lime)] bg-[var(--color-signal-lime)]/10"
+                  ? "border-[var(--color-gold-primary)] bg-[var(--color-gold-primary)]/10"
                   : "border-white/10 hover:border-white/25",
               )}
             >
-              <span className="font-display text-xs font-semibold text-[var(--color-cloud-linen)]">
+              <span className="font-display text-xs font-semibold text-[var(--color-cream)]">
                 {tour.label}
               </span>
-              <span className="mt-0.5 text-[11px] leading-4 text-[var(--color-telemetry-steel)]">
+              <span className="mt-0.5 text-[11px] leading-4 text-[var(--color-slate-gray)]">
                 {tour.description}
               </span>
             </button>

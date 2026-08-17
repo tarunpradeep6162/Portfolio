@@ -80,8 +80,8 @@ export function AtlasDiagram({
                 className={cn(
                   "rounded border px-3 py-1.5 font-mono text-[11px] tracking-[0.04em] transition-colors",
                   active
-                    ? "border-[var(--color-signal-lime)] text-[var(--color-signal-lime)]"
-                    : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]",
+                    ? "border-[var(--color-gold-primary)] text-[var(--color-gold-primary)]"
+                    : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]",
                 )}
               >
                 {node.label}

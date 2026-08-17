@@ -82,8 +82,8 @@ export function TimeMachine({
                     "rounded border px-3 py-1.5 font-mono text-[11px] tracking-[0.04em]",
                     !reducedMotion && "transition-colors",
                     isActive
-                      ? "border-[var(--color-signal-lime)] text-[var(--color-signal-lime)]"
-                      : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]",
+                      ? "border-[var(--color-gold-primary)] text-[var(--color-gold-primary)]"
+                      : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)]",
                   )}
                 >
                   {stage.label}
@@ -95,7 +95,7 @@ export function TimeMachine({
 
         <div
           role="status"
-          className="mt-4 border border-[var(--color-signal-lime)]/30 bg-[var(--color-signal-lime)]/5 px-4 py-3"
+          className="mt-4 border border-[var(--color-gold-primary)]/30 bg-[var(--color-gold-primary)]/5 px-4 py-3"
         >
           <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--ink)]">
             Stage {activeIndex + 1} of {stages.length}: {active.label}
@@ -109,7 +109,7 @@ export function TimeMachine({
             onClick={() => goTo(activeIndex - 1)}
             disabled={activeIndex === 0}
             aria-label={`Previous stage in ${projectLabel}'s timeline`}
-            className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--line)] disabled:hover:text-[var(--ink-muted)]"
+            className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--line)] disabled:hover:text-[var(--ink-muted)]"
           >
             Previous
           </button>
@@ -118,7 +118,7 @@ export function TimeMachine({
             onClick={() => goTo(activeIndex + 1)}
             disabled={activeIndex === stages.length - 1}
             aria-label={`Next stage in ${projectLabel}'s timeline`}
-            className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--line)] disabled:hover:text-[var(--ink-muted)]"
+            className="rounded border border-[var(--line)] px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-muted)] transition-colors hover:border-[var(--color-gold-primary)] hover:text-[var(--color-gold-primary)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--line)] disabled:hover:text-[var(--ink-muted)]"
           >
             Next
           </button>

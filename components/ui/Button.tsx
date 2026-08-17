@@ -12,7 +12,7 @@ const base =
 
 const variants = {
   primary:
-    "border border-[var(--accent)] bg-[var(--accent)] text-[var(--color-control-black)] hover:-translate-y-0.5 hover:bg-transparent hover:text-[var(--accent)] hover:shadow-[0_0_20px_rgba(216,255,79,0.3),inset_0_0_20px_rgba(216,255,79,0.1)]",
+    "border border-[var(--accent)] bg-[var(--accent)] text-[var(--color-dark-navy)] hover:-translate-y-0.5 hover:bg-transparent hover:text-[var(--accent)] hover:shadow-[0_0_20px_rgba(216,255,79,0.3),inset_0_0_20px_rgba(216,255,79,0.1)]",
   secondary:
     "border border-[var(--line)] text-[var(--ink)] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-[0_0_16px_rgba(216,255,79,0.2)]",
 };

@@ -4,10 +4,10 @@ import { ExternalLink } from "@/components/ui/ExternalLink";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[var(--color-control-black)] py-8 text-[var(--color-telemetry-steel)]">
+    <footer className="border-t border-white/10 bg-[var(--color-dark-navy)] py-8 text-[var(--color-slate-gray)]">
       <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
-          <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
+          <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cream)]">
             {site.name}
           </p>
           <p className="mt-2 max-w-md text-xs leading-5">
@@ -30,7 +30,7 @@ export function Footer() {
           </a>
           <a
             href="#main-content"
-            className="hover:text-[var(--color-signal-lime)]"
+            className="hover:text-[var(--color-gold-primary)]"
           >
             Back to top
           </a>

@@ -17,20 +17,20 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/92 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-dark-navy)]/92 backdrop-blur-xl">
       <Container className="flex h-full items-center justify-between">
         <Link
           href="/"
-          className="group flex items-center gap-3 text-[var(--color-cloud-linen)]"
+          className="group flex items-center gap-3 text-[var(--color-cream)]"
         >
-          <span className="flex h-9 w-9 items-center justify-center border border-white/15 font-display text-sm font-bold transition-colors group-hover:border-[var(--color-signal-lime)] group-hover:text-[var(--color-signal-lime)]">
+          <span className="flex h-9 w-9 items-center justify-center border border-white/15 font-display text-sm font-bold transition-colors group-hover:border-[var(--color-gold-primary)] group-hover:text-[var(--color-gold-primary)]">
             TP
           </span>
           <span className="hidden sm:block">
             <span className="block font-display text-[11px] font-bold uppercase tracking-[0.13em]">
               Tarun Pradeep
             </span>
-            <span className="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
+            <span className="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--color-slate-gray)]">
               Cloud systems
             </span>
           </span>
@@ -38,7 +38,7 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Primary" className="hidden sm:block">
-          <ul className="flex items-center gap-7 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-cloud-linen)] lg:gap-10">
+          <ul className="flex items-center gap-7 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-cream)] lg:gap-10">
             {links.map((link, index) => {
               const active =
                 pathname === link.href ||
@@ -49,10 +49,10 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group relative flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-signal-lime)]",
+                      "group relative flex items-center gap-2 py-3 transition-colors hover:text-[var(--color-gold-primary)]",
                       active
-                        ? "text-[var(--color-signal-lime)]"
-                        : "text-[var(--color-cloud-linen)]",
+                        ? "text-[var(--color-gold-primary)]"
+                        : "text-[var(--color-cream)]",
                     )}
                   >
                     <span
@@ -60,8 +60,8 @@ export function SiteHeader() {
                       className={cn(
                         "text-[8px]",
                         active
-                          ? "text-[var(--color-signal-lime)]"
-                          : "text-[var(--color-telemetry-steel)]",
+                          ? "text-[var(--color-gold-primary)]"
+                          : "text-[var(--color-slate-gray)]",
                       )}
                     >
                       0{index + 1}
@@ -69,7 +69,7 @@ export function SiteHeader() {
                     <span>{link.label}</span>
                     <span
                       className={cn(
-                        "absolute bottom-0 left-0 h-[1px] bg-[var(--color-signal-lime)] transition-all duration-300 ease-[var(--ease-spine)]",
+                        "absolute bottom-0 left-0 h-[1px] bg-[var(--color-gold-primary)] transition-all duration-300 ease-[var(--ease-spine)]",
                         active ? "w-full" : "w-0 group-hover:w-full",
                       )}
                     />

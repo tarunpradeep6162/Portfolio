@@ -72,7 +72,7 @@ export default function Home() {
 
       <section
         id="spine"
-        className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
+        className="control-grid relative border-y border-white/10 bg-[var(--color-dark-navy)] py-20 sm:py-28 lg:py-36"
       >
         <Container className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
           <div>
@@ -215,7 +215,7 @@ export default function Home() {
 
       <section
         id="contact"
-        className="control-grid relative overflow-hidden bg-[var(--color-control-black)] py-24 sm:py-32 lg:py-40"
+        className="control-grid relative overflow-hidden bg-[var(--color-dark-navy)] py-24 sm:py-32 lg:py-40"
       >
         <div
           aria-hidden
@@ -223,7 +223,7 @@ export default function Home() {
         />
         <div
           aria-hidden
-          className="absolute -right-8 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full border border-[var(--color-signal-lime)]/20"
+          className="absolute -right-8 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full border border-[var(--color-gold-primary)]/20"
         />
         <Container className="relative">
           <Eyebrow>Final route / 07</Eyebrow>

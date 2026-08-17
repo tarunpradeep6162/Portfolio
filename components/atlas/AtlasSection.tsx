@@ -38,7 +38,7 @@ export function AtlasSection({ flow, projectLabel }: { flow: string; projectLabe
       {selectedNode && (
         <p
           role="status"
-          className="mt-4 border border-[var(--color-signal-lime)]/30 bg-[var(--color-signal-lime)]/5 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)]"
+          className="mt-4 border border-[var(--color-gold-primary)]/30 bg-[var(--color-gold-primary)]/5 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)]"
         >
           Node {selectedNode.index + 1} of {nodes.length}: {selectedNode.label}
         </p>

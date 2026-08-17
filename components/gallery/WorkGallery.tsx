@@ -39,6 +39,42 @@ const workImages = [
     alt: 'Tech Stack',
     title: 'Modern Tech Stack',
   },
+  {
+    id: '7',
+    src: 'https://images.unsplash.com/photo-1517694712686-5e4a27911e6d?w=800&h=600&fit=crop',
+    alt: 'Container Orchestration',
+    title: 'Kubernetes Deployment',
+  },
+  {
+    id: '8',
+    src: 'https://images.unsplash.com/photo-1563440810-c5e66b3b8a5e?w=800&h=600&fit=crop',
+    alt: 'Monitoring & Observability',
+    title: 'System Monitoring',
+  },
+  {
+    id: '9',
+    src: 'https://images.unsplash.com/photo-1516534819246-8b33f42c5a4f?w=800&h=600&fit=crop',
+    alt: 'Network Infrastructure',
+    title: 'Network Architecture',
+  },
+  {
+    id: '10',
+    src: 'https://images.unsplash.com/photo-1514434328850-f280c7ee4e16?w=800&h=600&fit=crop',
+    alt: 'Database Systems',
+    title: 'Database Engineering',
+  },
+  {
+    id: '11',
+    src: 'https://images.unsplash.com/photo-1551434678-e076306fae0d?w=800&h=600&fit=crop',
+    alt: 'Server Infrastructure',
+    title: 'Server Architecture',
+  },
+  {
+    id: '12',
+    src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
+    alt: 'Enterprise Solutions',
+    title: 'Enterprise Infrastructure',
+  },
 ];
 
 export function WorkGallery() {

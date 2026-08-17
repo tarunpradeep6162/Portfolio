@@ -11,6 +11,7 @@ import { Canvas3D } from "@/components/shared/Canvas3D";
 import { AudioToggle } from "@/components/shared/AudioToggle";
 import { SoundDesign } from "@/components/shared/SoundDesign";
 import { ScrollAnimationsRoot } from "@/components/shared/ScrollAnimationsRoot";
+import { AnalyticsInit } from "@/components/shared/AnalyticsInit";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AudioToggle />
         <SoundDesign />
         <ScrollAnimationsRoot />
+        <AnalyticsInit />
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />

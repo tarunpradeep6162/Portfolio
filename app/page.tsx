@@ -11,6 +11,7 @@ import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { WorkGallery } from "@/components/gallery/WorkGallery";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -215,6 +216,8 @@ export default function Home() {
       </section>
 
       <WorkGallery />
+
+      <TestimonialsSection />
 
       <section
         id="contact"

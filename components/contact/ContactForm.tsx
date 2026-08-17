@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { trackConversion } from '@/lib/hooks/useConversionTracking';
 import { Button } from '@/components/ui/Button';
 
 interface FormData {
@@ -96,6 +97,15 @@ export function ContactForm() {
           email: '',
           projectType: '',
           message: '',
+        });
+
+        // Track conversion
+        trackConversion({
+          event: 'contact_form_submit',
+          metadata: {
+            projectType: formData.projectType,
+            messageLength: formData.message.length,
+          },
         });
       } else {
         setSubmitStatus('error');

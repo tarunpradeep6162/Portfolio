@@ -13,6 +13,7 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { WorkGallery } from "@/components/gallery/WorkGallery";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
+import { OutcomesShowcase } from "@/components/sections/OutcomesShowcase";
 import { BlogPostCard } from "@/components/blog/BlogPostCard";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
@@ -253,6 +254,8 @@ export default function Home() {
           </ScrollReveal>
         </Container>
       </section>
+
+      <OutcomesShowcase />
 
       <FAQSection />
 

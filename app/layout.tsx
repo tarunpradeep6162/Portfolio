@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
 import { FloatingCTA } from "@/components/shared/FloatingCTA";
+import { AnalyticsTracker } from "@/components/shared/AnalyticsTracker";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <SmoothScroll />
           <CustomCursor />
+          <AnalyticsTracker />
           <FloatingCTA />
           <ExperienceProvider>
             <SkipLink />

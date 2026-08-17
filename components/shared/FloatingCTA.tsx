@@ -18,13 +18,10 @@ export function FloatingCTA() {
 
       // Pulse animation on the button
       gsap.to(button, {
-        boxShadow: [
-          "0 0 8px rgba(216, 255, 79, 0.2)",
-          "0 0 20px rgba(216, 255, 79, 0.4)",
-          "0 0 8px rgba(216, 255, 79, 0.2)",
-        ],
-        duration: 2,
+        boxShadow: "0 0 20px rgba(216, 255, 79, 0.4)",
+        duration: 1,
         repeat: -1,
+        yoyo: true,
         ease: "sine.inOut",
       });
     },

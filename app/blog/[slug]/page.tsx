@@ -1,16 +1,10 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { blogPosts } from "@/content/blog";
-
-interface BlogPostPageProps {
-  params: {
-    slug: string;
-  };
-}
 
 export function generateStaticParams() {
   return blogPosts.map((post) => ({
@@ -18,10 +12,11 @@ export function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({
-  params,
-}: BlogPostPageProps): Promise<Metadata> {
-  const post = blogPosts.find((p) => p.slug === params.slug);
+export async function generateMetadata(
+  props: PageProps<"/blog/[slug]">,
+): Promise<Metadata> {
+  const { slug } = await props.params;
+  const post = blogPosts.find((p) => p.slug === slug);
 
   if (!post) {
     return {};
@@ -33,8 +28,11 @@ export async function generateMetadata({
   };
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = blogPosts.find((p) => p.slug === params.slug);
+export default async function BlogPostPage(
+  props: PageProps<"/blog/[slug]">,
+) {
+  const { slug } = await props.params;
+  const post = blogPosts.find((p) => p.slug === slug);
 
   if (!post) {
     notFound();

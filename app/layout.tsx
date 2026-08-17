@@ -6,6 +6,7 @@ import { CompanionRoot } from "@/components/companion/CompanionRoot";
 import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
+import { AnalyticsTracker } from "@/components/shared/AnalyticsTracker";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         <SmoothScroll />
         <CustomCursor />
+        <AnalyticsTracker />
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />

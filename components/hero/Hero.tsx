@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { HeroCopyReveal } from "./HeroCopyReveal";
 import { InfrastructureObservatory } from "./InfrastructureObservatory";
+import { ParallaxLayers } from "./ParallaxLayers";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
   return (
     <section className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(116,140,255,0.13),transparent_66%)]" />
+      <ParallaxLayers />
 
       <Container className="relative grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">
         <HeroCopyReveal>

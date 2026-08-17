@@ -38,6 +38,7 @@ export default async function BlogPostPage(
     notFound();
   }
 
+  // Format date for display
   const formattedDate = new Date(post.date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",

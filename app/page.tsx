@@ -12,12 +12,15 @@ import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { WorkGallery } from "@/components/gallery/WorkGallery";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
+import { FAQSection } from "@/components/sections/FAQSection";
+import { BlogPostCard } from "@/components/blog/BlogPostCard";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
 import { certifications } from "@/content/certifications";
 import { education } from "@/content/education";
 import { site } from "@/content/site";
+import { blogPosts } from "@/content/blog";
 
 const flagships = projects.filter((project) => project.kind === "flagship");
 const labProjects = projects.filter((project) => project.kind === "lab");
@@ -218,6 +221,40 @@ export default function Home() {
       <WorkGallery />
 
       <TestimonialsSection />
+
+      {/* Blog Section */}
+      <section
+        id="articles"
+        className="bg-[var(--surface)] py-20 sm:py-28 lg:py-36 text-[var(--ink)]"
+      >
+        <Container>
+          <div className="max-w-3xl mb-12">
+            <Eyebrow>Engineering Knowledge</Eyebrow>
+            <h2 className="mt-6 font-display text-5xl sm:text-6xl font-bold leading-tight">
+              Latest Articles
+            </h2>
+            <p className="mt-6 text-lg text-[var(--ink-muted)]">
+              In-depth guides on cloud infrastructure, DevOps practices, and production reliability.
+            </p>
+            <Link
+              href="/blog"
+              className="mt-6 inline-flex items-center gap-3 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent-secondary)] hover:text-[var(--accent)]"
+            >
+              Read all articles <ArrowRight size={14} aria-hidden />
+            </Link>
+          </div>
+
+          <ScrollReveal className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogPosts.slice(0, 3).map((post) => (
+              <div key={post.id} data-reveal>
+                <BlogPostCard post={post} />
+              </div>
+            ))}
+          </ScrollReveal>
+        </Container>
+      </section>
+
+      <FAQSection />
 
       <section
         id="contact"

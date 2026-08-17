@@ -12,6 +12,7 @@ import { AudioToggle } from "@/components/shared/AudioToggle";
 import { SoundDesign } from "@/components/shared/SoundDesign";
 import { ScrollAnimationsRoot } from "@/components/shared/ScrollAnimationsRoot";
 import { AnalyticsInit } from "@/components/shared/AnalyticsInit";
+import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -27,6 +28,15 @@ export const metadata: Metadata = {
     template: `%s | ${site.name}`,
   },
   description: site.description,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: site.name,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: site.title,
     description: site.description,
@@ -57,6 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SoundDesign />
         <ScrollAnimationsRoot />
         <AnalyticsInit />
+        <ServiceWorkerRegister />
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />

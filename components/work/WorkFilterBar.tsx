@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import type { Project, ProjectCategory } from "@/content/types";
 import { ProjectCard } from "./ProjectCard";
 import { LabProjectList } from "./LabProjectList";
@@ -16,13 +17,26 @@ const categories: ProjectCategory[] = [
 
 export function WorkFilterBar({ projects }: { projects: Project[] }) {
   const [active, setActive] = useState<ProjectCategory | "All">("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(
-    () =>
-      active === "All"
+    () => {
+      let result = active === "All"
         ? projects
-        : projects.filter((project) => project.categories.includes(active)),
-    [active, projects],
+        : projects.filter((project) => project.categories.includes(active));
+
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter((project) =>
+          project.title.toLowerCase().includes(query) ||
+          project.summary.toLowerCase().includes(query) ||
+          project.categories.some((cat) => cat.toLowerCase().includes(query))
+        );
+      }
+
+      return result;
+    },
+    [active, projects, searchQuery],
   );
 
   const flagships = filtered.filter((project) => project.kind === "flagship");
@@ -30,6 +44,26 @@ export function WorkFilterBar({ projects }: { projects: Project[] }) {
 
   return (
     <div>
+      {/* Search Bar */}
+      <div className="mb-6 relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-muted)]" size={18} />
+        <input
+          type="text"
+          placeholder="Search projects by name, technology, or category..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-12 py-3 bg-[var(--surface-secondary)] border border-[var(--line)] rounded-lg text-[var(--ink)] placeholder-[var(--ink-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-col gap-5 border-y border-[var(--line)] py-5 sm:flex-row sm:items-center sm:justify-between">
         <div
           role="group"

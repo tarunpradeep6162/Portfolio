@@ -10,6 +10,7 @@ import { InteractiveTimeline } from "@/components/about/InteractiveTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { WorkGallery } from "@/components/gallery/WorkGallery";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -212,6 +213,8 @@ export default function Home() {
           </div>
         </Container>
       </section>
+
+      <WorkGallery />
 
       <section
         id="contact"

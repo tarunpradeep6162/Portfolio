@@ -7,6 +7,10 @@ import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
 import { AnalyticsTracker } from "@/components/shared/AnalyticsTracker";
+import { Canvas3D } from "@/components/shared/Canvas3D";
+import { AudioToggle } from "@/components/shared/AudioToggle";
+import { SoundDesign } from "@/components/shared/SoundDesign";
+import { ScrollAnimationsRoot } from "@/components/shared/ScrollAnimationsRoot";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -47,6 +51,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SmoothScroll />
         <CustomCursor />
         <AnalyticsTracker />
+        <Canvas3D />
+        <AudioToggle />
+        <SoundDesign />
+        <ScrollAnimationsRoot />
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />

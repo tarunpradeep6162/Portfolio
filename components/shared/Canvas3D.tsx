@@ -19,7 +19,7 @@ export function Canvas3D() {
       const renderer = new WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
-      containerRef.current.appendChild(renderer.domElement);
+      containerRef.current!.appendChild(renderer.domElement);
 
       const geometry = new IcosahedronGeometry(2, 4);
       const material = new MeshPhongMaterial({

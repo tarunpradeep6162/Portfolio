@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { BlogPost } from "@/components/blog/BlogPost";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog";
+import { generateArticleSchema } from "@/lib/seo/schema";
+import { site } from "@/content/site";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -42,9 +44,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const relatedPosts = await getRelatedPosts(slug);
+  const schema = generateArticleSchema({
+    title: post.title,
+    description: post.description,
+    image: post.image,
+    datePublished: post.date,
+    author: post.author,
+    url: `${site.url}/blog/${slug}`,
+  });
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
       <section className="section-glow control-grid relative overflow-hidden bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36">
         <Container className="relative">
           <BlogPost post={post} />

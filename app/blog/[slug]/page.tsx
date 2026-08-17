@@ -6,11 +6,8 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { blogPosts } from "@/content/blog";
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({
-    slug: post.slug,
-  }));
-}
+// Use dynamic rendering on Vercel - fetch at request time instead of build time
+export const dynamic = 'auto';
 
 export async function generateMetadata(
   props: PageProps<"/blog/[slug]">,

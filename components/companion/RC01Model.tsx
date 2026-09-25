@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { CompanionState } from "@/lib/companion/state";
+import { GESTURE_DURATION_MS, robotSignals } from "@/lib/companion/robotSignals";
 
 const PALETTE = {
   graphite: "#131b24",
@@ -47,6 +48,7 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
   const visorRef = useRef<THREE.MeshStandardMaterial>(null);
+  const visorMeshRef = useRef<THREE.Mesh>(null);
   const chestSeamRef = useRef<THREE.MeshStandardMaterial>(null);
   const baseRingRef = useRef<THREE.MeshStandardMaterial>(null);
   const sensorRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -58,9 +60,44 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
   const lastState = useRef<CompanionState | null>(null);
 
   const clampedPointer = useRef(new THREE.Vector2(0, 0));
+  // Idle life: next blink / glance times and the current glance offset.
+  const nextBlinkAt = useRef(1.5);
+  const blinkStart = useRef(-1);
+  const nextGlanceAt = useRef(2);
+  const glance = useRef(new THREE.Vector2(0, 0));
 
   useFrame((frameState, delta) => {
     const t = frameState.clock.elapsedTime;
+    const nowMs = performance.now();
+    const signals = robotSignals;
+    const awake = state !== "sleep" && state !== "boot";
+
+    // Voice energy decays continuously; engines without word-boundary
+    // events still get a plausible talking rhythm while speech is active.
+    signals.voiceEnergy = Math.max(0, signals.voiceEnergy - delta * 3.2);
+    const voice = signals.speaking
+      ? Math.max(signals.voiceEnergy, 0.25 + Math.abs(Math.sin(t * 11)) * 0.35 * Math.abs(Math.sin(t * 2.7)))
+      : signals.voiceEnergy;
+
+    // Active gesture, if any, as 0..1 progress.
+    const gesture = signals.gesture;
+    let gestureProgress = -1;
+    if (gesture) {
+      gestureProgress = (nowMs - gesture.startedAt) / GESTURE_DURATION_MS[gesture.name];
+      if (gestureProgress >= 1) {
+        signals.gesture = null;
+        gestureProgress = -1;
+      }
+    }
+    const gestureName = gestureProgress >= 0 && gesture ? gesture.name : null;
+    // Smooth in/out envelope so gestures never snap.
+    const envelope = gestureProgress >= 0 ? Math.sin(Math.min(1, gestureProgress) * Math.PI) : 0;
+
+    // Saccades: small, quick re-targets every few seconds when idle.
+    if (awake && t > nextGlanceAt.current) {
+      glance.current.set((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.3);
+      nextGlanceAt.current = t + 1.8 + Math.random() * 3.2;
+    }
 
     if (lastState.current !== state) {
       lastState.current = state;
@@ -71,18 +108,76 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
 
     // Head tracking: only during idle/listening, clamped to a small safe cone,
     // damped rather than snapping - restrained, not chasing.
+    // Gaze priority: an explicit look-at (RC-01 is talking about something
+    // on the page) beats pointer tracking, which beats idle glances.
+    const gazeActive = signals.gaze.until > nowMs;
     const trackingAllowed = state === "idle" || state === "greeting";
-    const targetX = trackingAllowed ? THREE.MathUtils.clamp(pointer.x, -1, 1) : 0;
-    const targetY = trackingAllowed ? THREE.MathUtils.clamp(pointer.y, -1, 1) : 0;
+    let targetX = 0;
+    let targetY = 0;
+    if (gazeActive) {
+      targetX = signals.gaze.x * 2.2;
+      targetY = signals.gaze.y * 1.6;
+    } else if (trackingAllowed) {
+      targetX = THREE.MathUtils.clamp(pointer.x, -1, 1) + glance.current.x;
+      targetY = THREE.MathUtils.clamp(pointer.y, -1, 1) + glance.current.y;
+    }
     const pointerDamp = clampedPointer.current;
-    pointerDamp.x = damp(pointerDamp.x, targetX, 3, delta);
-    pointerDamp.y = damp(pointerDamp.y, targetY, 3, delta);
+    const gazeSpeed = gazeActive ? 5 : 3;
+    pointerDamp.x = damp(pointerDamp.x, targetX, gazeSpeed, delta);
+    pointerDamp.y = damp(pointerDamp.y, targetY, gazeSpeed, delta);
 
     if (headRef.current) {
-      const maxYaw = THREE.MathUtils.degToRad(12);
-      const maxPitch = THREE.MathUtils.degToRad(6);
-      headRef.current.rotation.y = pointerDamp.x * maxYaw;
-      headRef.current.rotation.x = -pointerDamp.y * maxPitch;
+      const maxYaw = THREE.MathUtils.degToRad(gazeActive ? 28 : 12);
+      const maxPitch = THREE.MathUtils.degToRad(gazeActive ? 12 : 6);
+      let pitch = -THREE.MathUtils.clamp(pointerDamp.y, -1.6, 1.6) * maxPitch;
+      let roll = 0;
+      if (gestureName === "nod") {
+        pitch += Math.sin(gestureProgress * Math.PI * 4) * THREE.MathUtils.degToRad(11) * envelope;
+      } else if (gestureName === "shrug") {
+        roll = THREE.MathUtils.degToRad(9) * envelope;
+      } else if (state === "thinking") {
+        roll = THREE.MathUtils.degToRad(6);
+      }
+      headRef.current.rotation.y = THREE.MathUtils.clamp(pointerDamp.x, -2.2, 2.2) * maxYaw;
+      headRef.current.rotation.x = pitch;
+      headRef.current.rotation.z = damp(headRef.current.rotation.z, roll, 6, delta);
+    }
+
+    // Body: hover bob, slow weight shift, attention lean, scroll flinch.
+    if (rootRef.current) {
+      const flinchAge = (nowMs - signals.flinchAt) / 1000;
+      const flinchAmount = flinchAge < 0.6 ? Math.exp(-flinchAge * 7) : 0;
+      const hop = gestureName === "celebrate" ? Math.abs(Math.sin(gestureProgress * Math.PI * 3)) * 0.06 : 0;
+      const bob = state === "sleep" ? -0.03 : Math.sin(t * 1.3) * 0.015;
+      rootRef.current.position.y = damp(rootRef.current.position.y, 0.32 + bob + hop, 8, delta);
+      rootRef.current.position.z = damp(rootRef.current.position.z, -flinchAmount * 0.25, 14, delta);
+      rootRef.current.rotation.z = damp(
+        rootRef.current.rotation.z,
+        awake ? Math.sin(t * 0.35) * THREE.MathUtils.degToRad(1.4) : 0,
+        2,
+        delta,
+      );
+      const lean = THREE.MathUtils.degToRad(signals.attention * 7 - flinchAmount * 9);
+      rootRef.current.rotation.x = damp(rootRef.current.rotation.x, lean, 4, delta);
+    }
+
+    // Blink: a quick vertical squash of the visor every few seconds.
+    if (visorMeshRef.current) {
+      if (awake && t > nextBlinkAt.current) {
+        blinkStart.current = t;
+        // Occasional double blink reads as more organic than a metronome.
+        nextBlinkAt.current = t + (Math.random() < 0.2 ? 0.25 : 2.5 + Math.random() * 4);
+      }
+      const blinkAge = t - blinkStart.current;
+      const blink = blinkStart.current >= 0 && blinkAge < 0.14 ? Math.sin((blinkAge / 0.14) * Math.PI) : 0;
+      const sleepSquash = state === "sleep" ? 0.35 : 1;
+      const talk = 1 + voice * 0.45;
+      visorMeshRef.current.scale.y = damp(
+        visorMeshRef.current.scale.y,
+        Math.max(0.12, (1 - blink * 0.88) * sleepSquash * talk),
+        blink > 0 ? 40 : 14,
+        delta,
+      );
     }
 
     // Breathing / boot rise on the torso.
@@ -120,6 +215,27 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       const wave = Math.sin(t * 2.4) * 10;
       leftTarget = THREE.MathUtils.degToRad(10 + wave);
       rightTarget = THREE.MathUtils.degToRad(10 - wave);
+    } else if (state === "thinking") {
+      // Hand-to-chin-ish: one arm half raised while it "considers".
+      rightTarget = THREE.MathUtils.degToRad(32);
+    }
+
+    // Gestures layer on top of the state pose with a smooth envelope.
+    if (gestureName === "wave") {
+      rightTarget = THREE.MathUtils.lerp(
+        rightTarget,
+        THREE.MathUtils.degToRad(125 + Math.sin(gestureProgress * Math.PI * 6) * 18),
+        envelope,
+      );
+    } else if (gestureName === "point") {
+      rightTarget = THREE.MathUtils.lerp(rightTarget, THREE.MathUtils.degToRad(70), envelope);
+    } else if (gestureName === "shrug") {
+      leftTarget = THREE.MathUtils.lerp(leftTarget, THREE.MathUtils.degToRad(34), envelope);
+      rightTarget = THREE.MathUtils.lerp(rightTarget, THREE.MathUtils.degToRad(34), envelope);
+    } else if (gestureName === "celebrate") {
+      const pump = THREE.MathUtils.degToRad(110 + Math.sin(gestureProgress * Math.PI * 6) * 15);
+      leftTarget = THREE.MathUtils.lerp(leftTarget, pump, envelope);
+      rightTarget = THREE.MathUtils.lerp(rightTarget, pump, envelope);
     }
 
     if (leftArmRef.current) {
@@ -157,6 +273,8 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       } else if (state === "briefing" && accentColor) {
         color = accentColor;
       }
+      // Speech drives the visor like a mouth: brighter on each syllable.
+      intensity += voice * 1.1;
       visorRef.current.emissiveIntensity = damp(
         visorRef.current.emissiveIntensity,
         intensity,
@@ -380,7 +498,7 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
           <boxGeometry args={[0.46, 0.04, 0.05]} />
           <meshStandardMaterial color={PALETTE.panel} metalness={0.4} roughness={0.4} />
         </mesh>
-        <mesh position={[0, 0.03, 0.37]}>
+        <mesh ref={visorMeshRef} position={[0, 0.03, 0.37]}>
           <boxGeometry args={[0.42, 0.09, 0.03]} />
           <meshStandardMaterial
             ref={visorRef}

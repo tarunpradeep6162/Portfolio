@@ -20,6 +20,7 @@ import {
   Maximize2,
   Minimize2,
   X,
+  MessageSquare,
 } from "lucide-react";
 import {
   scripts,
@@ -35,13 +36,31 @@ import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useActiveSection } from "@/lib/companion/useActiveSection";
 import { useCompanionSound } from "@/lib/companion/useCompanionSound";
 import { dispatchObservatoryHighlight } from "@/lib/companion/observatoryHighlight";
+import {
+  flinch,
+  lookAtElement,
+  playGesture,
+  setAttention,
+} from "@/lib/companion/robotSignals";
+import { useVoiceInput } from "@/lib/companion/useVoiceInput";
+import {
+  ensureMemory,
+  forgetMemory,
+  recordAudience,
+  returningGreeting,
+} from "@/lib/companion/visitorMemory";
+import type { Rc01Action } from "@/lib/rc01/actions";
+import { suggestionsFor } from "@/lib/rc01/suggestions";
+import { useRc01Chat } from "@/lib/rc01/useRc01Chat";
+import { site } from "@/content/site";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { qualityPresets, resolveQualityTier, type CompanionState } from "@/lib/companion/state";
-import { useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
+import { useExperienceDispatch, useExperienceState } from "@/lib/v6/ExperienceProvider";
 import { CompanionCanvas } from "./CompanionCanvas";
 import { CompanionPortrait } from "./CompanionPortrait";
 import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
+import { CompanionChat } from "./CompanionChat";
 import { cn } from "@/lib/cn";
 
 const SENTENCE_FALLBACK_MS = 3200;
@@ -53,7 +72,12 @@ const SECTION_LABELS: Record<string, string> = {
   contact: "Final route",
 };
 
-type Subpanel = "none" | "tours" | "console";
+type Subpanel = "none" | "tours" | "console" | "chat";
+
+// px per ms of scroll that reads as a "whoa" moment for the robot.
+const FLINCH_SCROLL_VELOCITY = 4.5;
+// Seconds on one page/section before RC-01 leans in and offers depth.
+const ATTENTION_DWELL_SECONDS = 15;
 
 interface CompanionExperienceProps {
   onDeactivate: () => void;
@@ -65,6 +89,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const speech = useCompanionSpeech();
   const { preferences, update } = useCompanionPreferences();
   const experienceDispatch = useExperienceDispatch();
+  const { visitorPath } = useExperienceState();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -414,6 +439,214 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
     [playScript, update, preferences.muted, handleStop, resetInactivityTimer, experienceDispatch],
   );
 
+  // -------------------------------------------------------------------------
+  // Conversational mode: awareness, memory, page actions, live speech.
+  // -------------------------------------------------------------------------
+
+  // Awareness: how long the visitor has stayed on this page/section. Ticks
+  // every 5s (cheap) and resets whenever either changes.
+  const [dwellSeconds, setDwellSeconds] = useState(0);
+  const dwellStartRef = useRef(0);
+  useEffect(() => {
+    dwellStartRef.current = Date.now();
+    const reset = window.setTimeout(() => setDwellSeconds(0), 0);
+    const id = window.setInterval(() => {
+      setDwellSeconds(Math.round((Date.now() - dwellStartRef.current) / 1000));
+    }, 5000);
+    return () => {
+      window.clearTimeout(reset);
+      window.clearInterval(id);
+    };
+  }, [pathname, activeSection]);
+
+  // Leans in when the visitor is reading attentively; straightens up again
+  // as soon as they move on.
+  useEffect(() => {
+    setAttention(dwellSeconds >= ATTENTION_DWELL_SECONDS ? 1 : 0);
+  }, [dwellSeconds]);
+  useEffect(() => () => setAttention(0), []);
+
+  // Memory: starts on first activation, local to this device only.
+  const [memory, setMemory] = useState(() => (typeof window === "undefined" ? null : ensureMemory()));
+  const greetedRef = useRef(false);
+
+  const chatContext = useCallback(
+    () => ({
+      path: pathname ?? "/",
+      section: pathname === "/" ? activeSection : null,
+      audience: visitorPath,
+      dwellSeconds: Math.round((Date.now() - dwellStartRef.current) / 1000),
+      returningVisitor: (memory?.visits ?? 0) > 1,
+    }),
+    [pathname, activeSection, visitorPath, memory],
+  );
+
+  const scrollToSection = useCallback(
+    (sectionId: string) => {
+      const element = document.getElementById(sectionId);
+      element?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      window.setTimeout(() => lookAtElement(element, panelRef.current), reducedMotion ? 0 : 650);
+      return element;
+    },
+    [reducedMotion],
+  );
+
+  const executeAction = useCallback(
+    (action: Rc01Action) => {
+      resetInactivityTimer();
+      switch (action.type) {
+        case "navigate": {
+          playGesture("point");
+          sound.play("servo");
+          const [path, hash] = action.path.split("#");
+          if (path === pathname && hash) scrollToSection(hash);
+          else router.push(action.path);
+          break;
+        }
+        case "scroll_to_section":
+          playGesture("point");
+          if (pathname === "/") scrollToSection(action.section);
+          else router.push(`/#${action.section}`);
+          break;
+        case "highlight_spine_stage":
+          if (pathname !== "/") break;
+          playGesture("point");
+          scrollToSection("spine");
+          window.setTimeout(() => dispatchObservatoryHighlight(action.stage), reducedMotion ? 0 : 650);
+          break;
+        case "gesture":
+          playGesture(action.gesture);
+          break;
+        case "set_audience":
+          experienceDispatch({ type: "VISITOR_PATH_SET", path: action.audience });
+          recordAudience(action.audience);
+          break;
+        case "copy_email":
+          void navigator.clipboard?.writeText(site.email).catch(() => undefined);
+          playGesture("nod");
+          break;
+      }
+    },
+    [pathname, router, reducedMotion, scrollToSection, experienceDispatch, sound, resetInactivityTimer],
+  );
+
+  const firstSentenceRef = useRef(false);
+  const chat = useRc01Chat({
+    onStart: () => {
+      resetInactivityTimer();
+      clearFallbackTimer();
+      speech.stop();
+      setCurrentScript(null);
+      firstSentenceRef.current = false;
+      setCompanionState("thinking");
+      sound.play("think");
+      if (usingRealSpeech) speech.beginStream();
+    },
+    onSentence: (sentence) => {
+      if (!firstSentenceRef.current) {
+        firstSentenceRef.current = true;
+        setCompanionState("briefing");
+      }
+      speech.enqueue(sentence);
+    },
+    onAction: executeAction,
+    onComplete: (outcome) => {
+      if (outcome === "error") {
+        speech.endStream();
+        sound.play("error");
+        setCompanionState("error");
+        window.setTimeout(() => setCompanionState((p) => (p === "error" ? "idle" : p)), 900);
+        return;
+      }
+      sound.play("message");
+      speech.endStream(() => {
+        setCompanionState((previous) =>
+          previous === "briefing" || previous === "thinking" ? "idle" : previous,
+        );
+      });
+      if (!usingRealSpeech) setCompanionState("idle");
+    },
+  });
+
+  const askQuestion = useCallback(
+    (text: string) => {
+      void chat.send(text, chatContext());
+    },
+    [chat, chatContext],
+  );
+
+  const voice = useVoiceInput(askQuestion);
+
+  const openChat = useCallback(() => {
+    setSubpanel((current) => (current === "chat" ? "none" : "chat"));
+    setMobileExpanded(true);
+    if (!greetedRef.current) {
+      greetedRef.current = true;
+      const greeting = returningGreeting(memory);
+      if (greeting) chat.addLocalMessage(greeting);
+      playGesture("wave");
+    }
+  }, [chat, memory]);
+
+  const handleForget = useCallback(() => {
+    forgetMemory();
+    setMemory(null);
+  }, []);
+
+  const suggestions = suggestionsFor({
+    path: pathname ?? "/",
+    section: pathname === "/" ? activeSection : null,
+    audience: visitorPath,
+    dwellSeconds,
+  });
+
+  // Reactions: flinch at a fast scroll, wake up from sleep on any activity.
+  const stateRef = useRef(companionState);
+  useEffect(() => {
+    stateRef.current = companionState;
+  }, [companionState]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let lastT = performance.now();
+    let lastFlinch = 0;
+    const onScroll = () => {
+      const now = performance.now();
+      const velocity = Math.abs(window.scrollY - lastY) / Math.max(1, now - lastT);
+      lastY = window.scrollY;
+      lastT = now;
+      if (velocity > FLINCH_SCROLL_VELOCITY && now - lastFlinch > 900) {
+        lastFlinch = now;
+        flinch();
+      }
+    };
+    const wake = () => {
+      if (stateRef.current !== "sleep") return;
+      resetInactivityTimer();
+      setCompanionState("greeting");
+      sound.play("servo");
+      window.setTimeout(() => setCompanionState((p) => (p === "greeting" ? "idle" : p)), 900);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pointerdown", wake);
+    window.addEventListener("keydown", wake);
+    window.addEventListener("scroll", wake, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+      window.removeEventListener("scroll", wake);
+    };
+  }, [resetInactivityTimer, sound]);
+
+  // Listening posture: lean in while the microphone is open.
+  useEffect(() => {
+    if (voice.state === "listening") {
+      sound.play("listen");
+      setAttention(1);
+    }
+  }, [voice.state, sound]);
+
   const handleEscape = useCallback(() => {
     if (subpanel !== "none") {
       setSubpanel("none");
@@ -600,6 +833,14 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <button
           type="button"
+          onClick={openChat}
+          aria-pressed={subpanel === "chat"}
+          className="flex items-center gap-1.5 rounded border border-[var(--color-signal-lime)]/50 bg-[var(--color-signal-lime)]/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-signal-lime)] hover:bg-[var(--color-signal-lime)]/20"
+        >
+          <MessageSquare size={13} aria-hidden /> Ask
+        </button>
+        <button
+          type="button"
           onClick={handleSpeak}
           className="flex items-center gap-1.5 rounded border border-white/15 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)] hover:text-[var(--color-signal-lime)]"
         >
@@ -783,6 +1024,24 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           activeTourId={activeTourId}
           onSelect={selectTour}
           onClose={closeSubpanel}
+        />
+      )}
+      {subpanel === "chat" && (
+        <CompanionChat
+          availability={chat.availability}
+          activity={chat.activity}
+          messages={chat.messages}
+          suggestions={suggestions}
+          onSubmit={askQuestion}
+          onStop={() => {
+            chat.stop();
+            speech.stop();
+          }}
+          onClose={closeSubpanel}
+          onOpenConsole={() => setSubpanel("console")}
+          voice={voice}
+          memoryActive={memory !== null}
+          onForget={handleForget}
         />
       )}
       {subpanel === "console" && (

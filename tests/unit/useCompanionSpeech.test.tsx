@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCompanionSpeech } from "@/lib/companion/useCompanionSpeech";
+import { pickVoice, useCompanionSpeech } from "@/lib/companion/useCompanionSpeech";
 
 class FakeUtterance {
   text: string;
@@ -120,5 +120,71 @@ describe("useCompanionSpeech", () => {
     });
     // Only the first, pre-mute utterance was ever created.
     expect(spoken).toHaveLength(1);
+  });
+
+  it("streams: speaks the first sentence immediately and queues the rest as they arrive", () => {
+    const { spoken } = installFakeSpeechSynthesis();
+    const { result } = renderHook(() => useCompanionSpeech());
+    const onDone = vi.fn();
+
+    act(() => result.current.beginStream());
+    act(() => result.current.enqueue("First."));
+    expect(spoken.map((u) => u.text)).toEqual(["First."]);
+
+    act(() => result.current.enqueue("Second."));
+    // Still speaking the first - the second waits its turn.
+    expect(spoken).toHaveLength(1);
+
+    act(() => spoken[0].onend?.());
+    expect(spoken[1].text).toBe("Second.");
+
+    // Ran out of sentences while the stream is open: parks, doesn't finish.
+    act(() => spoken[1].onend?.());
+    expect(onDone).not.toHaveBeenCalled();
+    expect(result.current.playbackState).toBe("speaking");
+
+    // A late sentence resumes from where it parked.
+    act(() => result.current.enqueue("Third."));
+    expect(spoken[2].text).toBe("Third.");
+
+    act(() => result.current.endStream(onDone));
+    expect(onDone).not.toHaveBeenCalled(); // "Third." still playing
+    act(() => spoken[2].onend?.());
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(result.current.playbackState).toBe("idle");
+  });
+
+  it("endStream on an empty or already-drained stream completes immediately", () => {
+    installFakeSpeechSynthesis();
+    const { result } = renderHook(() => useCompanionSpeech());
+    const onDone = vi.fn();
+    act(() => result.current.beginStream());
+    act(() => result.current.endStream(onDone));
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays silent in streaming mode while muted", () => {
+    const { spoken } = installFakeSpeechSynthesis();
+    const { result } = renderHook(() => useCompanionSpeech());
+    act(() => result.current.setMuted(true));
+    act(() => result.current.beginStream());
+    act(() => result.current.enqueue("Nope."));
+    expect(spoken).toHaveLength(0);
+  });
+});
+
+describe("pickVoice", () => {
+  const voice = (name: string, lang: string, isDefault = false) =>
+    ({ name, lang, default: isDefault }) as SpeechSynthesisVoice;
+
+  it("prefers a natural/neural English voice", () => {
+    expect(
+      pickVoice([voice("Robot Basic", "en-US", true), voice("Microsoft Aria Online (Natural)", "en-US")])?.name,
+    ).toBe("Microsoft Aria Online (Natural)");
+  });
+
+  it("falls back to the default English voice, ignoring other languages", () => {
+    expect(pickVoice([voice("Thomas", "fr-FR", true), voice("Fred", "en-US", true)])?.name).toBe("Fred");
+    expect(pickVoice([voice("Thomas", "fr-FR")])).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ import { Bot } from "lucide-react";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useExperienceState, useExperienceDispatch } from "@/lib/v6/ExperienceProvider";
 import { CompanionPortrait } from "./CompanionPortrait";
+import { recordPath, recordSession } from "@/lib/companion/visitorMemory";
 
 const CompanionExperience = dynamic(
   () => import("./CompanionExperience").then((mod) => mod.CompanionExperience),
@@ -23,7 +24,7 @@ const CompanionExperience = dynamic(
  * 404 page" at once - a 404 is, by definition, any pathname not in this
  * list, so it never needs special detection.
  */
-const ALLOWED_ROUTE_PREFIXES = ["/work", "/about", "/contact"];
+const ALLOWED_ROUTE_PREFIXES = ["/work", "/about", "/contact", "/blog"];
 
 function isCompanionAllowedRoute(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -119,6 +120,14 @@ export function CompanionRoot() {
       return () => window.clearTimeout(id);
     }
   }, [allowed, active, dispatch]);
+
+  // Visitor memory is only ever written once it exists - i.e. after the
+  // visitor has activated RC-01 at least once (see visitorMemory.ts).
+  useEffect(() => {
+    if (!pathname) return;
+    recordSession();
+    recordPath(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (!active && wasActive.current) {

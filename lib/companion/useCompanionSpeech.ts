@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { pulseVoice, setSpeaking } from "./robotSignals";
 
 export type SpeechPlaybackState = "idle" | "speaking" | "paused";
 
@@ -16,6 +17,32 @@ interface SpeechController {
   replay: () => void;
   muted: boolean;
   setMuted: (muted: boolean) => void;
+  /**
+   * Streaming mode for live answers: open a session, append sentences as
+   * they arrive, then close it. Speech starts on the first sentence rather
+   * than after the whole answer has generated.
+   */
+  beginStream: () => void;
+  enqueue: (line: string) => void;
+  endStream: (onDone?: () => void) => void;
+}
+
+/**
+ * Picks one consistent, natural-sounding English voice so RC-01 sounds like
+ * the same character on every visit. Engines expose their neural/cloud
+ * voices under recognisable names; the first match wins, falling back to the
+ * platform default English voice.
+ */
+const PREFERRED_VOICE = /(natural|neural|online|premium|enhanced|google (uk|us) english|samantha|daniel|aria|guy|jenny)/i;
+
+export function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  const english = voices.filter((voice) => /^en(-|_|$)/i.test(voice.lang));
+  return (
+    english.find((voice) => PREFERRED_VOICE.test(voice.name)) ??
+    english.find((voice) => voice.default) ??
+    english[0] ??
+    null
+  );
 }
 
 function detectSupport(): boolean {
@@ -45,6 +72,22 @@ export function useCompanionSpeech(): SpeechController {
   const linesRef = useRef<string[]>([]);
   const indexRef = useRef(-1);
   const onDoneRef = useRef<(() => void) | undefined>(undefined);
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  // Streaming session: while open, running out of lines means "wait for the
+  // next sentence", not "finished".
+  const streamOpenRef = useRef(false);
+  const waitingRef = useRef(false);
+
+  useEffect(() => {
+    if (!supported || typeof window.speechSynthesis.getVoices !== "function") return;
+    const synth = window.speechSynthesis;
+    const load = () => {
+      voiceRef.current = pickVoice(synth.getVoices());
+    };
+    load();
+    synth.addEventListener?.("voiceschanged", load);
+    return () => synth.removeEventListener?.("voiceschanged", load);
+  }, [supported]);
 
   useEffect(() => {
     return () => {
@@ -55,6 +98,8 @@ export function useCompanionSpeech(): SpeechController {
     };
   }, [supported]);
 
+  const speakNextRef = useRef<((index: number) => void) | null>(null);
+
   const speakFromIndex = useCallback(
     (startIndex: number) => {
       if (!supported) return;
@@ -63,24 +108,43 @@ export function useCompanionSpeech(): SpeechController {
 
       const speakNext = (index: number) => {
         if (index >= linesRef.current.length) {
+          if (streamOpenRef.current) {
+            // More sentences are still being generated - park here.
+            indexRef.current = index;
+            waitingRef.current = true;
+            return;
+          }
+          setSpeaking(false);
           setPlaybackState("idle");
           setActiveLineIndex(-1);
           onDoneRef.current?.();
           return;
         }
+        waitingRef.current = false;
         indexRef.current = index;
         setActiveLineIndex(index);
         const utterance = new SpeechSynthesisUtterance(linesRef.current[index]);
-        utterance.rate = 1;
+        utterance.rate = 1.03;
+        utterance.pitch = 0.92;
+        if (voiceRef.current) utterance.voice = voiceRef.current;
+        utterance.onstart = () => setSpeaking(true);
+        // Word boundaries drive the visor's "mouth" pulse. Engines that
+        // don't emit them still get a synthetic pulse from the model while
+        // `speaking` is true.
+        utterance.onboundary = (event) => {
+          if (event.name === "word") pulseVoice();
+        };
         utterance.onend = () => {
           if (indexRef.current === index) speakNext(index + 1);
         };
         utterance.onerror = () => {
+          setSpeaking(false);
           setPlaybackState("idle");
           setActiveLineIndex(-1);
         };
         synth.speak(utterance);
       };
+      speakNextRef.current = speakNext;
 
       setPlaybackState("speaking");
       speakNext(startIndex);
@@ -112,6 +176,9 @@ export function useCompanionSpeech(): SpeechController {
 
   const stop = useCallback(() => {
     if (supported) window.speechSynthesis.cancel();
+    streamOpenRef.current = false;
+    waitingRef.current = false;
+    setSpeaking(false);
     indexRef.current = -1;
     onDoneRef.current = undefined;
     setPlaybackState("idle");
@@ -137,6 +204,46 @@ export function useCompanionSpeech(): SpeechController {
     [supported],
   );
 
+  const beginStream = useCallback(() => {
+    if (!supported || muted) return;
+    window.speechSynthesis.cancel();
+    linesRef.current = [];
+    onDoneRef.current = undefined;
+    streamOpenRef.current = true;
+    waitingRef.current = false;
+    indexRef.current = -1;
+    setPlaybackState("speaking");
+  }, [supported, muted]);
+
+  const enqueue = useCallback(
+    (line: string) => {
+      if (!streamOpenRef.current || !line.trim()) return;
+      linesRef.current = [...linesRef.current, line.trim()];
+      if (indexRef.current === -1) {
+        speakFromIndex(0);
+      } else if (waitingRef.current) {
+        speakNextRef.current?.(indexRef.current);
+      }
+    },
+    [speakFromIndex],
+  );
+
+  const endStream = useCallback((onDone?: () => void) => {
+    if (!streamOpenRef.current) {
+      onDone?.();
+      return;
+    }
+    streamOpenRef.current = false;
+    onDoneRef.current = onDone;
+    if (waitingRef.current || indexRef.current === -1) {
+      waitingRef.current = false;
+      setSpeaking(false);
+      setPlaybackState("idle");
+      setActiveLineIndex(-1);
+      onDone?.();
+    }
+  }, []);
+
   return {
     supported,
     playbackState,
@@ -148,5 +255,8 @@ export function useCompanionSpeech(): SpeechController {
     replay,
     muted,
     setMuted,
+    beginStream,
+    enqueue,
+    endStream,
   };
 }

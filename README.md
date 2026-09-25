@@ -35,26 +35,16 @@ npm run start -- -p 3200
 
 ## Project structure
 
-- `app/` — routes (`/`, `/work`, `/work/[slug]`, `/about`, `/resume`, `/contact`), plus `sitemap.ts`, `robots.ts`, `icon.tsx`, `opengraph-image.tsx`, `not-found.tsx`.
-- `components/` — organized by domain (`hero/`, `spine/`, `work/`, `about/`, `contact/`, `layout/`, `ui/`, `shared/`).
+- `app/` — routes (`/`, `/work`, `/work/[slug]`, `/blog`, `/blog/[slug]`, `/about`, `/resume`, `/contact`), plus `sitemap.ts`, `robots.ts`, `icon.tsx`, `opengraph-image.tsx`, `not-found.tsx`.
+- `components/` — organized by domain (`hero/`, `spine/`, `work/`, `blog/`, `atlas/`, `companion/`, `about/`, `contact/`, `layout/`, `ui/`, `shared/`).
 - `content/` — all site copy and data as typed TypeScript, not hardcoded in components. See **Editing content** below.
-- `lib/` — motion tokens/hooks and the SEO metadata builder.
+- `lib/` — motion tokens/hooks, the SEO metadata builder, analytics events, and companion/experience state.
 - `tests/unit/` — Vitest + React Testing Library. `tests/e2e/` — Playwright.
-- `scripts/` — standalone Playwright scripts for screenshotting routes/breakpoints outside the test suite (used during development, not part of `npm test`).
+- `scripts/` — `audit-static-html.mjs` (`npm run audit:html`) and `ci/` helpers used by the Jenkinsfile.
+- `docs/` — CI/CD pipeline documentation.
 
 The display, body, and mono fonts are self-hosted through Fontsource packages,
 so production builds do not depend on Google Fonts being reachable.
-
-To capture the complete V4 review set while the production server is running
-on port 3200:
-
-```bash
-node scripts/capture-v4.mjs
-```
-
-This writes viewport and full-page captures to
-`/home/tarun/screenshots/award-experience-v4` by default. Set
-`V4_SCREENSHOT_DIR` or `V4_BASE_URL` to override either location.
 
 ## Editing content
 

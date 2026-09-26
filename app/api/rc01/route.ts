@@ -304,7 +304,9 @@ function streamAlternative(
             turns: withContext,
             maxTokens: MAX_TOKENS,
             signal: request.signal,
-          })) {
+          }, (model, error) =>
+            console.warn(JSON.stringify({ event: "rc01.free_model_failover", model, status: error.status })),
+          )) {
             sentText = true;
             send({ type: "text", text });
           }

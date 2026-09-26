@@ -20,7 +20,8 @@ describe("free provider", () => {
   it("prefers Gemini, then Groq, else none", () => {
     expect(freeProviderConfig({ GEMINI_API_KEY: "g", GROQ_API_KEY: "q" } as unknown as NodeJS.ProcessEnv)?.name).toBe("gemini");
     expect(freeProviderConfig({ GROQ_API_KEY: "q" } as unknown as NodeJS.ProcessEnv)?.name).toBe("groq");
-    expect(freeProviderConfig({ GROQ_API_KEY: "q", RC01_FREE_MODEL: "m" } as unknown as NodeJS.ProcessEnv)?.model).toBe("m");
+    expect(freeProviderConfig({ GROQ_API_KEY: "q", RC01_FREE_MODEL: "a, b" } as unknown as NodeJS.ProcessEnv)?.models).toEqual(["a", "b"]);
+    expect(freeProviderConfig({ GEMINI_API_KEY: "g" } as unknown as NodeJS.ProcessEnv)?.models[0]).toBe("gemini-3.8-flash");
     expect(freeProviderConfig({} as unknown as NodeJS.ProcessEnv)).toBeNull();
   });
 
@@ -61,5 +62,31 @@ describe("free provider", () => {
     expect(FREE_SYSTEM_PROMPT).toContain("# Boundaries");
     expect(FREE_SYSTEM_PROMPT).toContain("# Knowledge base");
     expect(FREE_SYSTEM_PROMPT.length).toBeLessThan(SYSTEM_PROMPT.length);
+  });
+
+  it("fails over to the next model when one is overloaded, before any text", async () => {
+    const tried: string[] = [];
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      const model = JSON.parse(String(init.body)).model as string;
+      tried.push(model);
+      if (model === "busy") return new Response("high demand", { status: 503 });
+      return sseResponse(['data: {"choices":[{"delta":{"content":"from ' + model + '"}}]}\n\n', "data: [DONE]\n\n"]);
+    }) as unknown as typeof fetch;
+    const config = { ...freeProviderConfig({ GEMINI_API_KEY: "k" } as unknown as NodeJS.ProcessEnv)!, models: ["busy", "backup"] };
+    const failovers: string[] = [];
+    let out = "";
+    for await (const t of streamFreeChat(config, { system: "", turns: [], maxTokens: 5, fetchImpl }, (m) => failovers.push(m))) out += t;
+    expect(out).toBe("from backup");
+    expect(tried).toEqual(["busy", "backup"]);
+    expect(failovers).toEqual(["busy"]);
+  });
+
+  it("does not fail over on auth errors", async () => {
+    const fetchImpl = (async () => new Response("bad key", { status: 401 })) as unknown as typeof fetch;
+    const config = { ...freeProviderConfig({ GEMINI_API_KEY: "k" } as unknown as NodeJS.ProcessEnv)!, models: ["a", "b"] };
+    const run = async () => {
+      for await (const _ of streamFreeChat(config, { system: "", turns: [], maxTokens: 1, fetchImpl })) void _;
+    };
+    await expect(run()).rejects.toMatchObject({ status: 401 });
   });
 });

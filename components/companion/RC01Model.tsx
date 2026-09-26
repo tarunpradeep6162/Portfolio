@@ -3,71 +3,92 @@
    mutable GPU-side render resources; mutating them per frame inside useFrame
    (instead of re-rendering React) is the intended react-three-fiber pattern. */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { CompanionState } from "@/lib/companion/state";
 import { GESTURE_DURATION_MS, robotSignals } from "@/lib/companion/robotSignals";
+import { buildAvatar } from "@/lib/avatar/buildAvatar";
 
-/** The hologram portrait shown on the face screen (public/rc01/). */
+/** The hologram portrait shown on the visor (public/rc01/). */
 const FACE_TEXTURE_URL = "/rc01/face-holo.webp";
 
-// Black-chrome armour with lime light strips - matched to Tarun's
-// character concept art.
 const PALETTE = {
-  shell: "#22262d",
-  shellShade: "#121519",
-  joint: "#0b0d10",
-  glass: "#05080c",
-  lime: "#d8ff4f",
+  lime: "#c2ff1f",
   blue: "#748cff",
   coral: "#ff6847",
 };
+
+const JOINTS = [
+  "hips",
+  "spine",
+  "chest",
+  "neck",
+  "head",
+  "upperArmL",
+  "upperArmR",
+  "forearmL",
+  "forearmR",
+  "handL",
+  "handR",
+  "hipL",
+  "hipR",
+  "kneeL",
+  "kneeR",
+] as const;
+type Joint = (typeof JOINTS)[number];
 
 function damp(current: number, target: number, lambda: number, delta: number) {
   return THREE.MathUtils.damp(current, target, lambda, delta);
 }
 
+const deg = THREE.MathUtils.degToRad;
+
 interface RC01ModelProps {
   state: CompanionState;
   fullEmissiveDetail: boolean;
-  /** Project-specific eye accent during a project briefing (v5.1). */
+  /** Project-specific light-strip accent during a project briefing (v5.1). */
   accentColor?: string;
 }
 
 /**
- * RC-01, v8: Tarun's robot double - black-chrome armour with lime light
- * strips (from his character concept art), and his own face projected as a
- * lime hologram on the glass face screen. The hologram flickers on at boot,
- * brightens with his voice while speaking, glitches on errors and dims to
- * standby in sleep. Until the portrait texture has loaded (or if it fails),
- * the original emissive eyes and speech bar show instead.
- *
- * v7 base: a black
- * glass face screen with two expressive emissive eyes and a speech bar,
- * floating arms, antenna, ear lights and a hover thruster - lit by a
- * procedural studio environment map so the shell has real reflections.
- * Still fully procedural (no downloaded meshes); all body language is
- * driven by `robotSignals` + the companion state machine.
+ * RC-01, v9: Tarun's armoured digital twin (lib/avatar/buildAvatar.ts - the
+ * same model as public/avatar/tarun-armour.glb), puppeted live by the
+ * companion state machine and `robotSignals`: head gaze and pointer
+ * tracking, nods and shrugs, waving / pointing / celebrating arms, a
+ * breathing idle, and light strips + visor hologram that react to state
+ * (boot flicker, thinking pulse, coral on error, voice glow, dim in sleep).
+ * Framed from the knees up so the face reads inside the companion panel.
  */
 export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelProps) {
   const rootRef = useRef<THREE.Group>(null);
-  const torsoRef = useRef<THREE.Group>(null);
-  const headRef = useRef<THREE.Group>(null);
-  const eyesRef = useRef<THREE.Group>(null);
-  const leftEyeRef = useRef<THREE.Mesh>(null);
-  const rightEyeRef = useRef<THREE.Mesh>(null);
-  const mouthRef = useRef<THREE.Mesh>(null);
-  const leftArmRef = useRef<THREE.Group>(null);
-  const rightArmRef = useRef<THREE.Group>(null);
-  const thrusterRef = useRef<THREE.Mesh>(null);
-  const faceRef = useRef<THREE.Mesh>(null);
-  const [faceReady, setFaceReady] = useState(false);
 
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const pointer = useThree((s) => s.pointer);
+
+  const avatar = useMemo(() => buildAvatar(), []);
+  const rig = useMemo(() => {
+    const joints = {} as Record<Joint, THREE.Object3D>;
+    const base = {} as Record<Joint, THREE.Euler>;
+    for (const name of JOINTS) {
+      const obj = avatar.root.getObjectByName(name);
+      if (!obj) throw new Error(`RC-01 rig is missing joint "${name}"`);
+      joints[name] = obj;
+      base[name] = obj.rotation.clone();
+    }
+    const faceMesh = avatar.root.getObjectByName("hologramFace") as THREE.Mesh;
+    const face = faceMesh.material as THREE.MeshStandardMaterial;
+    face.opacity = 0;
+    // Shadows are off in the companion panel; skip the per-mesh shadow work.
+    avatar.root.traverse((o) => {
+      o.castShadow = false;
+      o.receiveShadow = false;
+    });
+    return { joints, base, face };
+  }, [avatar]);
+  useEffect(() => () => avatar.dispose(), [avatar]);
 
   // Studio reflections: a PMREM-filtered room environment, generated once
   // per canvas (no HDR download), disposed with the canvas.
@@ -85,84 +106,8 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
     };
   }, [gl, scene]);
 
-  const materials = useMemo(
-    () => ({
-      shell: new THREE.MeshPhysicalMaterial({
-        color: PALETTE.shell,
-        roughness: 0.24,
-        metalness: 0.88,
-        clearcoat: 1,
-        clearcoatRoughness: 0.06,
-        envMapIntensity: 1.6,
-      }),
-      shellShade: new THREE.MeshPhysicalMaterial({
-        color: PALETTE.shellShade,
-        roughness: 0.34,
-        metalness: 0.8,
-        clearcoat: 0.6,
-        envMapIntensity: 1.3,
-      }),
-      // Normal (alpha) blending, not additive: glass highlights must not
-      // wash the portrait out.
-      face: new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-      joint: new THREE.MeshStandardMaterial({ color: PALETTE.joint, roughness: 0.4, metalness: 0.8 }),
-      glass: new THREE.MeshPhysicalMaterial({
-        color: PALETTE.glass,
-        roughness: 0.18,
-        metalness: 0.2,
-        clearcoat: 1,
-        clearcoatRoughness: 0.12,
-        envMapIntensity: 0.45,
-      }),
-      eye: new THREE.MeshStandardMaterial({
-        color: PALETTE.lime,
-        emissive: PALETTE.lime,
-        emissiveIntensity: 1.6,
-        toneMapped: false,
-      }),
-      mouth: new THREE.MeshBasicMaterial({
-        color: PALETTE.lime,
-        transparent: true,
-        opacity: 0.3,
-        toneMapped: false,
-      }),
-      accent: new THREE.MeshStandardMaterial({
-        color: PALETTE.lime,
-        emissive: PALETTE.lime,
-        emissiveIntensity: 0.8,
-        toneMapped: false,
-      }),
-      chest: new THREE.MeshStandardMaterial({
-        color: PALETTE.lime,
-        emissive: PALETTE.lime,
-        emissiveIntensity: 0.8,
-        toneMapped: false,
-      }),
-      thruster: new THREE.MeshBasicMaterial({
-        color: PALETTE.lime,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-      groundGlow: new THREE.MeshBasicMaterial({
-        color: PALETTE.lime,
-        transparent: true,
-        opacity: 0.12,
-        depthWrite: false,
-      }),
-    }),
-    [],
-  );
-  useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
-
-  // Load the hologram portrait outside React's render path; the eyes stay
-  // on screen until it's ready, so a slow or failed load never looks broken.
+  // Load the hologram portrait outside React's render path; the visor stays
+  // dark glass until it's ready, so a slow or failed load never looks broken.
   useEffect(() => {
     let texture: THREE.Texture | null = null;
     let cancelled = false;
@@ -174,11 +119,12 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
           return;
         }
         loaded.colorSpace = THREE.SRGBColorSpace;
-        loaded.anisotropy = 4;
+        loaded.anisotropy = fullEmissiveDetail ? 4 : 1;
         texture = loaded;
-        materials.face.map = loaded;
-        materials.face.needsUpdate = true;
-        setFaceReady(true);
+        rig.face.map = loaded;
+        rig.face.emissiveMap = loaded;
+        rig.face.emissiveIntensity = 1;
+        rig.face.needsUpdate = true;
       },
       undefined,
       () => undefined,
@@ -187,16 +133,14 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       cancelled = true;
       texture?.dispose();
     };
-  }, [materials]);
+  }, [rig, fullEmissiveDetail]);
 
   const stateEnteredAt = useRef(0);
   const lastState = useRef<CompanionState | null>(null);
   const look = useRef(new THREE.Vector2(0, 0));
-  const nextBlinkAt = useRef(1.5);
-  const blinkStart = useRef(-1);
   const nextGlanceAt = useRef(2);
   const glance = useRef(new THREE.Vector2(0, 0));
-  const eyeColor = useRef(new THREE.Color(PALETTE.lime));
+  const glowColor = useRef(new THREE.Color(PALETTE.lime));
   const targetColor = useRef(new THREE.Color(PALETTE.lime));
 
   useFrame((frameState, delta) => {
@@ -204,6 +148,7 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
     const nowMs = performance.now();
     const signals = robotSignals;
     const awake = state !== "sleep" && state !== "boot";
+    const { joints: j, base } = rig;
 
     if (lastState.current !== state) {
       lastState.current = state;
@@ -235,6 +180,15 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       nextGlanceAt.current = t + 1.8 + Math.random() * 3.2;
     }
 
+    /** Damp a joint toward its bind pose plus an offset. */
+    const pose = (name: Joint, x: number, y: number, z: number, lambda = 6) => {
+      const r = j[name].rotation;
+      const b = base[name];
+      r.x = damp(r.x, b.x + x, lambda, delta);
+      r.y = damp(r.y, b.y + y, lambda, delta);
+      r.z = damp(r.z, b.z + z, lambda, delta);
+    };
+
     // ---- Head: explicit gaze > pointer tracking > idle glances ----
     const gazeActive = signals.gaze.until > nowMs;
     const trackingAllowed = state === "idle" || state === "greeting";
@@ -251,341 +205,143 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
     l.x = damp(l.x, targetX, gazeActive ? 5 : 3, delta);
     l.y = damp(l.y, targetY, gazeActive ? 5 : 3, delta);
 
-    if (headRef.current) {
-      const maxYaw = THREE.MathUtils.degToRad(gazeActive ? 28 : 16);
-      const maxPitch = THREE.MathUtils.degToRad(gazeActive ? 12 : 8);
-      let pitch = -THREE.MathUtils.clamp(l.y, -1.6, 1.6) * maxPitch;
-      let roll = 0;
-      if (gestureName === "nod") {
-        pitch += Math.sin(gestureProgress * Math.PI * 4) * THREE.MathUtils.degToRad(12) * envelope;
-      } else if (gestureName === "shrug") {
-        roll = THREE.MathUtils.degToRad(10) * envelope;
-      } else if (state === "thinking") {
-        roll = THREE.MathUtils.degToRad(8);
-      } else if (state === "sleep") {
-        pitch = THREE.MathUtils.degToRad(14);
-      }
-      headRef.current.rotation.y = THREE.MathUtils.clamp(l.x, -2.2, 2.2) * maxYaw;
-      headRef.current.rotation.x = damp(headRef.current.rotation.x, pitch, 8, delta);
-      headRef.current.rotation.z = damp(headRef.current.rotation.z, roll, 6, delta);
-    }
+    const maxYaw = deg(gazeActive ? 30 : 20);
+    const maxPitch = deg(gazeActive ? 14 : 10);
+    let headPitch = -THREE.MathUtils.clamp(l.y, -1.6, 1.6) * maxPitch;
+    let headRoll = 0;
+    if (gestureName === "nod") headPitch += Math.sin(gestureProgress * Math.PI * 4) * deg(14) * envelope;
+    else if (gestureName === "shrug") headRoll = deg(10) * envelope;
+    else if (state === "thinking") {
+      headRoll = deg(9);
+      headPitch -= deg(6);
+    } else if (state === "sleep") headPitch = deg(22);
+    const headYaw = THREE.MathUtils.clamp(l.x, -2.2, 2.2) * maxYaw;
+    // Split the turn between neck and head so it reads as a real neck.
+    pose("neck", headPitch * 0.35, headYaw * 0.35, headRoll * 0.4, 7);
+    pose("head", headPitch * 0.65, headYaw * 0.65, headRoll * 0.6, 8);
 
-    // Eyes also slide across the face screen - small, but it's what makes
-    // the gaze read as intentional rather than the whole head swivelling.
-    if (eyesRef.current) {
-      eyesRef.current.position.x = damp(eyesRef.current.position.x, THREE.MathUtils.clamp(l.x, -1, 1) * 0.05, 10, delta);
-      eyesRef.current.position.y = damp(eyesRef.current.position.y, THREE.MathUtils.clamp(l.y, -1, 1) * 0.03, 10, delta);
-    }
+    // ---- Body: breathing, weight shift, attention lean, scroll flinch ----
+    const flinchAge = (nowMs - signals.flinchAt) / 1000;
+    const flinchAmount = flinchAge < 0.6 ? Math.exp(-flinchAge * 7) : 0;
+    const breath = Math.sin(t * (state === "sleep" ? 1.4 : 2.1));
+    const sway = awake ? Math.sin(t * 0.45) : 0;
+    const lean = deg(signals.attention * 6 - flinchAmount * 8);
+    pose("hips", 0, sway * deg(3), sway * deg(1.2), 3);
+    pose("spine", lean * 0.5 + breath * deg(0.8) + (state === "sleep" ? deg(6) : 0), -sway * deg(2), -sway * deg(1), 4);
+    pose("chest", lean * 0.5 + breath * deg(1.2), 0, 0, 4);
+    // Knees soften with the weight shift, and dip for a celebration hop.
+    const hop = gestureName === "celebrate" ? Math.abs(Math.sin(gestureProgress * Math.PI * 3)) : 0;
+    pose("hipL", -hop * deg(10), 0, 0, 10);
+    pose("hipR", -hop * deg(10), 0, 0, 10);
+    pose("kneeL", hop * deg(18) + Math.max(0, sway) * deg(4), 0, 0, 10);
+    pose("kneeR", hop * deg(18) + Math.max(0, -sway) * deg(4), 0, 0, 10);
 
-    // ---- Eye shape = emotion; blink = quick squash ----
-    if (awake && t > nextBlinkAt.current) {
-      blinkStart.current = t;
-      nextBlinkAt.current = t + (Math.random() < 0.2 ? 0.25 : 2.5 + Math.random() * 4);
-    }
-    const blinkAge = t - blinkStart.current;
-    const blink = blinkStart.current >= 0 && blinkAge < 0.14 ? Math.sin((blinkAge / 0.14) * Math.PI) : 0;
-    let eyeHeight = 1;
-    let eyeTilt = 0;
-    if (state === "sleep") eyeHeight = 0.12;
-    else if (state === "boot") eyeHeight = Math.max(0.1, Math.min(1, stateElapsed / 0.9));
-    else if (state === "success" || gestureName === "celebrate" || gestureName === "wave") eyeHeight = 0.45;
-    else if (state === "thinking") eyeHeight = 0.7;
-    else if (state === "error") eyeTilt = 0.35;
-    const eyeScaleY = Math.max(0.08, eyeHeight * (1 - blink * 0.9));
-    const eyes: Array<[THREE.Mesh | null, number]> = [
-      [leftEyeRef.current, -1],
-      [rightEyeRef.current, 1],
-    ];
-    for (const [eye, side] of eyes) {
-      if (!eye) continue;
-      eye.scale.y = damp(eye.scale.y, eyeScaleY, blink > 0 ? 40 : 12, delta);
-      eye.rotation.z = damp(eye.rotation.z, eyeTilt * side, 10, delta);
-    }
-    if (mouthRef.current) {
-      mouthRef.current.scale.x = damp(mouthRef.current.scale.x, 0.5 + voice * 1.6, 18, delta);
-      mouthRef.current.scale.y = damp(mouthRef.current.scale.y, 0.35 + voice * 0.9, 18, delta);
-    }
-    materials.mouth.opacity = 0.25 + voice * 0.75;
-
-    // ---- Hologram face: boot flicker, voice glow, error glitch, standby ----
-    if (faceRef.current) {
-      let target = 0.95 + voice * 0.35;
-      let jitter = 0;
-      if (state === "boot") target = Math.random() < 0.35 ? 0.1 : Math.min(1, stateElapsed / 0.9);
-      else if (state === "sleep") target = 0.16;
-      else if (state === "thinking") target = 0.75 + Math.abs(Math.sin(t * 9)) * 0.25;
-      else if (state === "error") {
-        target = stateElapsed < 0.6 ? (Math.random() < 0.5 ? 0.3 : 1) : 0.9;
-        jitter = stateElapsed < 0.6 ? (Math.random() - 0.5) * 0.04 : 0;
-      } else if (blink > 0) target *= 0.7;
-      // A faint, occasional roll - the "projection" never looks like a sticker.
-      if (awake && Math.random() < 0.004) jitter = (Math.random() - 0.5) * 0.02;
-      materials.face.opacity = damp(materials.face.opacity, Math.min(1, target), state === "boot" ? 30 : 10, delta);
-      // Brighter than white while he "speaks" (tone mapping is off for this material).
-      materials.face.color.setScalar(1 + voice * 0.45);
-      faceRef.current.position.x = damp(faceRef.current.position.x, jitter, 40, delta);
-      faceRef.current.scale.y = 1 + voice * 0.015;
-    }
-
-    // ---- Body: hover bob, sway, attention lean, scroll flinch ----
     if (rootRef.current) {
-      const flinchAge = (nowMs - signals.flinchAt) / 1000;
-      const flinchAmount = flinchAge < 0.6 ? Math.exp(-flinchAge * 7) : 0;
-      const hop = gestureName === "celebrate" ? Math.abs(Math.sin(gestureProgress * Math.PI * 3)) * 0.08 : 0;
-      const bootRise = state === "boot" ? (1 - Math.min(1, stateElapsed / 0.9)) * -0.2 : 0;
-      const bob = state === "sleep" ? -0.05 : Math.sin(t * 1.4) * 0.03;
-      rootRef.current.position.y = damp(rootRef.current.position.y, -0.05 + bob + hop + bootRise, 8, delta);
-      rootRef.current.position.z = damp(rootRef.current.position.z, -flinchAmount * 0.25, 14, delta);
-      rootRef.current.rotation.z = damp(
-        rootRef.current.rotation.z,
-        awake ? Math.sin(t * 0.45) * THREE.MathUtils.degToRad(2) : 0,
-        2,
-        delta,
-      );
-      const lean = THREE.MathUtils.degToRad(signals.attention * 7 - flinchAmount * 9);
-      rootRef.current.rotation.x = damp(rootRef.current.rotation.x, lean, 4, delta);
-    }
-    if (torsoRef.current) {
-      const breathe = state === "sleep" ? 1 + Math.sin(t / 4.5) * 0.006 : 1 + Math.sin(t / 2) * 0.012;
-      torsoRef.current.scale.setScalar(damp(torsoRef.current.scale.x, breathe, 6, delta));
+      const bootRise = state === "boot" ? (1 - Math.min(1, stateElapsed / 0.9)) * -0.25 : 0;
+      rootRef.current.position.y = damp(rootRef.current.position.y, -1.32 + bootRise + hop * 0.03, 8, delta);
+      rootRef.current.position.z = damp(rootRef.current.position.z, 1.0 - flinchAmount * 0.25, 14, delta);
     }
 
-    // ---- Arms (positive = raised outward) ----
-    const rest = THREE.MathUtils.degToRad(8);
-    let leftTarget = rest + Math.sin(t * 1.4 + 0.6) * 0.03;
-    let rightTarget = rest + Math.sin(t * 1.4) * 0.03;
+    // ---- Arms. raise = outward (away from the body); fwd = toward camera;
+    //      bend = elbow flex. ----
+    const arm = { L: { raise: 0, fwd: 0, bend: deg(6) }, R: { raise: 0, fwd: 0, bend: deg(6) } };
+    const idleSwing = Math.sin(t * 1.1) * deg(2);
+    arm.L.fwd = idleSwing;
+    arm.R.fwd = -idleSwing;
     if (state === "greeting") {
-      const lift = Math.min(1, stateElapsed / 0.5);
-      leftTarget = rightTarget = THREE.MathUtils.degToRad(8 + 20 * Math.sin(lift * Math.PI));
+      const lift = Math.sin(Math.min(1, stateElapsed / 0.8) * Math.PI);
+      arm.R.raise = deg(70) * lift;
+      arm.R.bend = deg(70) * lift;
     } else if (state === "pointing") {
-      rightTarget = THREE.MathUtils.degToRad(65);
+      arm.R.fwd = deg(70);
+      arm.R.raise = deg(12);
+      arm.R.bend = deg(4);
     } else if (state === "briefing") {
-      const talk = Math.sin(t * 2.4) * 12;
-      leftTarget = THREE.MathUtils.degToRad(14 + talk);
-      rightTarget = THREE.MathUtils.degToRad(14 - talk);
+      const talk = Math.sin(t * 2.4);
+      arm.L.fwd = deg(28 + talk * 10);
+      arm.R.fwd = deg(28 - talk * 10);
+      arm.L.bend = arm.R.bend = deg(55);
     } else if (state === "thinking") {
-      rightTarget = THREE.MathUtils.degToRad(38);
+      // Hand to chin.
+      arm.R.fwd = deg(40);
+      arm.R.raise = deg(-8);
+      arm.R.bend = deg(120);
+    } else if (state === "sleep") {
+      arm.L.bend = arm.R.bend = deg(2);
     }
+    if (voice > 0 && state !== "thinking" && state !== "pointing") {
+      arm.R.fwd += voice * deg(10);
+      arm.R.bend += voice * deg(15);
+    }
+    const blend = (from: number, to: number) => THREE.MathUtils.lerp(from, to, envelope);
     if (gestureName === "wave") {
-      rightTarget = THREE.MathUtils.lerp(
-        rightTarget,
-        THREE.MathUtils.degToRad(130 + Math.sin(gestureProgress * Math.PI * 6) * 20),
-        envelope,
-      );
+      arm.R.raise = blend(arm.R.raise, deg(150));
+      arm.R.bend = blend(arm.R.bend, deg(40 + Math.sin(gestureProgress * Math.PI * 6) * 25));
     } else if (gestureName === "point") {
-      rightTarget = THREE.MathUtils.lerp(rightTarget, THREE.MathUtils.degToRad(75), envelope);
+      arm.R.fwd = blend(arm.R.fwd, deg(80));
+      arm.R.bend = blend(arm.R.bend, deg(4));
     } else if (gestureName === "shrug") {
-      leftTarget = THREE.MathUtils.lerp(leftTarget, THREE.MathUtils.degToRad(38), envelope);
-      rightTarget = THREE.MathUtils.lerp(rightTarget, THREE.MathUtils.degToRad(38), envelope);
+      for (const s of [arm.L, arm.R]) {
+        s.raise = blend(s.raise, deg(18));
+        s.fwd = blend(s.fwd, deg(20));
+        s.bend = blend(s.bend, deg(80));
+      }
     } else if (gestureName === "celebrate") {
-      const pump = THREE.MathUtils.degToRad(120 + Math.sin(gestureProgress * Math.PI * 6) * 15);
-      leftTarget = THREE.MathUtils.lerp(leftTarget, pump, envelope);
-      rightTarget = THREE.MathUtils.lerp(rightTarget, pump, envelope);
+      const pump = deg(155 + Math.sin(gestureProgress * Math.PI * 6) * 12);
+      for (const s of [arm.L, arm.R]) {
+        s.raise = blend(s.raise, pump);
+        s.bend = blend(s.bend, deg(25));
+      }
     }
-    if (leftArmRef.current) leftArmRef.current.rotation.z = damp(leftArmRef.current.rotation.z, -leftTarget, 5, delta);
-    if (rightArmRef.current) rightArmRef.current.rotation.z = damp(rightArmRef.current.rotation.z, rightTarget, 5, delta);
+    // Left arm hangs at -x: raising it outward is -z; right arm is +z.
+    // Swinging forward (+z in front) is -x on both.
+    pose("upperArmL", -arm.L.fwd, 0, -arm.L.raise, 6);
+    pose("upperArmR", -arm.R.fwd, 0, arm.R.raise, 6);
+    pose("forearmL", -arm.L.bend, 0, 0, 7);
+    pose("forearmR", -arm.R.bend, 0, 0, 7);
+    pose("handL", 0, 0, 0, 6);
+    pose("handR", 0, gestureName === "wave" ? deg(-20) * envelope : 0, 0, 6);
 
-    // ---- Lights ----
-    let eyeIntensity = 1.6;
-    let target = PALETTE.lime;
-    if (state === "boot") eyeIntensity = THREE.MathUtils.lerp(0, 1.8, Math.min(1, stateElapsed / 0.9));
-    else if (state === "thinking") eyeIntensity = 1.2 + Math.abs(Math.sin(t * 6)) * 0.9;
-    else if (state === "error") target = PALETTE.coral;
-    else if (state === "success") eyeIntensity = stateElapsed < 0.4 ? 2.8 : 1.6;
-    else if (state === "sleep") eyeIntensity = 0.3;
-    else if (state === "briefing" && accentColor) target = accentColor;
-    eyeIntensity += voice * 0.8;
-    targetColor.current.set(target);
-    eyeColor.current.lerp(targetColor.current, Math.min(1, delta * 8));
-    materials.eye.color.copy(eyeColor.current);
-    materials.eye.emissive.copy(eyeColor.current);
-    materials.eye.emissiveIntensity = damp(materials.eye.emissiveIntensity, eyeIntensity, 8, delta);
-    materials.mouth.color.copy(eyeColor.current);
+    // ---- Light strips: state colour + intensity ----
+    let glowTarget = 1.1 + Math.sin(t * 1.6) * 0.12;
+    let colour = PALETTE.lime;
+    if (state === "boot") glowTarget = Math.random() < 0.3 ? 0.1 : THREE.MathUtils.lerp(0, 1.4, Math.min(1, stateElapsed / 0.9));
+    else if (state === "thinking") glowTarget = 0.8 + Math.abs(Math.sin(t * 6)) * 1.1;
+    else if (state === "error") colour = PALETTE.coral;
+    else if (state === "success") glowTarget = stateElapsed < 0.4 ? 2.4 : 1.2;
+    else if (state === "sleep") glowTarget = 0.15;
+    else if (state === "briefing" && accentColor) colour = accentColor;
+    glowTarget += voice * 0.9;
+    targetColor.current.set(colour);
+    glowColor.current.lerp(targetColor.current, Math.min(1, delta * 8));
+    avatar.glow.emissive.copy(glowColor.current);
+    avatar.glow.color.copy(glowColor.current).multiplyScalar(0.8);
+    avatar.glow.emissiveIntensity = damp(avatar.glow.emissiveIntensity, glowTarget, state === "boot" ? 30 : 8, delta);
 
-    const pulse = state === "thinking" ? 0.8 + Math.abs(Math.sin(t * 6)) * 1.2 : 0.8 + Math.sin(t * 1.6) * 0.15;
-    materials.accent.emissiveIntensity = damp(
-      materials.accent.emissiveIntensity,
-      state === "sleep" ? 0.1 : pulse,
-      6,
-      delta,
-    );
-    materials.chest.emissiveIntensity = damp(
-      materials.chest.emissiveIntensity,
-      state === "sleep" ? 0.1 : 0.7 + voice * 1.2,
-      8,
-      delta,
-    );
-    if (thrusterRef.current) {
-      const flicker = 1 + Math.sin(t * 23) * 0.05 + Math.sin(t * 37) * 0.04;
-      const power = state === "sleep" ? 0.35 : 1;
-      thrusterRef.current.scale.set(power * flicker, power * (1.05 + Math.sin(t * 1.4) * 0.12), power * flicker);
-      materials.thruster.opacity = state === "sleep" ? 0.1 : 0.3 + Math.sin(t * 17) * 0.04;
+    // ---- Visor hologram: boot flicker, voice glow, error glitch, standby ----
+    if (rig.face.map) {
+      let target = 0.95 + voice * 0.3;
+      if (state === "boot") target = Math.random() < 0.35 ? 0.1 : Math.min(1, stateElapsed / 0.9);
+      else if (state === "sleep") target = 0.18;
+      else if (state === "thinking") target = 0.75 + Math.abs(Math.sin(t * 9)) * 0.25;
+      else if (state === "error") target = stateElapsed < 0.6 ? (Math.random() < 0.5 ? 0.3 : 1) : 0.9;
+      rig.face.opacity = damp(rig.face.opacity, Math.min(1, target), state === "boot" ? 30 : 10, delta);
+      rig.face.emissiveIntensity = 1 + voice * 0.5;
     }
   });
 
-  const seg = fullEmissiveDetail ? 48 : 24;
-  const segLow = fullEmissiveDetail ? 24 : 12;
-
   return (
-    <group ref={rootRef} scale={0.62} position={[0, -0.05, 0]}>
-      {/* ---------------- Head ---------------- */}
-      <group ref={headRef} position={[0, 0.66, 0]} scale={1.22}>
-        {/* Shell: slightly wide, rounded helmet */}
-        <mesh material={materials.shell} scale={[1.18, 0.98, 1]}>
-          <sphereGeometry args={[0.44, seg, seg]} />
-        </mesh>
-        {/* Face screen: black glass set into the front of the helmet */}
-        <mesh material={materials.glass} position={[0, -0.02, 0.2]} scale={[1.04, 0.72, 0.62]}>
-          <sphereGeometry args={[0.4, seg, seg]} />
-        </mesh>
-        {/* Tarun's hologram portrait, projected just proud of the glass */}
-        <mesh ref={faceRef} material={materials.face} position={[0, -0.02, 0.462]} renderOrder={2} visible={faceReady}>
-          <planeGeometry args={[0.58, 0.58]} />
-        </mesh>
-        {/* Eyes + speech bar: shown until the portrait texture is ready */}
-        <group position={[0, 0, 0.455]} visible={!faceReady}>
-          <group ref={eyesRef}>
-            <mesh ref={leftEyeRef} material={materials.eye} position={[-0.14, 0.03, 0]}>
-              <capsuleGeometry args={[0.06, 0.05, 8, segLow]} />
-            </mesh>
-            <mesh ref={rightEyeRef} material={materials.eye} position={[0.14, 0.03, 0]}>
-              <capsuleGeometry args={[0.06, 0.05, 8, segLow]} />
-            </mesh>
-          </group>
-          <mesh ref={mouthRef} material={materials.mouth} position={[0, -0.125, -0.01]} rotation={[0, 0, Math.PI / 2]}>
-            <capsuleGeometry args={[0.012, 0.09, 4, 8]} />
-          </mesh>
-        </group>
-        {/* Ear pods with light rings */}
-        {[-1, 1].map((side) => (
-          <group key={side} position={[side * 0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <mesh material={materials.shellShade}>
-              <cylinderGeometry args={[0.12, 0.12, 0.09, segLow]} />
-            </mesh>
-            <mesh material={materials.accent} position={[0, -side * 0.047, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.078, 0.012, 8, segLow * 2]} />
-            </mesh>
-          </group>
-        ))}
-        {/* Antenna */}
-        <mesh material={materials.joint} position={[0.12, 0.47, -0.05]} rotation={[0, 0, -0.2]}>
-          <cylinderGeometry args={[0.012, 0.016, 0.2, 8]} />
-        </mesh>
-        <mesh material={materials.accent} position={[0.14, 0.58, -0.05]}>
-          <sphereGeometry args={[0.035, segLow, segLow]} />
-        </mesh>
+    <group>
+      <group ref={rootRef} position={[0, -1.32, 1.0]} rotation={[0, deg(-12), 0]}>
+        <primitive object={avatar.root} />
       </group>
-
-      {/* Neck */}
-      <mesh material={materials.joint} position={[0, 0.17, 0]}>
-        <cylinderGeometry args={[0.09, 0.12, 0.12, segLow]} />
-      </mesh>
-
-      {/* ---------------- Body: egg-shaped torso ---------------- */}
-      <group ref={torsoRef} position={[0, -0.34, 0]}>
-        <mesh material={materials.shell} scale={[0.95, 1.15, 0.85]}>
-          <sphereGeometry args={[0.42, seg, seg]} />
-        </mesh>
-        <mesh material={materials.shellShade} position={[0, 0.38, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.24, 0.035, 12, seg]} />
-        </mesh>
-        {/* Chest light */}
-        <mesh material={materials.glass} position={[0, 0.06, 0.33]} scale={[1, 1, 0.35]}>
-          <sphereGeometry args={[0.1, segLow, segLow]} />
-        </mesh>
-        <mesh material={materials.chest} position={[0, 0.06, 0.365]}>
-          <torusGeometry args={[0.055, 0.012, 8, segLow * 2]} />
-        </mesh>
-        {/* Armour light strips: collar, chest chevron, waist line */}
-        <mesh material={materials.chest} position={[0, 0.36, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.215, 0.008, 8, seg]} />
-        </mesh>
-        {[-1, 1].map((side) => (
-          <mesh
-            key={side}
-            material={materials.chest}
-            position={[side * 0.15, 0.13, 0.322]}
-            rotation={[-0.35, side * 0.4, side * 0.55]}
-          >
-            <capsuleGeometry args={[0.011, 0.17, 4, 8]} />
-          </mesh>
-        ))}
-        <mesh material={materials.chest} position={[0, -0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.372, 0.009, 8, seg]} />
-        </mesh>
-      </group>
-
-      {/* ---------------- Floating arms (pivot at shoulder) ---------------- */}
-      <group ref={leftArmRef} position={[-0.46, -0.08, 0]}>
-        <Arm side={-1} materials={materials} segLow={segLow} />
-      </group>
-      <group ref={rightArmRef} position={[0.46, -0.08, 0]}>
-        <Arm side={1} materials={materials} segLow={segLow} />
-      </group>
-
-      {/* ---------------- Hover thruster ---------------- */}
-      <group position={[0, -0.9, 0]}>
-        <mesh material={materials.joint}>
-          <cylinderGeometry args={[0.16, 0.1, 0.08, segLow]} />
-        </mesh>
-        <mesh material={materials.accent} position={[0, -0.045, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.1, 0.014, 8, segLow * 2]} />
-        </mesh>
-        <mesh ref={thrusterRef} material={materials.thruster} position={[0, -0.15, 0]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.13, 0.22, segLow, 1, true]} />
-        </mesh>
-      </group>
-      <mesh material={materials.groundGlow} position={[0, -1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.45, seg]} />
-      </mesh>
 
       {/* Key, fill, and blue + lime rims so black chrome separates from the dark panel */}
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[2, 3, 3]} intensity={1.8} />
-      <directionalLight position={[-2.5, 1, 1.5]} intensity={0.5} />
-      <directionalLight position={[0, 1, -3]} intensity={2.2} color={PALETTE.blue} />
-      <directionalLight position={[3, 0.5, -1]} intensity={1.1} color={PALETTE.lime} />
-      <pointLight position={[0, 0.3, 1.2]} intensity={0.4} color={PALETTE.lime} distance={3} />
+      <ambientLight intensity={0.3} />
+      <directionalLight position={[2, 3, 3]} intensity={2} />
+      <directionalLight position={[-2.5, 1, 1.5]} intensity={0.6} />
+      <directionalLight position={[-1, 1.5, -3]} intensity={2.4} color={PALETTE.blue} />
+      <directionalLight position={[3, 0.5, -1]} intensity={1.2} color={PALETTE.lime} />
     </group>
-  );
-}
-
-function Arm({
-  side,
-  materials,
-  segLow,
-}: {
-  side: number;
-  materials: {
-    joint: THREE.Material;
-    shell: THREE.Material;
-    shellShade: THREE.Material;
-    accent: THREE.Material;
-    chest: THREE.Material;
-  };
-  segLow: number;
-}) {
-  return (
-    <>
-      <mesh material={materials.joint} position={[side * 0.02, 0, 0]}>
-        <sphereGeometry args={[0.07, segLow, segLow]} />
-      </mesh>
-      <mesh material={materials.shell} position={[side * 0.08, -0.26, 0]} rotation={[0, 0, side * 0.12]}>
-        <capsuleGeometry args={[0.075, 0.3, 8, segLow]} />
-      </mesh>
-      {/* Forearm light strip + shoulder ring, as on the armour concept */}
-      <mesh material={materials.chest} position={[side * 0.08, -0.27, 0.07]} rotation={[0, 0, side * 0.12]}>
-        <capsuleGeometry args={[0.01, 0.2, 4, 8]} />
-      </mesh>
-      <mesh material={materials.accent} position={[side * 0.02, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <torusGeometry args={[0.072, 0.008, 8, segLow * 2]} />
-      </mesh>
-      <mesh material={materials.shellShade} position={[side * 0.12, -0.5, 0]}>
-        <sphereGeometry args={[0.082, segLow, segLow]} />
-      </mesh>
-      <mesh material={materials.accent} position={[side * 0.125, -0.575, 0.02]}>
-        <sphereGeometry args={[0.02, 8, 8]} />
-      </mesh>
-    </>
   );
 }

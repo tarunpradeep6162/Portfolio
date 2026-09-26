@@ -6,8 +6,6 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { GitHubStatsCard } from "@/components/github/GitHubStatsCard";
-import { AvatarViewer } from "@/components/about/AvatarViewer";
-import { SplitReveal } from "@/components/shared/SplitReveal";
 import { about } from "@/content/site";
 import { experience } from "@/content/experience";
 import { education } from "@/content/education";
@@ -49,51 +47,11 @@ export default function AboutPage() {
       </section>
 
       <section
-        aria-labelledby="digital-twin"
-        className="control-grid relative overflow-hidden border-t border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-32"
-      >
-        <Container className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-          <div>
-            <Eyebrow>Digital twin / 02</Eyebrow>
-            <SplitReveal
-              as="h2"
-              className="mt-6 max-w-[12ch] font-display text-display font-semibold leading-[0.93] tracking-[-0.06em] text-[var(--ink)]"
-            >
-              The operator, suited up.
-            </SplitReveal>
-            <p className="mt-6 max-w-[52ch] text-lead leading-8 text-[var(--ink-muted)]">
-              A 3D model built in code from my character concept: black-chrome plates that follow the body,
-              lime light strips, and my own face projected on the visor. Every joint is a named node, and it
-              ships with an idle animation.
-            </p>
-            <dl className="mt-10 grid max-w-md grid-cols-3 border border-[var(--line)] font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-              {[
-                ["glTF", "format"],
-                ["33", "joints"],
-                ["1", "anim clip"],
-              ].map(([value, label]) => (
-                <div key={label} className="border-r border-[var(--line)] p-4 last:border-r-0">
-                  <dt className="sr-only">{label}</dt>
-                  <dd>
-                    <span className="block font-display text-2xl font-semibold normal-case tracking-[-0.03em] text-[var(--accent)]">
-                      {value}
-                    </span>
-                    {label}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <AvatarViewer />
-        </Container>
-      </section>
-
-      <section
         data-field="manual"
         className="manual-grid border-t border-[var(--line)] bg-[var(--surface)] py-20 text-[var(--ink)] sm:py-28 lg:py-36"
       >
         <Container>
-          <Eyebrow>GitHub footprint / 03</Eyebrow>
+          <Eyebrow>GitHub footprint / 02</Eyebrow>
           <div className="mt-8">
             <GitHubStatsCard />
           </div>
@@ -120,7 +78,7 @@ export default function AboutPage() {
       >
         <Container className="grid gap-12 lg:grid-cols-[0.42fr_1.58fr] lg:gap-20">
           <div>
-            <Eyebrow>Experience / 04</Eyebrow>
+            <Eyebrow>Experience / 03</Eyebrow>
             <h2 className="mt-5 font-display text-heading font-semibold tracking-[-0.045em]">
               Three operating contexts.
             </h2>
@@ -135,7 +93,7 @@ export default function AboutPage() {
       >
         <Container className="grid gap-16 lg:grid-cols-2 lg:gap-24">
           <div>
-            <Eyebrow>Education / 05</Eyebrow>
+            <Eyebrow>Education / 04</Eyebrow>
             <div className="mt-8 border-t border-[var(--line)]">
               {education.map((entry, index) => (
                 <article
@@ -159,7 +117,7 @@ export default function AboutPage() {
           </div>
 
           <div>
-            <Eyebrow>Certification record / 06</Eyebrow>
+            <Eyebrow>Certification record / 05</Eyebrow>
             <div className="mt-8">
               <CertificationList items={certifications} />
             </div>

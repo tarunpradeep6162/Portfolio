@@ -217,6 +217,10 @@ test.describe("RC-01 Reliability Companion", () => {
       page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),
     ).toBeVisible();
 
+    // The chat opens by default on the desktop dock; Escape closes the open
+    // subpanel first (same rule as Tours/Console), then the companion.
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("log", { name: /conversation with rc-01/i })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(
       page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }),

@@ -13,13 +13,14 @@ export const dynamic = "force-dynamic";
  * RC-01's conversational endpoint.
  *
  * Model and effort are environment-configurable so cost/quality can be tuned
- * from Vercel without a deploy. Effort defaults to "low": short, grounded
- * chat answers don't benefit from deep reasoning, and latency matters more.
+ * from Vercel without a deploy. Effort defaults to "medium": RC-01 answers
+ * general questions (including code), so it needs more than "low", while
+ * chat latency still rules out "high".
  */
 const MODEL = process.env.RC01_MODEL ?? "claude-opus-5";
-const EFFORT = (process.env.RC01_EFFORT ?? "low") as "low" | "medium" | "high";
-// Hard per-response ceiling: answers are meant to be a few spoken sentences.
-const MAX_TOKENS = 2048;
+const EFFORT = (process.env.RC01_EFFORT ?? "medium") as "low" | "medium" | "high";
+// Hard per-response ceiling: room for a code sample or a how-to, not essays.
+const MAX_TOKENS = 4096;
 // A turn can be text -> tool call -> text; three model calls is ample.
 const MAX_MODEL_CALLS = 3;
 
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
           logUsage(message);
 
           if (message.stop_reason === "refusal") {
-            send({ type: "text", text: "That's not something I can help with - ask me about Tarun's work instead." });
+            send({ type: "text", text: "That's not something I can help with, but I'm happy to help with something else." });
             send({ type: "done", reason: "refused" });
             break;
           }

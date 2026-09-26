@@ -94,7 +94,11 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const pathname = usePathname();
 
   const [companionState, setCompanionState] = useState<CompanionState>("boot");
-  const [subpanel, setSubpanel] = useState<Subpanel>("none");
+  // The chat is RC-01's main surface: open by default on the desktop dock.
+  // (Mobile starts as the collapsed peek, so nothing opens underneath it.)
+  const [subpanel, setSubpanel] = useState<Subpanel>(() =>
+    typeof window !== "undefined" && window.innerWidth >= 1024 ? "chat" : "none",
+  );
   const [activeTourId, setActiveTourId] = useState<CompanionTourId | null>(null);
   const [tourStepIndex, setTourStepIndex] = useState(0);
   const [currentScript, setCurrentScript] = useState<CompanionScript | null>(null);
@@ -580,13 +584,18 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const openChat = useCallback(() => {
     setSubpanel((current) => (current === "chat" ? "none" : "chat"));
     setMobileExpanded(true);
-    if (!greetedRef.current) {
-      greetedRef.current = true;
-      const greeting = returningGreeting(memory);
-      if (greeting) chat.addLocalMessage(greeting);
-      playGesture("wave");
-    }
-  }, [chat, memory]);
+  }, []);
+
+  // First time the chat is shown (by default or by click): wave, and greet
+  // returning visitors by name of what they looked at last time.
+  const addLocalMessage = chat.addLocalMessage;
+  useEffect(() => {
+    if (subpanel !== "chat" || greetedRef.current) return;
+    greetedRef.current = true;
+    const greeting = returningGreeting(memory);
+    if (greeting) addLocalMessage(greeting);
+    playGesture("wave");
+  }, [subpanel, memory, addLocalMessage]);
 
   const handleForget = useCallback(() => {
     forgetMemory();
@@ -809,7 +818,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       {!minimised && (
       <div className="min-h-0 flex-1 overflow-y-auto p-4 pt-0">
       <div
-        className="mt-3 h-40 w-full overflow-hidden rounded-xl border border-white/10 sm:h-44"
+        className="mt-3 h-48 w-full overflow-hidden rounded-xl border border-white/10 sm:h-56"
         style={{
           background:
             "radial-gradient(circle at 50% 38%, #141d27 0%, #0a0f14 62%, #06090d 100%)",
@@ -837,7 +846,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
           aria-pressed={subpanel === "chat"}
           className="flex items-center gap-1.5 rounded border border-[var(--color-signal-lime)]/50 bg-[var(--color-signal-lime)]/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--color-signal-lime)] hover:bg-[var(--color-signal-lime)]/20"
         >
-          <MessageSquare size={13} aria-hidden /> Ask
+          <MessageSquare size={13} aria-hidden /> Chat
         </button>
         <button
           type="button"

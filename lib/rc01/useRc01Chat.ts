@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { describeAction, type Rc01Action } from "./actions";
 import { createEventParser, LIMITS, type ChatTurn, type VisitorContext } from "./protocol";
-import { takeSentences, toSpeech } from "./text";
+import { speakablePart, takeSentences, toSpeech } from "./text";
 
 export interface ChatMessage {
   id: string;
@@ -24,6 +24,8 @@ export interface ChatCallbacks {
   onAction?: (action: Rc01Action) => void;
   onComplete?: (outcome: "complete" | "error" | "stopped") => void;
 }
+
+const MAX_SPOKEN_SENTENCES = 6;
 
 let nextId = 0;
 const id = () => `m${++nextId}`;
@@ -99,17 +101,28 @@ export function useRc01Chat(callbacks: ChatCallbacks) {
 
       const controller = new AbortController();
       abortRef.current = controller;
-      let speechBuffer = "";
       let answer = "";
       let failed = false;
-
+      // Speech cursor over the speakable part of the answer (code excluded).
+      // Long answers are read only up to MAX_SPOKEN_SENTENCES - the rest is
+      // on screen, and nobody wants a robot reading a tutorial aloud.
+      let spokenChars = 0;
+      let spokenSentences = 0;
+      const speak = (sentence: string) => {
+        if (spokenSentences >= MAX_SPOKEN_SENTENCES) return;
+        const text = toSpeech(sentence);
+        if (!text) return;
+        spokenSentences++;
+        callbacksRef.current.onSentence?.(text);
+      };
       const flushSpeech = (final: boolean) => {
-        const { sentences, rest } = takeSentences(speechBuffer);
-        speechBuffer = rest;
-        for (const sentence of sentences) callbacksRef.current.onSentence?.(toSpeech(sentence));
-        if (final && speechBuffer.trim()) {
-          callbacksRef.current.onSentence?.(toSpeech(speechBuffer));
-          speechBuffer = "";
+        const pending = speakablePart(answer).slice(spokenChars);
+        const { sentences, rest } = takeSentences(pending);
+        spokenChars += pending.length - rest.length;
+        sentences.forEach(speak);
+        if (final && rest.trim()) {
+          spokenChars += rest.length;
+          speak(rest);
         }
       };
 
@@ -138,7 +151,6 @@ export function useRc01Chat(callbacks: ChatCallbacks) {
             if (event.type === "text") {
               if (!answer) setActivity("streaming");
               answer += event.text;
-              speechBuffer += event.text;
               flushSpeech(false);
               patchMessage(reply.id, (m) => ({ ...m, text: answer }));
             } else if (event.type === "action") {

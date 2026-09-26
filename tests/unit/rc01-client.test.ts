@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { extractCitations, parseRichText, takeSentences, toSpeech } from "@/lib/rc01/text";
+import { extractCitations, parseBlocks, parseRichText, speakablePart, takeSentences, toSpeech } from "@/lib/rc01/text";
 import { suggestionsFor } from "@/lib/rc01/suggestions";
 import {
   ensureMemory,
@@ -19,16 +19,27 @@ describe("parseRichText", () => {
     ]);
   });
 
-  it("degrades external or unknown links to their label", () => {
-    expect(parseRichText("[click](https://evil.example)")).toEqual([{ type: "text", text: "click" }]);
-    expect(parseRichText("[x](javascript:alert(1))")).not.toContainEqual(
-      expect.objectContaining({ type: "link" }),
-    );
+  it("renders https links as external, and degrades unsafe or unknown links to their label", () => {
+    expect(parseRichText("[docs](https://docs.aws.amazon.com/)")).toEqual([
+      { type: "external", label: "docs", href: "https://docs.aws.amazon.com/" },
+    ]);
+    for (const bad of ["[x](javascript:alert(1))", "[x](http://insecure.example)", "[x](/work/not-real)", "[x](data:text/html,hi)"]) {
+      expect(parseRichText(bad), bad).not.toContainEqual(expect.objectContaining({ type: "link" }));
+      expect(parseRichText(bad), bad).not.toContainEqual(expect.objectContaining({ type: "external" }));
+    }
   });
 
   it("never interprets HTML - it stays literal text", () => {
     const segments = parseRichText("<img src=x onerror=alert(1)>");
     expect(segments).toEqual([{ type: "text", text: "<img src=x onerror=alert(1)>" }]);
+  });
+
+  it("supports inline code, with its contents kept literal", () => {
+    expect(parseRichText("run `npm **ci**` now")).toEqual([
+      { type: "text", text: "run " },
+      { type: "code", text: "npm **ci**" },
+      { type: "text", text: " now" },
+    ]);
   });
 
   it("supports bold emphasis", () => {
@@ -47,7 +58,30 @@ describe("parseRichText", () => {
   });
 });
 
+describe("parseBlocks", () => {
+  it("splits paragraphs, lists and fenced code", () => {
+    const blocks = parseBlocks("Intro line.\n\n- one\n- two\n\n1. first\n2. second\n\n```bash\nls -la\necho hi\n```\nOutro.");
+    expect(blocks.map((b) => b.type)).toEqual(["paragraph", "list", "list", "code", "paragraph"]);
+    expect(blocks[1]).toMatchObject({ ordered: false });
+    expect(blocks[2]).toMatchObject({ ordered: true });
+    expect(blocks[3]).toEqual({ type: "code", language: "bash", code: "ls -la\necho hi" });
+  });
+
+  it("renders a still-streaming, unclosed fence as code", () => {
+    expect(parseBlocks("Here:\n```ts\nconst a = 1;").at(-1)).toEqual({ type: "code", language: "ts", code: "const a = 1;" });
+  });
+});
+
 describe("speech text", () => {
+  it("never speaks code, and holds back text inside an unclosed fence", () => {
+    expect(speakablePart("Run this. ```bash\nrm -rf x\n``` Then relax.")).toBe("Run this.   Then relax.");
+    expect(speakablePart("Run this. ```bash\nrm -rf")).toBe("Run this. ");
+  });
+
+  it("drops list markers when speaking", () => {
+    expect(toSpeech("- first item")).toBe("first item");
+  });
+
   it("speaks link labels, not markdown", () => {
     expect(toSpeech("Read **the** [case study](/work/project-aurora).")).toBe("Read the case study.");
   });

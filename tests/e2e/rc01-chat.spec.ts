@@ -27,7 +27,8 @@ async function mockRc01(page: Page, { enabled, events }: { enabled: boolean; eve
 async function openAsk(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /activate rc-01/i }).click();
-  await page.getByRole("button", { name: /^ask$/i }).click();
+  // Chat is RC-01's default surface on the desktop dock.
+  await expect(page.getByRole("button", { name: /^chat$/i })).toHaveAttribute("aria-pressed", "true");
 }
 
 test.describe("RC-01 Ask mode", () => {
@@ -69,11 +70,11 @@ test.describe("RC-01 Ask mode", () => {
     await expect(page).toHaveURL(/\/work\/project-aurora$/);
   });
 
-  test("ignores out-of-policy actions and external links from the stream", async ({ page }) => {
+  test("ignores out-of-policy actions and unsafe links from the stream", async ({ page }) => {
     await mockRc01(page, {
       enabled: true,
       events: [
-        { type: "text", text: "Here: [somewhere](https://evil.example)." },
+        { type: "text", text: "Here: [somewhere](javascript:void0)." },
         { type: "action", action: { type: "navigate", path: "https://evil.example" } },
         { type: "done", reason: "complete" },
       ],
@@ -86,6 +87,27 @@ test.describe("RC-01 Ask mode", () => {
     await expect(log).toContainText("Here: somewhere.");
     await expect(log.getByRole("link")).toHaveCount(0);
     await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("renders markdown: lists, code blocks with copy, and safe external links", async ({ page }) => {
+    await mockRc01(page, {
+      enabled: true,
+      events: [
+        { type: "text", text: "Steps:\n\n- build\n- ship\n\n```bash\nnpm run build\n```\n" },
+        { type: "text", text: "See [the docs](https://nextjs.org/docs)." },
+        { type: "done", reason: "complete" },
+      ],
+    });
+    await openAsk(page);
+    await page.getByLabel(/ask rc-01 a question/i).fill("How do I deploy?");
+    await page.keyboard.press("Enter");
+    const log = page.getByRole("log", { name: /conversation with rc-01/i });
+    await expect(log.getByRole("listitem")).toHaveCount(2);
+    await expect(log.locator("pre code")).toHaveText("npm run build");
+    await expect(log.getByRole("button", { name: /copy code/i })).toBeVisible();
+    const external = log.getByRole("link", { name: /the docs/i });
+    await expect(external).toHaveAttribute("target", "_blank");
+    await expect(external).toHaveAttribute("rel", /noopener/);
   });
 
   test("suggested questions adapt and can be asked with one click", async ({ page }) => {
@@ -102,7 +124,7 @@ test.describe("RC-01 Ask mode", () => {
   test("offline mode explains itself and hands over to the console", async ({ page }) => {
     await mockRc01(page, { enabled: false });
     await openAsk(page);
-    await expect(page.getByText(/conversational mode is offline/i)).toBeVisible();
+    await expect(page.getByText(/ai chat is offline/i)).toBeVisible();
     await page.getByRole("button", { name: /open console/i }).click();
     await expect(page.getByLabel("RC-01 console command")).toBeVisible();
   });

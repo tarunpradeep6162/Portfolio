@@ -71,7 +71,7 @@ export function suggestionsFor({
       return [
         "Who is Tarun, in one line?",
         "Show me his strongest project",
-        "I'm a recruiter - what should I look at first?",
+        "Explain Kubernetes like I'm five",
       ];
   }
 }

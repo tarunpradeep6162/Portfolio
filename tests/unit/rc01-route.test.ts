@@ -161,7 +161,7 @@ describe("/api/rc01", () => {
     expect(params.model).toBe("claude-opus-5");
     expect(params.fallbacks).toBe("default");
     expect(params.betas).toContain("server-side-fallback-2026-07-01");
-    expect(params.output_config).toEqual({ effort: "low" });
+    expect(params.output_config).toEqual({ effort: "medium" });
     const system = params.system as Array<{ cache_control?: unknown }>;
     expect(system[0].cache_control).toEqual({ type: "ephemeral" });
 
@@ -192,7 +192,7 @@ describe("/api/rc01", () => {
     const { POST } = await loadRoute();
     const events = await readEvents(await POST(post(question) as never));
     expect(events.at(-1)).toEqual({ type: "done", reason: "refused" });
-    expect(events[0].text).toMatch(/Tarun's work/);
+    expect(events[0].text).toMatch(/not something I can help with/);
   });
 
   it("turns API failures into a fallback error event, not a crash", async () => {

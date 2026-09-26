@@ -538,6 +538,7 @@ export function ProjectCoverArt({
 
   return (
     <div
+      data-anim-scope
       className={cn(
         "project-card-art aspect-[12/7] w-full overflow-hidden bg-[var(--color-control-black)] transition-transform duration-700 ease-[var(--ease-spine)]",
         bordered && "border border-[var(--line)]",

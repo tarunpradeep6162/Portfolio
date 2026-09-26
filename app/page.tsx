@@ -217,6 +217,7 @@ export default function Home() {
 
       <section
         id="contact"
+        data-anim-scope
         className="cinema-window control-grid relative overflow-hidden bg-[var(--color-control-black)] py-24 sm:py-32 lg:py-40"
       >
         <div

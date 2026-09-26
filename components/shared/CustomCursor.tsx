@@ -33,6 +33,8 @@ export function CustomCursor() {
     const label = labelRef.current;
     if (!dot || !ring || !label) return;
 
+    const dotEl: HTMLDivElement = dot;
+    const ringEl: HTMLDivElement = ring;
     let x = -100;
     let y = -100;
     let rx = -100;
@@ -41,6 +43,11 @@ export function CustomCursor() {
     let mode: Mode = "default";
     let magnet: HTMLElement | null = null;
     let raf = 0;
+    // The loop only runs while the ring is still catching up with the
+    // pointer; a resting cursor costs nothing.
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
 
     const setMode = (next: Mode) => {
       if (next === mode) return;
@@ -91,6 +98,7 @@ export function CustomCursor() {
         lit.style.setProperty("--my", `${(((y - r.top) / r.height) * 100).toFixed(1)}%`);
       }
 
+      wake();
       if (mode === "scan") {
         label.textContent = `SCAN ${String(Math.round(x)).padStart(4, "0")}·${String(Math.round(y)).padStart(4, "0")}`;
       } else if (mode === "drag") {
@@ -109,14 +117,17 @@ export function CustomCursor() {
     const onDown = () => ring.classList.add("is-pressed");
     const onUp = () => ring.classList.remove("is-pressed");
 
-    const tick = () => {
+    function tick() {
       rx += (x - rx) * 0.2;
       ry += (y - ry) * 0.2;
-      dot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+      dotEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      ringEl.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
+      if (Math.abs(x - rx) < 0.15 && Math.abs(y - ry) < 0.15) {
+        raf = 0;
+        return;
+      }
       raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
+    }
 
     window.addEventListener("pointermove", onMove, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);

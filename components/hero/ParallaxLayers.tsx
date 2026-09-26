@@ -19,39 +19,35 @@ export function ParallaxLayers() {
 
       if (!containerRef.current) return;
 
-      // Mouse-based parallax
+      // Mouse-based parallax. quickTo reuses one tween per axis (the old
+      // handler created three new tweens on *every* mousemove, site-wide),
+      // and the listener only runs while the hero is on screen.
+      const layers = [
+        [layer1Ref.current, 20],
+        [layer2Ref.current, 12],
+        [layer3Ref.current, 6],
+      ] as const;
+      const setters = layers
+        .filter(([el]) => el)
+        .map(([el, depth]) => ({
+          depth,
+          x: gsap.quickTo(el, "x", { duration: 0.5, ease: "cinema.settle" }),
+          y: gsap.quickTo(el, "y", { duration: 0.5, ease: "cinema.settle" }),
+        }));
+      let inView = true;
+      const observer = new IntersectionObserver(([entry]) => (inView = entry.isIntersecting));
+      observer.observe(containerRef.current);
       const handleMouseMove = (e: MouseEvent) => {
-        const { clientX, clientY } = e;
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-
-        const moveX = (clientX - centerX) * 0.01;
-        const moveY = (clientY - centerY) * 0.01;
-
-        if (layer1Ref.current)
-          gsap.to(layer1Ref.current, {
-            x: moveX * 20,
-            y: moveY * 20,
-            duration: 0.5,
-            overwrite: "auto",
-          });
-        if (layer2Ref.current)
-          gsap.to(layer2Ref.current, {
-            x: moveX * 12,
-            y: moveY * 12,
-            duration: 0.5,
-            overwrite: "auto",
-          });
-        if (layer3Ref.current)
-          gsap.to(layer3Ref.current, {
-            x: moveX * 6,
-            y: moveY * 6,
-            duration: 0.5,
-            overwrite: "auto",
-          });
+        if (!inView) return;
+        const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+        const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+        for (const s of setters) {
+          s.x(moveX * s.depth);
+          s.y(moveY * s.depth);
+        }
       };
 
-      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mousemove", handleMouseMove, { passive: true });
 
       // Scroll-based parallax
       gsap.from(layer1Ref.current, {
@@ -63,6 +59,7 @@ export function ParallaxLayers() {
 
       return () => {
         window.removeEventListener("mousemove", handleMouseMove);
+        observer.disconnect();
       };
     },
     { scope: containerRef },

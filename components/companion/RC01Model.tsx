@@ -10,6 +10,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { CompanionState } from "@/lib/companion/state";
 import { GESTURE_DURATION_MS, robotSignals } from "@/lib/companion/robotSignals";
 import { buildAvatar } from "@/lib/avatar/buildAvatar";
+import { mergeAvatarMeshes } from "@/lib/avatar/mergeAvatar";
 import { HEAD_MODEL_URL, attachHeadModel } from "@/lib/avatar/headModel";
 
 /** The hologram portrait shown on the visor (public/rc01/). */
@@ -69,7 +70,18 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
   const scene = useThree((s) => s.scene);
   const pointer = useThree((s) => s.pointer);
 
-  const avatar = useMemo(() => buildAvatar(), []);
+  const avatar = useMemo(() => {
+    const built = buildAvatar();
+    // ~140 draw calls -> ~65: static parts baked into their joints.
+    const unmerge = mergeAvatarMeshes(built.root);
+    return {
+      ...built,
+      dispose: () => {
+        unmerge();
+        built.dispose();
+      },
+    };
+  }, []);
   const rig = useMemo(() => {
     const joints = {} as Record<Joint, THREE.Object3D>;
     const base = {} as Record<Joint, THREE.Euler>;

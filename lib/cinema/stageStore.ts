@@ -8,8 +8,11 @@ import { useSyncExternalStore } from "react";
  * sections only while the 3D stage is actually live behind them.
  */
 export type StageStatus = "off" | "loading" | "live" | "paused";
-/** Adaptive quality level: 0 = full (bloom + grade), 1 = no bloom, 2 = no post, lower DPR. */
-export type StageQuality = 0 | 1 | 2;
+/**
+ * Adaptive quality level: 0 = full (bloom + grade), 1 = no bloom,
+ * 2 = no post + lower resolution, 3 = too slow - stage switched off.
+ */
+export type StageQuality = 0 | 1 | 2 | 3;
 
 interface StageSnapshot {
   status: StageStatus;

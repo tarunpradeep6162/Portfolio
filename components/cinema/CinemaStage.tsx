@@ -44,11 +44,13 @@ export function CinemaStage() {
   const webgl = useWebGLSupport();
   const { preferences } = useCompanionPreferences();
   const { activeScene } = useExperienceState();
-  const { status } = useStage();
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  const eligible = !reducedMotion && webgl && !preferences.lowPowerMode && !failed;
+  const { quality, status } = useStage();
+  // Quality 3 means this device couldn't hold ~45 fps even at the cheapest
+  // settings: the stage retires for the session and the still takes over.
+  const eligible = !reducedMotion && webgl && !preferences.lowPowerMode && !failed && quality < 3;
 
   useEffect(() => {
     if (!eligible || !automationAllowed()) {

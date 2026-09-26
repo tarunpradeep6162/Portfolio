@@ -14,6 +14,7 @@ import { FilmGrain } from "@/components/cinema/FilmGrain";
 import { SoundBridge } from "@/components/cinema/SoundBridge";
 import { VelocitySkew } from "@/components/cinema/VelocitySkew";
 import { Letterbox } from "@/components/cinema/Letterbox";
+import { OffscreenAnimationPauser } from "@/components/shared/OffscreenAnimationPauser";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Letterbox />
         <ExperienceProvider>
           <CinemaStage />
+          <OffscreenAnimationPauser />
           <SkipLink />
           <SiteHeader />
           <ScrollProgress />

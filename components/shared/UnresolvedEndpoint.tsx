@@ -1,12 +1,25 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
+
+const noop = () => () => {};
+
+/**
+ * The 404 page is prerendered once at build time, so the server can't know
+ * which path was requested - reading it during render made the server HTML
+ * ("/_not-found") disagree with the browser ("/whatever"): React #418.
+ * The real path is read only on the client, after hydration.
+ */
+function useRequestedPath() {
+  return useSyncExternalStore(noop, () => window.location.pathname, () => null);
+}
 
 export function UnresolvedEndpoint() {
-  const pathname = usePathname() || "/";
+  const pathname = useRequestedPath() ?? "requested path";
 
   return (
     <div
+      data-anim-scope
       role="img"
       aria-label={`Request flow: request received, path ${pathname} unresolved, no matching route`}
       className="relative aspect-square w-full max-w-[38rem] justify-self-center overflow-hidden rounded-full border border-white/10 bg-[radial-gradient(circle,#111d2a_0%,#080d12_58%,#06090d_72%)]"

@@ -52,7 +52,7 @@ export function TrailerButton() {
             type="button"
             onClick={close}
             aria-label="Close trailer"
-            className="absolute -top-11 right-0 flex h-9 w-9 items-center justify-center border border-white/20 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)]"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center border border-white/25 bg-black/70 text-[var(--color-cloud-linen)] hover:border-[var(--color-signal-lime)]"
           >
             <X size={16} aria-hidden />
           </button>

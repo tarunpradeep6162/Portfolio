@@ -32,13 +32,11 @@ export function HeroCopyReveal({ children }: { children: React.ReactNode }) {
       // On a first visit the cold open owns the opening seconds; the copy
       // reveals as its letterbox parts (or the moment it is skipped).
       const booting = document.documentElement.dataset.boot === "play";
-      gsap.set(items, { opacity: 0, y: 16, filter: "blur(4px)" });
+      gsap.set(items, { opacity: 0, y: 18 });
       const tween = gsap.to(items, {
         paused: booting,
-        clearProps: "filter",
         opacity: 1,
         y: 0,
-        filter: "blur(0px)",
         duration: motionTokens.heroEntranceMs / 1000,
         ease: motionTokens.ease.gsapSpine,
         stagger: motionTokens.stagger.hero,

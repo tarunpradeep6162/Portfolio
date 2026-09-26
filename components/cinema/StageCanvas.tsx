@@ -13,6 +13,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { buildAvatar } from "@/lib/avatar/buildAvatar";
+import { mergeAvatarMeshes } from "@/lib/avatar/mergeAvatar";
 import { onCue } from "@/lib/cinema/cues";
 import {
   MOODS,
@@ -150,11 +151,11 @@ const GradeShader = {
         vec2 px = uBlur * 2.2 / uResolution;
         float edge = 0.55 + smoothstep(0.0, 0.7, length(vUv - 0.5));
         vec3 acc = col;
-        for (int i = 0; i < 8; i++) {
-          float a = float(i) * 0.785398;
+        for (int i = 0; i < 4; i++) {
+          float a = float(i) * 1.570796 + 0.785398;
           acc += sampleCA(vUv + vec2(cos(a), sin(a)) * px * edge);
         }
-        col = acc / 9.0;
+        col = acc / 5.0;
       }
       // Film grade: teal shadows, warm highlights, gentle contrast.
       float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
@@ -207,7 +208,18 @@ const coneMaterial = () =>
 function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
   const group = useRef<THREE.Group>(null);
   const figure = useRef<THREE.Group>(null);
-  const avatar = useMemo(() => buildAvatar(), []);
+  const avatar = useMemo(() => {
+    const built = buildAvatar();
+    // ~140 draw calls -> ~65: static parts baked into their joints.
+    const unmerge = mergeAvatarMeshes(built.root);
+    return {
+      ...built,
+      dispose: () => {
+        unmerge();
+        built.dispose();
+      },
+    };
+  }, []);
   const mixer = useMemo(() => new THREE.AnimationMixer(avatar.root), [avatar]);
   const head = useMemo(() => avatar.root.getObjectByName("head")!, [avatar]);
   const cone = useMemo(() => coneMaterial(), []);
@@ -456,7 +468,7 @@ function Dust() {
       r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
       return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
     };
-    const count = 520;
+    const count = 260;
     const pos = new Float32Array(count * 3);
     const seed = new Float32Array(count);
     for (let i = 0; i < count; i++) {
@@ -546,7 +558,7 @@ function Director({ onQuality }: { onQuality: (q: StageQuality) => void }) {
     const dpr = gl.getPixelRatio();
     post.composer.setPixelRatio(dpr);
     post.composer.setSize(size.width, size.height);
-    post.bloom.resolution.set(size.width / 2, size.height / 2);
+    post.bloom.resolution.set(size.width / 3, size.height / 3);
     post.grade.uniforms.uResolution.value.set(size.width * dpr, size.height * dpr);
   }, [post, size, gl]);
 
@@ -596,13 +608,17 @@ function Director({ onQuality }: { onQuality: (q: StageQuality) => void }) {
       gl.render(scene, camera);
     }
 
-    // Adaptive quality (Phase 19): step down if frames run long.
+    // Adaptive quality (Phase 19): after a warm-up (shader compiles), step
+    // down whenever frames average slower than ~45 fps: bloom off, then the
+    // whole post chain + lower resolution, then the stage turns itself off
+    // entirely (the page falls back to the still image).
     const f = frames.current;
+    if (t < 2.5) return;
     f.n += 1;
     f.total += delta;
-    if (f.n >= 90) {
+    if (f.n >= 60) {
       const avg = f.total / f.n;
-      if (avg > 0.028 && quality < 2) onQuality((quality + 1) as StageQuality);
+      if (avg > 0.022) onQuality((quality + 1) as StageQuality);
       f.n = 0;
       f.total = 0;
     }
@@ -616,7 +632,7 @@ export default function StageCanvas({ paused }: { paused: boolean }) {
   const quality = getStageSnapshot().quality;
   return (
     <Canvas
-      dpr={quality >= 2 ? [0.75, 0.75] : [1, 1.5]}
+      dpr={quality >= 2 ? [0.75, 0.75] : [1, 1]}
       frameloop={paused ? "never" : "always"}
       gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
       camera={{ position: [0, 0, 10], fov: 30, near: 0.1, far: 60 }}

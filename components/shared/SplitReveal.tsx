@@ -40,12 +40,12 @@ export function SplitReveal({
       }
       // A "reveal" shot: each word rises out of its mask, un-skewing and
       // coming into focus, like type on a camera move.
-      gsap.set(words, { yPercent: 115, skewY: 7, filter: "blur(6px)", transformOrigin: "0% 100%" });
+      // Transform + opacity only (compositor-friendly); the mask does the reveal.
+      gsap.set(words, { yPercent: 115, skewY: 7, opacity: 0.2, transformOrigin: "0% 100%" });
       gsap.to(words, {
         yPercent: 0,
         skewY: 0,
-        filter: "blur(0px)",
-        clearProps: "filter",
+        opacity: 1,
         duration: shots.reveal.duration * 1.1,
         ease: "cinema.reveal",
         stagger: 0.055,

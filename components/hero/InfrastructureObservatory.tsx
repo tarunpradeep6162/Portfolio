@@ -61,6 +61,7 @@ export function InfrastructureObservatory() {
     <figure
       aria-hidden
       data-stage-anchor="hero"
+      data-anim-scope
       className="observatory-disc relative mx-auto aspect-square w-full max-w-[42rem] overflow-hidden rounded-full border border-white/10 bg-[radial-gradient(circle_at_50%_50%,#121f2c_0%,#080d12_52%,#06090d_74%)] shadow-[0_0_0_1px_rgba(216,255,79,0.03),0_50px_120px_rgba(0,0,0,0.45)]"
     >
       {/* Curated still for reduced motion / no 3D stage: the same figure the

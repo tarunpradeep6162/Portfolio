@@ -22,11 +22,23 @@ export function KineticName({ lines }: { lines: { text: string; className?: stri
     let frame = 0;
     let px = -9999;
     let py = -9999;
+    // Letter centres are measured once per scroll/resize, not every frame -
+    // measuring after writing styles forced a full layout per pointer move.
+    let centres: { x: number; y: number }[] | null = null;
+    const measure = () =>
+      (centres = letters.map((el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }));
+    const invalidate = () => (centres = null);
+    window.addEventListener("scroll", invalidate, { passive: true });
+    window.addEventListener("resize", invalidate);
     const apply = () => {
       frame = 0;
-      for (const el of letters) {
-        const r = el.getBoundingClientRect();
-        const d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
+      const c = centres ?? measure();
+      for (let i = 0; i < letters.length; i++) {
+        const el = letters[i];
+        const d = Math.hypot(px - c[i].x, py - c[i].y);
         const k = Math.max(0, 1 - d / 260);
         const e = k * k * (3 - 2 * k);
         el.style.setProperty("--kw", String(Math.round(700 + e * 100)));
@@ -47,6 +59,8 @@ export function KineticName({ lines }: { lines: { text: string; className?: stri
     section.addEventListener("pointerleave", onLeave);
     return () => {
       cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", invalidate);
+      window.removeEventListener("resize", invalidate);
       section.removeEventListener("pointermove", onMove as EventListener);
       section.removeEventListener("pointerleave", onLeave);
     };

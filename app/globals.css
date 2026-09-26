@@ -752,28 +752,20 @@ textarea:focus {
   z-index: 60;
   pointer-events: none;
 }
+/* Static and un-blended: an animated, mix-blend-mode layer the size of the
+   viewport forced the whole page to be re-blended every frame. */
 .film-grain-noise {
   position: absolute;
-  inset: -50%;
-  opacity: 0.075;
-  mix-blend-mode: overlay;
+  inset: 0;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain-step 0.9s steps(6) infinite;
 }
 .film-vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.28) 100%);
 }
-@keyframes grain-step {
-  0% { transform: translate(0, 0); }
-  17% { transform: translate(-6%, 4%); }
-  33% { transform: translate(5%, -7%); }
-  50% { transform: translate(-3%, 8%); }
-  67% { transform: translate(8%, 2%); }
-  83% { transform: translate(-7%, -4%); }
-  100% { transform: translate(2%, 6%); }
-}
+
 
 /* The persistent stage sits behind the page; main + footer stack above it. */
 .cinema-stage {
@@ -1020,7 +1012,6 @@ body > footer,
   margin: -15px 0 0 -15px;
   border: 1px solid color-mix(in srgb, var(--color-signal-lime) 55%, transparent);
   border-radius: 999px;
-  mix-blend-mode: difference;
   transition:
     opacity 0.2s,
     width 0.35s var(--ease-settle),
@@ -1043,7 +1034,6 @@ body > footer,
   margin: -32px 0 0 -32px;
   border-radius: 2px;
   border-color: transparent;
-  mix-blend-mode: normal;
 }
 .cine-cursor-ring.is-pressed {
   transform-origin: center;
@@ -1124,4 +1114,10 @@ body > footer,
 @media (prefers-reduced-motion: reduce) {
   .end-credits { height: auto; mask-image: none; }
   .end-credits-roll { animation: none; }
+}
+
+/* Off-screen ambient animations are paused (components/shared/OffscreenAnimationPauser). */
+[data-anim-scope][data-offscreen="true"],
+[data-anim-scope][data-offscreen="true"] * {
+  animation-play-state: paused !important;
 }

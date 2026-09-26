@@ -20,7 +20,7 @@ const CREDITS: [string, string][] = [
  */
 export function EndCredits() {
   return (
-    <div className="end-credits relative mt-2 overflow-hidden border-y border-white/10" aria-label="End credits">
+    <div data-anim-scope className="end-credits relative mt-2 overflow-hidden border-y border-white/10" aria-label="End credits">
       <div className="end-credits-roll py-6">
         {CREDITS.map(([role, name]) => (
           <p key={role} className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-4 py-1.5">

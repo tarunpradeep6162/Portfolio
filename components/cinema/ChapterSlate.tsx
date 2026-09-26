@@ -36,8 +36,10 @@ export function ChapterSlate({ chapter, title, note }: { chapter: string; title:
         .fromTo(q(".slate-chapter"), { opacity: 0, x: -24 }, { opacity: 1, x: 0, ease: "cinema.cut", duration: 0.35 }, 0.25)
         .fromTo(
           q(".slate-title"),
-          { opacity: 0, filter: "blur(14px)", letterSpacing: "0.2em" },
-          { opacity: 1, filter: "blur(0px)", letterSpacing: "-0.04em", ease: "cinema.push", duration: 0.7 },
+          // Scrubbed per scroll frame, so transform + opacity only: blur
+          // repainted and letter-spacing re-laid-out the title every frame.
+          { opacity: 0, scale: 1.12, yPercent: 12, transformOrigin: "0% 100%" },
+          { opacity: 1, scale: 1, yPercent: 0, ease: "cinema.push", duration: 0.7 },
           0.3,
         )
         .fromTo(q(".slate-rule"), { scaleX: 0 }, { scaleX: 1, ease: "cinema.reveal", duration: 0.6 }, 0.45);

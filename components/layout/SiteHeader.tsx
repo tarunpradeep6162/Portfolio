@@ -19,7 +19,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/92 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 h-[4.5rem] border-b border-white/10 bg-[var(--color-control-black)]/[0.97]">
       <Container className="flex h-full items-center justify-between">
         <Link
           href="/"

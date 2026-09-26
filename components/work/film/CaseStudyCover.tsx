@@ -43,8 +43,8 @@ export function CaseStudyCover({ children }: { children: React.ReactNode }) {
       } else {
         gsap.fromTo(
           art,
-          { scale: 1.18, filter: "blur(12px)", opacity: 0 },
-          { scale: 1, filter: "blur(0px)", opacity: 1, duration: 1.6, ease: "cinema.push", clearProps: "filter" },
+          { scale: 1.18, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 1.6, ease: "cinema.push" },
         );
       }
       gsap.to(art, {

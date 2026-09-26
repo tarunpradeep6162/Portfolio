@@ -15,7 +15,8 @@
     "audit:html": "node scripts/audit-static-html.mjs",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
     "ci:summary": "node scripts/ci/create-summary.mjs",
-    "eval:rc01": "node scripts/eval-rc01.mjs"
+    "eval:rc01": "node scripts/eval-rc01.mjs",
+    "export:avatar": "node scripts/export-avatar.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

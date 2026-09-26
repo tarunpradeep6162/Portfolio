@@ -46,7 +46,7 @@ export interface EvidenceItem {
   href?: string;
 }
 
-export type SceneKind = "atlas" | "time-machine" | "rc01" | null;
+export type SceneKind = "atlas" | "time-machine" | "rc01" | "avatar" | null;
 
 export type VisitorPath = "recruiter" | "engineer" | "explorer" | null;
 

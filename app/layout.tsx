@@ -7,6 +7,8 @@ import { ExperienceProvider } from "@/lib/v6/ExperienceProvider";
 import { SmoothScroll } from "@/components/shared/SmoothScroll";
 import { CustomCursor } from "@/components/shared/CustomCursor";
 import { AnalyticsTracker } from "@/components/shared/AnalyticsTracker";
+import { BootSequence, bootGateScript } from "@/components/shared/BootSequence";
+import { ScrollProgress } from "@/components/shared/ScrollProgress";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -38,8 +40,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-field="control" className="h-full scroll-smooth">
+    <html lang="en" data-field="control" className="h-full scroll-smooth" suppressHydrationWarning>
       <body className="flex min-h-full flex-col font-body antialiased cursor-none">
+        {/* Must run before the boot overlay paints - see BootSequence.tsx. */}
+        <script dangerouslySetInnerHTML={{ __html: bootGateScript }} />
+        <BootSequence />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
@@ -50,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ExperienceProvider>
           <SkipLink />
           <SiteHeader />
+          <ScrollProgress />
           <main id="main-content" className="flex-1">
             {children}
           </main>

@@ -272,8 +272,12 @@ body::before {
 }
 
 /* Visual effect enhancements */
+/* The decorative glows below sit partly outside their sections. `clip`
+   (not `hidden`) trims them without creating a scroll container, so the
+   sticky column inside #spine keeps working. */
 #work {
   position: relative;
+  overflow-x: clip;
 }
 
 #work::before {
@@ -294,6 +298,7 @@ body::before {
 
 #spine {
   position: relative;
+  overflow-x: clip;
 }
 
 #spine::before {
@@ -386,14 +391,18 @@ button:active:not(:disabled) {
   animation: button-press 0.3s var(--ease-spine);
 }
 
-/* Link hover animations */
-a {
-  position: relative;
-  transition: color 0.2s ease;
-}
+/* Link defaults. In the base layer so any utility class on a link
+   (fixed, absolute, hover:text-...) wins - unlayered, these rules silently
+   overrode Tailwind utilities site-wide (e.g. the skip link's `fixed`). */
+@layer base {
+  a {
+    position: relative;
+    transition: color 0.2s ease;
+  }
 
-a:hover:not(.no-animation) {
-  color: var(--accent);
+  a:hover:not(.no-animation) {
+    color: var(--accent);
+  }
 }
 
 /* Card animations */
@@ -477,5 +486,143 @@ textarea:focus {
 
   main {
     display: block;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Cinematic layer: boot sequence, route transitions, scroll progress.
+   Every effect here is decorative and disabled for reduced motion.
+   ------------------------------------------------------------------------ */
+
+/* Boot sequence - pure CSS timeline (see components/shared/BootSequence).
+   Plays only when the pre-paint gate sets data-boot="play"; it also clears
+   itself without JavaScript. Total: ~1.9s. */
+.boot-overlay {
+  display: none;
+}
+[data-boot="play"] .boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: block;
+  pointer-events: none;
+  animation: boot-hide 0s linear 1.9s forwards;
+}
+.boot-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.5%;
+  background-color: var(--color-control-black);
+  animation: 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.18s forwards;
+}
+.boot-panel-top {
+  top: 0;
+  animation-name: boot-split-up;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-signal-lime) 35%, transparent);
+}
+.boot-panel-bottom {
+  bottom: 0;
+  animation-name: boot-split-down;
+}
+.boot-content {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(34rem, calc(100vw - 3rem));
+  transform: translate(-50%, -50%);
+  animation: boot-content-out 0.35s var(--ease-spine) 1.08s forwards;
+}
+.boot-line {
+  opacity: 0;
+  animation: boot-line-in 0.28s var(--ease-spine) forwards;
+}
+.boot-progress {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: boot-progress 1.1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes boot-split-up {
+  to { transform: translateY(-101%); }
+}
+@keyframes boot-split-down {
+  to { transform: translateY(101%); }
+}
+@keyframes boot-content-out {
+  to { opacity: 0; transform: translate(-50%, calc(-50% - 16px)); }
+}
+@keyframes boot-line-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes boot-progress {
+  to { transform: scaleX(1); }
+}
+@keyframes boot-hide {
+  to { visibility: hidden; }
+}
+
+/* Route transition: a lime scan line sweeps the viewport while the new
+   page rises in (components/shared/RouteTransition). */
+.route-scan {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 45;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--color-signal-lime) 20%, var(--color-signal-lime) 80%, transparent);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-signal-lime) 45%, transparent);
+  animation: route-scan 0.75s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes route-scan {
+  0% { transform: translateY(4.5rem); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+.route-enter {
+  animation: route-enter 0.7s var(--ease-spine) both;
+}
+@keyframes route-enter {
+  from { opacity: 0; transform: translateY(28px); clip-path: inset(0 0 12% 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+
+/* Scroll progress rail under the sticky header. */
+.scroll-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 4.5rem;
+  z-index: 41;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: var(--color-signal-lime);
+  pointer-events: none;
+}
+
+/* Split-word heading reveal (components/shared/SplitReveal). */
+.split-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.split-word > span {
+  display: inline-block;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-boot="play"] .boot-overlay,
+  .route-scan,
+  .scroll-progress {
+    display: none;
+  }
+  .route-enter {
+    animation: none;
   }
 }

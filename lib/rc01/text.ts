@@ -9,6 +9,7 @@ export type RichSegment =
 
 export type RichBlock =
   | { type: "paragraph"; segments: RichSegment[] }
+  | { type: "heading"; level: 2 | 3; segments: RichSegment[] }
   | { type: "list"; ordered: boolean; items: RichSegment[][] }
   | { type: "code"; language: string; code: string };
 
@@ -120,9 +121,15 @@ export function parseBlocks(input: string): RichBlock[] {
       list.items[list.items.length - 1] += ` ${line.trim()}`;
       continue;
     }
+    const heading = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: "heading", level: heading[1].length <= 2 ? 2 : 3, segments: parseRichText(heading[2]) });
+      continue;
+    }
     flushList();
-    // Headings aren't styled in the narrow chat; keep their text.
-    paragraph.push(line.replace(/^#{1,6}\s+/, ""));
+    paragraph.push(line);
   }
   flushParagraph();
   flushList();

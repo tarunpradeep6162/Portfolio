@@ -5,16 +5,17 @@ import { ExternalLink } from "@/components/ui/ExternalLink";
 import { HeroCopyReveal } from "./HeroCopyReveal";
 import { InfrastructureObservatory } from "./InfrastructureObservatory";
 import { ParallaxLayers } from "./ParallaxLayers";
+import { HeroScrollScene } from "./HeroScrollScene";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
   return (
-    <section className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
+    <HeroScrollScene className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
       <ParallaxLayers />
 
       <Container className="relative grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">
         <HeroCopyReveal>
-          <div className="relative z-10 max-w-[46rem]">
+          <div data-scene="copy" className="relative z-10 max-w-[46rem]">
             <p
               data-reveal
               className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--accent)] sm:text-xs"
@@ -67,12 +68,12 @@ export function Hero() {
           </div>
         </HeroCopyReveal>
 
-        <div className="relative -mx-10 -mb-20 -mt-6 min-w-0 sm:-mx-4 lg:m-0">
+        <div data-scene="orbit" className="relative -mx-10 -mb-20 -mt-6 min-w-0 sm:-mx-4 lg:m-0">
           <InfrastructureObservatory />
         </div>
       </Container>
 
-      <div className="border-t border-[var(--line)] bg-black/15">
+      <div data-scene="stats" className="border-t border-[var(--line)] bg-black/15">
         <Container className="grid divide-y divide-[var(--line)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {[
             ["Role", "Cloud Engineer"],
@@ -93,6 +94,6 @@ export function Hero() {
           ))}
         </Container>
       </div>
-    </section>
+    </HeroScrollScene>
   );
 }

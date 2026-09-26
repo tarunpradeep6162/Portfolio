@@ -10,6 +10,7 @@ import { InteractiveTimeline } from "@/components/about/InteractiveTimeline";
 import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { SplitReveal } from "@/components/shared/SplitReveal";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -34,9 +35,7 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
               <Eyebrow>Selected systems / 01</Eyebrow>
-              <h2 className="mt-5 max-w-[12ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">
-                Evidence over adjectives.
-              </h2>
+              <SplitReveal className="mt-5 max-w-[12ch] font-display text-display font-semibold leading-[0.94] tracking-[-0.055em]">Evidence over adjectives.</SplitReveal>
             </div>
             <div className="lg:pb-2">
               <p className="max-w-[56ch] text-lead leading-8 text-[var(--ink-muted)]">
@@ -78,9 +77,7 @@ export default function Home() {
           <div>
             <div className="lg:sticky lg:top-32">
               <Eyebrow>Reliability protocol / 02</Eyebrow>
-              <h2 className="mt-5 max-w-[10ch] font-display text-display font-semibold leading-[0.93] tracking-[-0.055em] text-[var(--ink)]">
-                A system is only as strong as its recovery path.
-              </h2>
+              <SplitReveal className="mt-5 max-w-[10ch] font-display text-display font-semibold leading-[0.93] tracking-[-0.055em] text-[var(--ink)]">A system is only as strong as its recovery path.</SplitReveal>
               <p className="mt-6 max-w-[46ch] text-base leading-7 text-[var(--ink-muted)]">
                 The same eight-stage protocol connects every case study. Open a
                 stage to inspect the operating principle and see how much
@@ -150,9 +147,7 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:gap-20">
             <div>
               <Eyebrow>Operating history / 04</Eyebrow>
-              <h2 className="mt-5 max-w-[11ch] font-display text-display font-semibold leading-[0.95] tracking-[-0.055em]">
-                From support pressure to cloud delivery.
-              </h2>
+              <SplitReveal className="mt-5 max-w-[11ch] font-display text-display font-semibold leading-[0.95] tracking-[-0.055em]">From support pressure to cloud delivery.</SplitReveal>
               <Link
                 href="/about"
                 className="mt-7 inline-flex items-center gap-3 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent-secondary)] hover:text-[var(--accent)]"
@@ -227,9 +222,7 @@ export default function Home() {
         />
         <Container className="relative">
           <Eyebrow>Final route / 07</Eyebrow>
-          <h2 className="mt-6 max-w-[13ch] font-display text-display font-semibold leading-[0.92] tracking-[-0.06em] text-[var(--ink)]">
-            Bring me the system that cannot stay manual.
-          </h2>
+          <SplitReveal className="mt-6 max-w-[13ch] font-display text-display font-semibold leading-[0.92] tracking-[-0.06em] text-[var(--ink)]">Bring me the system that cannot stay manual.</SplitReveal>
           <p className="mt-6 max-w-[54ch] text-lead leading-8 text-[var(--ink-muted)]">
             Start with the infrastructure problem, the delivery bottleneck, or
             the recovery question.

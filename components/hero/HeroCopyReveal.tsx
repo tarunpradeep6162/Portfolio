@@ -28,8 +28,13 @@ export function HeroCopyReveal({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // On a first visit the boot sequence owns the opening seconds; the
+      // copy reveals as its panels part rather than behind them.
+      const booting = document.documentElement.dataset.boot === "play";
       gsap.set(items, { opacity: 0, y: 16, filter: "blur(4px)" });
       gsap.to(items, {
+        delay: booting ? 1.3 : 0,
+        clearProps: "filter",
         opacity: 1,
         y: 0,
         filter: "blur(0px)",

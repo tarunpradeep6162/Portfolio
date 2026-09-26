@@ -131,7 +131,7 @@ function Markdown({ text }: { text: string }) {
           );
         }
         return (
-          <p key={index}>
+          <p key={index} className={block.type === "heading" ? "font-semibold text-[var(--color-cloud-linen)]" : undefined}>
             <Inline segments={block.segments} />
           </p>
         );

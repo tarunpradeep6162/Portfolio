@@ -1,10 +1,12 @@
 import { site } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { ExternalLink } from "@/components/ui/ExternalLink";
+import { EndCredits } from "@/components/cinema/EndCredits";
+import { TrailerButton } from "@/components/cinema/TrailerButton";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[var(--color-control-black)] py-8 text-[var(--color-telemetry-steel)]">
+    <footer className="site-footer border-t border-white/10 bg-[var(--color-control-black)] py-8 text-[var(--color-telemetry-steel)]">
       <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
           <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
@@ -20,6 +22,7 @@ export function Footer() {
           aria-label="Footer"
           className="flex flex-wrap items-center gap-5 font-mono text-[10px] uppercase tracking-[0.12em]"
         >
+          <TrailerButton />
           <ExternalLink href={site.github}>GitHub</ExternalLink>
           <ExternalLink href={site.linkedin}>LinkedIn</ExternalLink>
           <a
@@ -35,6 +38,9 @@ export function Footer() {
             Back to top
           </a>
         </nav>
+      </Container>
+      <Container className="mt-8">
+        <EndCredits />
       </Container>
       <Container className="mt-8 flex items-center justify-between border-t border-white/10 pt-5 font-mono text-[8px] uppercase tracking-[0.18em]">
         <span>{site.location}</span>

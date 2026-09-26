@@ -6,11 +6,12 @@ import { HeroCopyReveal } from "./HeroCopyReveal";
 import { InfrastructureObservatory } from "./InfrastructureObservatory";
 import { ParallaxLayers } from "./ParallaxLayers";
 import { HeroScrollScene } from "./HeroScrollScene";
+import { KineticName } from "@/components/cinema/KineticName";
 import { hero, site } from "@/content/site";
 
 export function Hero() {
   return (
-    <HeroScrollScene className="control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
+    <HeroScrollScene className="cinema-window control-grid relative overflow-hidden border-b border-[var(--line)] bg-[var(--color-control-black)]">
       <ParallaxLayers />
 
       <Container className="relative grid min-h-[calc(100svh-4.5rem)] items-center gap-12 py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:gap-8 lg:py-16">
@@ -31,9 +32,7 @@ export function Hero() {
               data-reveal
               className="mt-7 font-display text-name font-bold uppercase leading-[0.78] tracking-[-0.075em] text-[var(--ink)]"
             >
-              Tarun
-              <br />
-              <span className="text-[var(--accent)]">Pradeep</span>
+              <KineticName lines={[{ text: "Tarun" }, { text: "Pradeep", className: "text-[var(--accent)]" }]} />
             </h1>
 
             <p

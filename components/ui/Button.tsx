@@ -31,14 +31,14 @@ export function Button({
 
   if (isExternal) {
     return (
-      <a href={href} className={classes} {...rest}>
+      <a href={href} className={classes} data-magnetic {...rest}>
         {children}
       </a>
     );
   }
 
   return (
-    <Link href={href} className={classes} {...rest}>
+    <Link href={href} className={classes} data-magnetic {...rest}>
       {children}
     </Link>
   );

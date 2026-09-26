@@ -58,7 +58,7 @@ export function ParallaxLayers() {
         y: -80,
         opacity: 0,
         duration: 1.2,
-        ease: "power2.out",
+        ease: "cinema.push",
       });
 
       return () => {

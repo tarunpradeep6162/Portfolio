@@ -2,7 +2,12 @@
 
 import { Component, type ReactNode, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Boxes } from "lucide-react";
+import { Boxes, Clapperboard } from "lucide-react";
+import { useGitHubPulse } from "@/lib/cinema/useGitHubPulse";
+import { emitCue } from "@/lib/cinema/cues";
+import { site } from "@/content/site";
+import { parseFlowNodes } from "@/lib/v6/flowParser";
+import type { IncidentPhase } from "./AtlasSpatialScene";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useCompanionPreferences } from "@/lib/companion/useCompanionPreferences";
@@ -64,6 +69,22 @@ export function AtlasCanvasHost({
   const [erroredOut, setErroredOut] = useState(false);
 
   const active = experienceState.activeScene === "atlas";
+  const [cinematic, setCinematic] = useState(false);
+  const [incidentPhase, setIncidentPhase] = useState<{ phase: IncidentPhase | null; nodeId: string | null }>({
+    phase: null,
+    nodeId: null,
+  });
+  const pulse = useGitHubPulse(site.github, active);
+  const failedLabel = incidentPhase.nodeId
+    ? (parseFlowNodes(flow).find((n) => n.id === incidentPhase.nodeId)?.label ?? "a node")
+    : null;
+
+  // The film is framed widescreen: letterbox bars while it plays.
+  useEffect(() => {
+    if (!active || !cinematic) return;
+    emitCue({ type: "letterbox", on: true, source: "atlas-film" });
+    return () => emitCue({ type: "letterbox", on: false, source: "atlas-film" });
+  }, [active, cinematic]);
   const qualityTier = resolveQualityTier(preferences.lowPowerMode);
 
   // Three.js's own WebGLRenderer.dispose() (called by R3F when this scene
@@ -147,13 +168,44 @@ export function AtlasCanvasHost({
               onSelectNode={onSelectNode}
               qualityTier={qualityTier}
               onError={handleSceneError}
+              cinematic={cinematic}
+              trafficRate={pulse.rate}
+              onIncidentPhase={(phase, nodeId) => setIncidentPhase({ phase, nodeId })}
             />
           </SceneErrorBoundary>
         </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <button
+            type="button"
+            aria-pressed={cinematic}
+            onClick={() => setCinematic((v) => !v)}
+            className="inline-flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)] aria-pressed:text-[var(--color-signal-lime)]"
+          >
+            <Clapperboard size={13} aria-hidden />
+            {cinematic ? "Stop incident film" : "Play incident film"}
+          </button>
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)]">
+            Traffic follows live GitHub activity
+            {pulse.weekEvents !== null ? ` · ${pulse.weekEvents} public events this week` : ""}
+          </p>
+        </div>
+        {cinematic && (
+          <p
+            role="status"
+            className="mt-3 border-l-2 border-[var(--color-signal-coral)] pl-3 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink)]"
+          >
+            {incidentPhase.phase === "tour" && "Walking the system, node by node"}
+            {incidentPhase.phase === "incident" && `Incident: ${failedLabel} is down - alarms firing`}
+            {incidentPhase.phase === "reroute" && `Traffic rerouting around ${failedLabel}`}
+            {incidentPhase.phase === "recovered" && `${failedLabel} recovered - all paths green`}
+            {incidentPhase.phase === null && "Rolling"}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => {
             activeRef.current = false;
+            setCinematic(false);
             dispatch({ type: "SCENE_CHANGED", scene: null });
           }}
           className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-muted)] transition-colors hover:text-[var(--color-signal-lime)]"

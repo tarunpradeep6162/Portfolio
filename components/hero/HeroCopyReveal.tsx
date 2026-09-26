@@ -6,6 +6,7 @@ import { gsap } from "gsap";
 import { registerGsap } from "@/lib/motion/gsapConfig";
 import { motion as motionTokens } from "@/lib/motion/tokens";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
+import { BOOT_END_EVENT, BOOT_REVEAL_MS } from "@/components/shared/BootSequence";
 
 /**
  * The hero's single strong entrance moment (spec §6): name, positioning
@@ -28,12 +29,12 @@ export function HeroCopyReveal({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // On a first visit the boot sequence owns the opening seconds; the
-      // copy reveals as its panels part rather than behind them.
+      // On a first visit the cold open owns the opening seconds; the copy
+      // reveals as its letterbox parts (or the moment it is skipped).
       const booting = document.documentElement.dataset.boot === "play";
       gsap.set(items, { opacity: 0, y: 16, filter: "blur(4px)" });
-      gsap.to(items, {
-        delay: booting ? 1.3 : 0,
+      const tween = gsap.to(items, {
+        paused: booting,
         clearProps: "filter",
         opacity: 1,
         y: 0,
@@ -42,6 +43,15 @@ export function HeroCopyReveal({ children }: { children: React.ReactNode }) {
         ease: motionTokens.ease.gsapSpine,
         stagger: motionTokens.stagger.hero,
       });
+      if (booting) {
+        const play = () => tween.play();
+        window.addEventListener(BOOT_END_EVENT, play, { once: true });
+        const fallback = window.setTimeout(play, BOOT_REVEAL_MS + 400);
+        return () => {
+          window.removeEventListener(BOOT_END_EVENT, play);
+          window.clearTimeout(fallback);
+        };
+      }
     },
     { scope, dependencies: [reducedMotion] },
   );

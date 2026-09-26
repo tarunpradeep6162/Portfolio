@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { registerGsap } from "@/lib/motion/gsapConfig";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
+import { shots } from "@/lib/motion/tokens";
 
 type Tag = "h1" | "h2" | "h3" | "p";
 
@@ -37,11 +38,16 @@ export function SplitReveal({
         gsap.set(words, { yPercent: 0 });
         return;
       }
-      gsap.set(words, { yPercent: 110 });
+      // A "reveal" shot: each word rises out of its mask, un-skewing and
+      // coming into focus, like type on a camera move.
+      gsap.set(words, { yPercent: 115, skewY: 7, filter: "blur(6px)", transformOrigin: "0% 100%" });
       gsap.to(words, {
         yPercent: 0,
-        duration: 1,
-        ease: "expo.out",
+        skewY: 0,
+        filter: "blur(0px)",
+        clearProps: "filter",
+        duration: shots.reveal.duration * 1.1,
+        ease: "cinema.reveal",
         stagger: 0.055,
         delay,
         scrollTrigger: { trigger: ref.current, start: "top 85%", once: true },
@@ -53,7 +59,7 @@ export function SplitReveal({
   const words = children.split(/\s+/).filter(Boolean);
   const Tag = as;
   return (
-    <Tag ref={ref as React.Ref<HTMLHeadingElement>} className={className}>
+    <Tag ref={ref as React.Ref<HTMLHeadingElement>} className={`kinetic-skew ${className ?? ""}`}>
       {/* Screen readers (and search engines) get the sentence once, intact. */}
       <span className="sr-only">{children}</span>
       {/* Real (breakable) spaces between masked words, so headings still wrap. */}

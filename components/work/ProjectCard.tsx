@@ -19,7 +19,7 @@ export function ProjectCard({
   const body = (
     <>
       {project.kind === "flagship" && (
-        <div className="relative overflow-hidden bg-[var(--color-control-black)]">
+        <div data-flip-cover className="relative overflow-hidden bg-[var(--color-control-black)]">
           {project.screenshot.status === "ready" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

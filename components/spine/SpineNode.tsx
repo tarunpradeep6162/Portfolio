@@ -4,23 +4,38 @@ import { useId, useState } from "react";
 import { Plus } from "lucide-react";
 import type { SpineStage } from "@/content/types";
 import { cn } from "@/lib/cn";
+import type { RunState } from "./useReleaseRun";
 
 export function SpineNode({
   stage,
   index,
   active,
   proofCount,
+  runState,
 }: {
   stage: SpineStage;
   index: number;
   active?: boolean;
   proofCount: number;
+  /** Phase 9: where the simulated release is relative to this stage. */
+  runState?: RunState;
 }) {
   const [expanded, setExpanded] = useState(false);
   const descriptionId = useId();
 
   return (
-    <div className="group border-b border-[var(--line)]">
+    <div className="group relative border-b border-[var(--line)]" data-run={runState}>
+      {runState && runState !== "pending" && (
+        <span
+          aria-hidden
+          className={cn(
+            "run-chip absolute right-14 top-1/2 -translate-y-1/2 font-mono text-[8px] uppercase tracking-[0.16em] sm:right-16",
+            runState === "alert" ? "text-[var(--color-signal-coral)]" : "text-[var(--color-signal-lime)]",
+          )}
+        >
+          {runState === "done" ? "✓ passed" : runState === "alert" ? "▲ alert" : "● running"}
+        </span>
+      )}
       <button
         type="button"
         data-spine-node

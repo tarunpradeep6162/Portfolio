@@ -9,6 +9,11 @@ import { CustomCursor } from "@/components/shared/CustomCursor";
 import { AnalyticsTracker } from "@/components/shared/AnalyticsTracker";
 import { BootSequence, bootGateScript } from "@/components/shared/BootSequence";
 import { ScrollProgress } from "@/components/shared/ScrollProgress";
+import { CinemaStage } from "@/components/cinema/CinemaStage";
+import { FilmGrain } from "@/components/cinema/FilmGrain";
+import { SoundBridge } from "@/components/cinema/SoundBridge";
+import { VelocitySkew } from "@/components/cinema/VelocitySkew";
+import { Letterbox } from "@/components/cinema/Letterbox";
 import { site } from "@/content/site";
 import { personJsonLd } from "@/lib/seo/metadata";
 import "@fontsource-variable/syne";
@@ -30,6 +35,7 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     type: "website",
+    videos: [{ url: "/trailer/tarun-portfolio-trailer.webm", type: "video/webm", width: 1280, height: 720 }],
   },
   twitter: {
     card: "summary_large_image",
@@ -41,7 +47,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" data-field="control" className="h-full scroll-smooth" suppressHydrationWarning>
-      <body className="flex min-h-full flex-col font-body antialiased cursor-none">
+      <body className="flex min-h-full flex-col font-body antialiased">
         {/* Must run before the boot overlay paints - see BootSequence.tsx. */}
         <script dangerouslySetInnerHTML={{ __html: bootGateScript }} />
         <BootSequence />
@@ -52,7 +58,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SmoothScroll />
         <CustomCursor />
         <AnalyticsTracker />
+        <SoundBridge />
+        <VelocitySkew />
+        <FilmGrain />
+        <Letterbox />
         <ExperienceProvider>
+          <CinemaStage />
           <SkipLink />
           <SiteHeader />
           <ScrollProgress />

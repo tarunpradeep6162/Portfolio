@@ -60,8 +60,17 @@ export function InfrastructureObservatory() {
   return (
     <figure
       aria-hidden
-      className="relative mx-auto aspect-square w-full max-w-[42rem] overflow-hidden rounded-full border border-white/10 bg-[radial-gradient(circle_at_50%_50%,#121f2c_0%,#080d12_52%,#06090d_74%)] shadow-[0_0_0_1px_rgba(216,255,79,0.03),0_50px_120px_rgba(0,0,0,0.45)]"
+      data-stage-anchor="hero"
+      className="observatory-disc relative mx-auto aspect-square w-full max-w-[42rem] overflow-hidden rounded-full border border-white/10 bg-[radial-gradient(circle_at_50%_50%,#121f2c_0%,#080d12_52%,#06090d_74%)] shadow-[0_0_0_1px_rgba(216,255,79,0.03),0_50px_120px_rgba(0,0,0,0.45)]"
     >
+      {/* Curated still for reduced motion / no 3D stage: the same figure the
+          live stage renders, as a still frame inside the Observatory. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/avatar/renders/three-quarter.png"
+        alt=""
+        className="observatory-still absolute left-1/2 top-[9%] h-[86%] w-auto -translate-x-1/2 opacity-80 [mask-image:radial-gradient(circle_at_50%_45%,#000_45%,transparent_72%)]"
+      />
       <div className="absolute inset-[8%] rounded-full border border-white/[0.05]" />
       <div className="absolute inset-[19%] rounded-full border border-dashed border-white/10 observatory-orbit" />
       <div className="absolute inset-[31%] rounded-full border border-white/[0.07] observatory-orbit-reverse" />
@@ -94,7 +103,7 @@ export function InfrastructureObservatory() {
           <circle cx="350" cy="350" r="214" fill="none" />
         </g>
 
-        <circle cx="350" cy="350" r="150" fill="url(#coreGlow)" />
+        <circle className="observatory-core" cx="350" cy="350" r="150" fill="url(#coreGlow)" />
         <path
           d={route}
           fill="none"
@@ -102,6 +111,7 @@ export function InfrastructureObservatory() {
           strokeOpacity="0.16"
           strokeWidth="12"
           filter="url(#softGlow)"
+          className="observatory-core"
         />
         <path
           d={route}
@@ -111,7 +121,7 @@ export function InfrastructureObservatory() {
           className="observatory-trace"
         />
 
-        <g>
+        <g className="observatory-core">
           <circle
             cx="350"
             cy="350"

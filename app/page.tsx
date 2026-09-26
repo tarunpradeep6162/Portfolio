@@ -11,6 +11,7 @@ import { CertificationList } from "@/components/about/CertificationList";
 import { CopyEmailButton } from "@/components/contact/CopyEmailButton";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { SplitReveal } from "@/components/shared/SplitReveal";
+import { ChapterSlate } from "@/components/cinema/ChapterSlate";
 import { projects } from "@/content/projects";
 import { skillDomains } from "@/content/skills";
 import { experience } from "@/content/experience";
@@ -25,6 +26,8 @@ export default function Home() {
   return (
     <>
       <Hero />
+
+      <ChapterSlate chapter="Chapter 01" title="Selected systems" note="Four systems, built and shipped" />
 
       <section
         id="work"
@@ -69,9 +72,11 @@ export default function Home() {
         </Container>
       </section>
 
+      <ChapterSlate chapter="Chapter 02" title="The recovery path" note="A release travels the spine - scroll to run it" />
+
       <section
         id="spine"
-        className="control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
+        className="cinema-window control-grid relative border-y border-white/10 bg-[var(--color-control-black)] py-20 sm:py-28 lg:py-36"
       >
         <Container className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
           <div>
@@ -208,9 +213,11 @@ export default function Home() {
         </Container>
       </section>
 
+      <ChapterSlate chapter="Final chapter" title="The route to you" note="Open channel" />
+
       <section
         id="contact"
-        className="control-grid relative overflow-hidden bg-[var(--color-control-black)] py-24 sm:py-32 lg:py-40"
+        className="cinema-window control-grid relative overflow-hidden bg-[var(--color-control-black)] py-24 sm:py-32 lg:py-40"
       >
         <div
           aria-hidden
@@ -218,6 +225,7 @@ export default function Home() {
         />
         <div
           aria-hidden
+          data-stage-anchor="contact"
           className="absolute -right-8 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full border border-[var(--color-signal-lime)]/20"
         />
         <Container className="relative">

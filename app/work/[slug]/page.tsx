@@ -17,6 +17,19 @@ import {
 } from "@/components/work/ProjectCoverArt";
 import { projects } from "@/content/projects";
 import type { FlagshipProject } from "@/content/types";
+import { parseFlowNodes } from "@/lib/v6/flowParser";
+import { CaseStudyCover } from "@/components/work/film/CaseStudyCover";
+import { CountUpStats } from "@/components/work/film/CountUpStats";
+import { ChapterRail } from "@/components/work/film/ChapterRail";
+import { BeforeAfter } from "@/components/work/film/BeforeAfter";
+
+const CHAPTERS = [
+  { id: "chapter-01", number: "01", title: "The constraint" },
+  { id: "chapter-02", number: "02", title: "The architecture" },
+  { id: "chapter-03", number: "03", title: "The engineering decisions" },
+  { id: "chapter-04", number: "04", title: "The hard part" },
+  { id: "chapter-05", number: "05", title: "What shipped" },
+];
 
 function getFlagship(slug: string): FlagshipProject | undefined {
   const project = projects.find((item) => item.slug === slug);
@@ -48,7 +61,10 @@ function Chapter({
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-4 border-t border-[var(--line)] py-10 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:py-14">
+    <section
+      id={`chapter-${number}`}
+      data-chapter
+      className="scroll-mt-28 grid gap-4 border-t border-[var(--line)] py-10 sm:grid-cols-[4rem_1fr] sm:gap-8 sm:py-14">
       <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--accent-secondary)]">
         {number}
       </span>
@@ -78,7 +94,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
 
   return (
     <article>
-      <header className="control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20 lg:py-24">
+      <header className="cinema-window cinema-window-deep control-grid relative overflow-hidden border-b border-white/10 bg-[var(--color-control-black)] py-16 sm:py-20 lg:py-24">
         <Container>
           <Link
             href="/work"
@@ -100,6 +116,14 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
               <p className="mt-7 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--accent)]">
                 {project.categories.join(" / ")}
               </p>
+              <CountUpStats
+                stats={[
+                  { value: parseFlowNodes(project.flow).length, label: "Flow nodes" },
+                  { value: project.implementationDecisions.length, label: "Decisions" },
+                  { value: project.toolsAndServices.length, label: "Tools" },
+                  { value: project.spineStages.length, label: "Protocol stages" },
+                ]}
+              />
               {project.labelNote && (
                 <p className="mt-4 max-w-[60ch] text-xs leading-5 text-[var(--ink-muted)]">
                   {project.labelNote}
@@ -107,7 +131,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
               )}
             </div>
 
-            <div className="shadow-[0_32px_100px_rgba(0,0,0,0.35)]">
+            <CaseStudyCover>
               {project.screenshot.status === "ready" ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -122,7 +146,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                   bordered={false}
                 />
               )}
-            </div>
+            </CaseStudyCover>
           </div>
         </Container>
       </header>
@@ -163,10 +187,12 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                   </dd>
                 </div>
               </dl>
+              <ChapterRail chapters={CHAPTERS} />
             </div>
           </aside>
 
           <div>
+            <BeforeAfter before={project.context} after={project.outcome} />
             <Chapter number="01" title="The constraint">
               <p>{project.context}</p>
             </Chapter>

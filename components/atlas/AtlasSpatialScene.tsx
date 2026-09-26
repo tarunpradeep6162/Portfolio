@@ -1,4 +1,6 @@
 "use client";
+/* eslint-disable react-hooks/immutability -- the incident state and three.js objects are
+   mutable per-frame render resources, mutated inside useFrame by design. */
 
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -30,14 +32,31 @@ import { qualityPresets, type QualityTier } from "@/lib/companion/state";
  */
 const SCALE = 1 / 55;
 
+const CORAL = new THREE.Color("#ff6847");
+const LIME = new THREE.Color("#d8ff4f");
+const NODE_IDLE = new THREE.Color("#232e3a");
+
+export type IncidentPhase = "tour" | "incident" | "reroute" | "recovered";
+
+/** Shared, per-frame state of the cinematic incident film (Phase 10). */
+interface IncidentState {
+  phase: IncidentPhase | null;
+  failedId: string | null;
+  flash: number;
+}
+
 function AtlasNode({
+  nodeId,
   position,
   active,
   onSelect,
+  incident,
 }: {
+  nodeId: string;
   position: [number, number, number];
   active: boolean;
   onSelect: () => void;
+  incident: React.RefObject<IncidentState>;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshLambertMaterial>(null);
@@ -45,14 +64,26 @@ function AtlasNode({
   // `active` is a prop, so this callback closure (recreated each render by
   // useFrame's own subscription) always sees its latest value - no ref
   // needed to smuggle it into the render loop.
-  useFrame((_, delta) => {
-    if (materialRef.current) {
-      materialRef.current.emissiveIntensity = THREE.MathUtils.damp(
-        materialRef.current.emissiveIntensity,
-        active ? 0.9 : 0.15,
-        6,
-        delta,
-      );
+  useFrame((state, delta) => {
+    const m = materialRef.current;
+    if (!m) return;
+    const inc = incident.current;
+    const failed = inc.failedId === nodeId && (inc.phase === "incident" || inc.phase === "reroute");
+    const recovered = inc.failedId === nodeId && inc.phase === "recovered" && inc.flash > 0;
+    let intensity = active ? 0.9 : 0.15;
+    if (failed) {
+      m.emissive.copy(CORAL);
+      m.color.copy(CORAL).multiplyScalar(0.4);
+      intensity = inc.phase === "incident" ? 0.6 + Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.9 : 0.12;
+    } else {
+      m.emissive.copy(LIME);
+      m.color.copy(active || recovered ? LIME : NODE_IDLE);
+      if (recovered) intensity = 0.4 + inc.flash;
+    }
+    m.emissiveIntensity = THREE.MathUtils.damp(m.emissiveIntensity, intensity, failed ? 20 : 6, delta);
+    if (meshRef.current) {
+      const s = failed && inc.phase === "incident" ? 1 + Math.sin(state.clock.elapsedTime * 9) * 0.06 : 1;
+      meshRef.current.scale.setScalar(s);
     }
   });
 
@@ -101,12 +132,137 @@ function AtlasEdges({ points }: { points: [THREE.Vector3, THREE.Vector3][] }) {
   );
 }
 
+/**
+ * Packets travelling every edge - the system's traffic. Their speed follows
+ * `rate` (live GitHub activity, Phase 18); during the incident film,
+ * packets heading into the failed node turn coral, then vanish while
+ * traffic reroutes.
+ */
+function Packets({
+  edges,
+  rate,
+  incident,
+}: {
+  edges: { from: string; to: string; a: THREE.Vector3; b: THREE.Vector3 }[];
+  rate: number;
+  incident: React.RefObject<IncidentState>;
+}) {
+  const perEdge = 3;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const color = useMemo(() => new THREE.Color(), []);
+  useFrame((state) => {
+    const m = mesh.current;
+    if (!m) return;
+    const t = state.clock.elapsedTime;
+    const inc = incident.current;
+    edges.forEach((edge, e) => {
+      const touches = inc.failedId !== null && (edge.from === inc.failedId || edge.to === inc.failedId);
+      for (let k = 0; k < perEdge; k++) {
+        const i = e * perEdge + k;
+        const u = (t * 0.22 * (0.5 + rate) + k / perEdge + e * 0.13) % 1;
+        dummy.position.lerpVectors(edge.a, edge.b, u);
+        const hidden = touches && inc.phase === "reroute";
+        dummy.scale.setScalar(hidden ? 0 : 1);
+        dummy.updateMatrix();
+        m.setMatrixAt(i, dummy.matrix);
+        m.setColorAt(i, color.copy(touches && inc.phase === "incident" ? CORAL : LIME));
+      }
+    });
+    m.instanceMatrix.needsUpdate = true;
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  });
+  if (edges.length === 0) return null;
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, edges.length * perEdge]}>
+      <sphereGeometry args={[0.045, 10, 8]} />
+      <meshBasicMaterial toneMapped={false} />
+    </instancedMesh>
+  );
+}
+
+/**
+ * The incident film's camera (Phase 10): a 16 s loop - fly node to node,
+ * pull back wide as one node fails, hold while traffic reroutes, then the
+ * recovery flash. Outside cinematic mode the camera eases home.
+ */
+function CinematicRig({
+  enabled,
+  points,
+  home,
+  incident,
+  onPhase,
+}: {
+  enabled: boolean;
+  points: { nodeId: string; position: [number, number, number] }[];
+  home: THREE.Vector3;
+  incident: React.RefObject<IncidentState>;
+  onPhase: (phase: IncidentPhase | null, nodeId: string | null) => void;
+}) {
+  const startedAt = useRef<number | null>(null);
+  const lastPhase = useRef<IncidentPhase | null>(null);
+  const look = useMemo(() => new THREE.Vector3(), []);
+  const target = useMemo(() => new THREE.Vector3(), []);
+  const lookTarget = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame((state, delta) => {
+    const cam = state.camera;
+    const inc = incident.current;
+    if (!enabled || points.length === 0) {
+      startedAt.current = null;
+      if (inc.phase !== null) {
+        inc.phase = null;
+        inc.failedId = null;
+        onPhase(null, null);
+        lastPhase.current = null;
+      }
+      cam.position.lerp(home, 1 - Math.exp(-3 * delta));
+      look.lerp(lookTarget.set(home.x, 0, 0), 1 - Math.exp(-3 * delta));
+      cam.lookAt(look);
+      return;
+    }
+    if (startedAt.current === null) startedAt.current = state.clock.elapsedTime;
+    const t = (state.clock.elapsedTime - startedAt.current) % 16;
+    const failed = points[Math.floor(points.length / 2)];
+    let phase: IncidentPhase;
+    if (t < 8) {
+      phase = "tour";
+      const seg = 8 / points.length;
+      const i = Math.min(points.length - 1, Math.floor(t / seg));
+      const p = points[i].position;
+      // Close enough to feel like a fly-through, far enough to keep context.
+      target.set(p[0] + 0.9, p[1] + 0.55, p[2] + 3.1);
+      lookTarget.set(p[0], p[1], p[2]);
+    } else {
+      phase = t < 10.5 ? "incident" : t < 13 ? "reroute" : "recovered";
+      target.set(home.x, home.y + 0.5, home.z + 1.4);
+      lookTarget.set(failed.position[0], failed.position[1], 0);
+    }
+    inc.phase = phase;
+    inc.failedId = phase === "tour" ? null : failed.nodeId;
+    inc.flash = phase === "recovered" ? Math.max(0, 1.2 - (t - 13) * 0.8) : 0;
+    if (phase !== lastPhase.current) {
+      lastPhase.current = phase;
+      onPhase(phase, inc.failedId);
+    }
+    cam.position.lerp(target, 1 - Math.exp(-2.2 * delta));
+    look.lerp(lookTarget, 1 - Math.exp(-2.6 * delta));
+    cam.lookAt(look);
+  });
+  return null;
+}
+
 interface AtlasSpatialSceneProps {
   flow: string;
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string) => void;
   qualityTier: QualityTier;
   onError: () => void;
+  /** Phase 10: play the incident film (camera fly-through + failure + recovery). */
+  cinematic?: boolean;
+  /** Phase 18: packet traffic multiplier from live GitHub activity. */
+  trafficRate?: number;
+  onIncidentPhase?: (phase: IncidentPhase | null, nodeId: string | null) => void;
 }
 
 export function AtlasSpatialScene({
@@ -115,7 +271,11 @@ export function AtlasSpatialScene({
   onSelectNode,
   qualityTier,
   onError,
+  cinematic = false,
+  trafficRate = 1,
+  onIncidentPhase,
 }: AtlasSpatialSceneProps) {
+  const incident = useRef<IncidentState>({ phase: null, failedId: null, flash: 0 });
   const nodes = parseFlowNodes(flow);
   const edges = parseFlowEdges(nodes);
   const layout = computeAtlasLayout(nodes);
@@ -166,12 +326,34 @@ export function AtlasSpatialScene({
       <ambientLight intensity={0.65} />
       <directionalLight position={[2, 3, 4]} intensity={0.8} />
       <AtlasEdges points={edgeSegments} />
+      <Packets
+        edges={edges
+          .map((edge) => {
+            const from = positioned.find((p) => p.nodeId === edge.from);
+            const to = positioned.find((p) => p.nodeId === edge.to);
+            return from && to
+              ? { from: edge.from, to: edge.to, a: new THREE.Vector3(...from.position), b: new THREE.Vector3(...to.position) }
+              : null;
+          })
+          .filter((e): e is NonNullable<typeof e> => e !== null)}
+        rate={trafficRate}
+        incident={incident}
+      />
+      <CinematicRig
+        enabled={cinematic}
+        points={positioned.map((p) => ({ nodeId: p.nodeId, position: p.position }))}
+        home={new THREE.Vector3(centerX, 0.6, 3.4)}
+        incident={incident}
+        onPhase={(phase, nodeId) => onIncidentPhase?.(phase, nodeId)}
+      />
       {positioned.map((point) => {
         const node = nodes.find((n) => n.id === point.nodeId);
         if (!node) return null;
         return (
           <AtlasNode
             key={point.nodeId}
+            nodeId={point.nodeId}
+            incident={incident}
             position={point.position}
             active={point.nodeId === selectedNodeId}
             onSelect={() => onSelectNode(point.nodeId)}

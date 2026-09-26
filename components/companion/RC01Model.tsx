@@ -10,6 +10,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { CompanionState } from "@/lib/companion/state";
 import { GESTURE_DURATION_MS, robotSignals } from "@/lib/companion/robotSignals";
 import { buildAvatar } from "@/lib/avatar/buildAvatar";
+import { HEAD_MODEL_URL, attachHeadModel } from "@/lib/avatar/headModel";
 
 /** The hologram portrait shown on the visor (public/rc01/). */
 const FACE_TEXTURE_URL = "/rc01/face-holo.webp";
@@ -86,9 +87,23 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       o.castShadow = false;
       o.receiveShadow = false;
     });
-    return { joints, base, face };
+    return { joints, base, face, faceMesh };
   }, [avatar]);
   useEffect(() => () => avatar.dispose(), [avatar]);
+
+  // Phase 15: a sculpted head, when one has been configured.
+  useEffect(() => {
+    if (!HEAD_MODEL_URL) return;
+    let detach: (() => void) | null = null;
+    let cancelled = false;
+    attachHeadModel(avatar.root, HEAD_MODEL_URL)
+      .then((d) => (cancelled ? d() : (detach = d)))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      detach?.();
+    };
+  }, [avatar]);
 
   // Studio reflections: a PMREM-filtered room environment, generated once
   // per canvas (no HDR download), disposed with the canvas.
@@ -136,6 +151,8 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
   }, [rig, fullEmissiveDetail]);
 
   const stateEnteredAt = useRef(0);
+  const mountedAt = useRef<number | null>(null);
+  const stateChanges = useRef(0);
   const lastState = useRef<CompanionState | null>(null);
   const look = useRef(new THREE.Vector2(0, 0));
   const nextGlanceAt = useRef(2);
@@ -151,10 +168,20 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
     const { joints: j, base } = rig;
 
     if (lastState.current !== state) {
+      if (lastState.current !== null) stateChanges.current += 1;
       lastState.current = state;
       stateEnteredAt.current = t;
     }
     const stateElapsed = t - stateEnteredAt.current;
+    mountedAt.current ??= t;
+    // Walk-in (Phase 13): RC-01 strides into frame from the right when the
+    // panel opens, then settles into its idle stance.
+    const walk = Math.min(1, (t - mountedAt.current) / 1.9);
+    const walking = walk < 1;
+    const walkEase = 1 - Math.pow(1 - walk, 3);
+    const stride = walking ? Math.sin(t * 8.5) * (1 - walkEase * 0.85) : 0;
+    // Mood-change glitch: the hologram tears for a moment on each new state.
+    const glitch = stateChanges.current > 0 && stateElapsed < 0.32;
 
     // Voice energy: word boundaries bump it; engines without boundary
     // events still get a plausible talking rhythm while speech is active.
@@ -231,31 +258,40 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
     pose("chest", lean * 0.5 + breath * deg(1.2), 0, 0, 4);
     // Knees soften with the weight shift, and dip for a celebration hop.
     const hop = gestureName === "celebrate" ? Math.abs(Math.sin(gestureProgress * Math.PI * 3)) : 0;
-    pose("hipL", -hop * deg(10), 0, 0, 10);
-    pose("hipR", -hop * deg(10), 0, 0, 10);
-    pose("kneeL", hop * deg(18) + Math.max(0, sway) * deg(4), 0, 0, 10);
-    pose("kneeR", hop * deg(18) + Math.max(0, -sway) * deg(4), 0, 0, 10);
+    pose("hipL", -hop * deg(10) - stride * deg(24), 0, 0, walking ? 30 : 10);
+    pose("hipR", -hop * deg(10) + stride * deg(24), 0, 0, walking ? 30 : 10);
+    pose("kneeL", hop * deg(18) + Math.max(0, sway) * deg(4) + Math.max(0, stride) * deg(34), 0, 0, walking ? 30 : 10);
+    pose("kneeR", hop * deg(18) + Math.max(0, -sway) * deg(4) + Math.max(0, -stride) * deg(34), 0, 0, walking ? 30 : 10);
 
     if (rootRef.current) {
       const bootRise = state === "boot" ? (1 - Math.min(1, stateElapsed / 0.9)) * -0.25 : 0;
       rootRef.current.position.y = damp(rootRef.current.position.y, -1.32 + bootRise + hop * 0.03, 8, delta);
       rootRef.current.position.z = damp(rootRef.current.position.z, 1.0 - flinchAmount * 0.25, 14, delta);
+      rootRef.current.position.x = (1 - walkEase) * 1.7 + (glitch ? (Math.random() - 0.5) * 0.03 : 0);
+      rootRef.current.rotation.y = deg(-12) - (1 - walkEase) * deg(55);
+      if (walking) rootRef.current.position.y += Math.abs(Math.sin(t * 8.5)) * 0.018 * (1 - walkEase);
     }
+    if (rig.faceMesh) rig.faceMesh.position.x = glitch ? (Math.random() - 0.5) * 0.012 : 0;
 
     // ---- Arms. raise = outward (away from the body); fwd = toward camera;
     //      bend = elbow flex. ----
     const arm = { L: { raise: 0, fwd: 0, bend: deg(6) }, R: { raise: 0, fwd: 0, bend: deg(6) } };
     const idleSwing = Math.sin(t * 1.1) * deg(2);
-    arm.L.fwd = idleSwing;
-    arm.R.fwd = -idleSwing;
+    arm.L.fwd = idleSwing + stride * deg(22);
+    arm.R.fwd = -idleSwing - stride * deg(22);
     if (state === "greeting") {
       const lift = Math.sin(Math.min(1, stateElapsed / 0.8) * Math.PI);
       arm.R.raise = deg(70) * lift;
       arm.R.bend = deg(70) * lift;
     } else if (state === "pointing") {
-      arm.R.fwd = deg(70);
-      arm.R.raise = deg(12);
-      arm.R.bend = deg(4);
+      // Point toward where the tour's target actually is on the page:
+      // the arm on that side, raised by how far off-centre it sits.
+      const gx = gazeActive ? signals.gaze.x : 0.4;
+      const gy = gazeActive ? signals.gaze.y : 0;
+      const side = gx < 0 ? arm.L : arm.R;
+      side.fwd = deg(55 + THREE.MathUtils.clamp(gy, -1, 1) * 25);
+      side.raise = deg(10 + Math.min(1, Math.abs(gx)) * 45);
+      side.bend = deg(4);
     } else if (state === "briefing") {
       const talk = Math.sin(t * 2.4);
       arm.L.fwd = deg(28 + talk * 10);
@@ -325,7 +361,8 @@ export function RC01Model({ state, fullEmissiveDetail, accentColor }: RC01ModelP
       else if (state === "sleep") target = 0.18;
       else if (state === "thinking") target = 0.75 + Math.abs(Math.sin(t * 9)) * 0.25;
       else if (state === "error") target = stateElapsed < 0.6 ? (Math.random() < 0.5 ? 0.3 : 1) : 0.9;
-      rig.face.opacity = damp(rig.face.opacity, Math.min(1, target), state === "boot" ? 30 : 10, delta);
+      if (glitch) target = Math.random() < 0.5 ? 0.25 : 1;
+      rig.face.opacity = damp(rig.face.opacity, Math.min(1, target), state === "boot" || glitch ? 30 : 10, delta);
       rig.face.emissiveIntensity = 1 + voice * 0.5;
     }
   });

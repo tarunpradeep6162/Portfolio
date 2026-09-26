@@ -494,9 +494,9 @@ textarea:focus {
    Every effect here is decorative and disabled for reduced motion.
    ------------------------------------------------------------------------ */
 
-/* Boot sequence - pure CSS timeline (see components/shared/BootSequence).
+/* Cold open - pure CSS timeline (components/shared/BootSequence).
    Plays only when the pre-paint gate sets data-boot="play"; it also clears
-   itself without JavaScript. Total: ~1.9s. */
+   itself without JavaScript. Total: ~4.6s. */
 .boot-overlay {
   display: none;
 }
@@ -506,80 +506,187 @@ textarea:focus {
   z-index: 70;
   display: block;
   pointer-events: none;
-  animation: boot-hide 0s linear 1.9s forwards;
+  background: transparent;
+  animation: boot-hide 0s linear 4.6s forwards;
 }
-.boot-panel {
+.cold-bar {
   position: absolute;
   left: 0;
   right: 0;
   height: 50.5%;
-  background-color: var(--color-control-black);
-  animation: 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.18s forwards;
+  background: #030507;
+  animation: 0.9s var(--ease-cut) 3.7s forwards;
 }
-.boot-panel-top {
+.cold-bar-top {
   top: 0;
-  animation-name: boot-split-up;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-signal-lime) 35%, transparent);
+  animation-name: cold-bar-up;
 }
-.boot-panel-bottom {
+.cold-bar-bottom {
   bottom: 0;
-  animation-name: boot-split-down;
+  animation-name: cold-bar-down;
 }
-.boot-content {
+.cold-line {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(34rem, calc(100vw - 3rem));
-  transform: translate(-50%, -50%);
-  animation: boot-content-out 0.35s var(--ease-spine) 1.08s forwards;
-}
-.boot-line {
-  opacity: 0;
-  animation: boot-line-in 0.28s var(--ease-spine) forwards;
-}
-.boot-progress {
+  width: min(64vw, 46rem);
+  height: 2px;
+  margin-left: calc(min(64vw, 46rem) / -2);
+  background: var(--color-signal-lime);
+  box-shadow: 0 0 28px 3px color-mix(in srgb, var(--color-signal-lime) 55%, transparent);
   transform: scaleX(0);
-  transform-origin: left;
-  animation: boot-progress 1.1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation:
+    cold-line-draw 0.6s var(--ease-reveal) 0.35s forwards,
+    cold-fade-out 0.25s linear 2.15s forwards;
 }
-@keyframes boot-split-up {
-  to { transform: translateY(-101%); }
+.cold-visor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(64vw, 46rem);
+  height: min(30vh, 17rem);
+  overflow: hidden;
+  border-radius: 999px / 60%;
+  transform: translate(-50%, -50%) scaleY(0);
+  background: radial-gradient(ellipse at center, #0c1a10 0%, #030507 75%);
+  box-shadow: 0 0 60px color-mix(in srgb, var(--color-signal-lime) 18%, transparent);
+  animation:
+    cold-visor-open 0.55s var(--ease-reveal) 0.95s forwards,
+    cold-visor-close 0.3s var(--ease-cut) 2.05s forwards;
 }
-@keyframes boot-split-down {
-  to { transform: translateY(101%); }
+.cold-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 170%;
+  width: auto;
+  transform: translate(-50%, -46%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: cold-flicker 0.9s steps(1) 1.1s forwards;
 }
-@keyframes boot-content-out {
-  to { opacity: 0; transform: translate(-50%, calc(-50% - 16px)); }
+.cold-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 2px, transparent 2px 4px);
 }
-@keyframes boot-line-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: none; }
+.cold-readout {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + min(15vh, 8.5rem) + 1.4rem);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  animation:
+    cold-type 0.8s steps(28) 1.2s forwards,
+    cold-fade-out 0.2s linear 2.05s forwards;
 }
-@keyframes boot-progress {
-  to { transform: scaleX(1); }
+.cold-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  animation:
+    cold-fade-in 0.01s linear 2.3s forwards,
+    cold-title-out 0.5s var(--ease-cut) 3.45s forwards;
 }
+.cold-title-word {
+  display: inline-block;
+  letter-spacing: 0.35em;
+  filter: blur(10px);
+  opacity: 0;
+  animation: cold-track 1.1s var(--ease-push) 2.3s forwards;
+}
+.cold-title-word + .cold-title-word {
+  animation-delay: 2.42s;
+}
+.cold-subtitle {
+  opacity: 0;
+  animation: cold-fade-in 0.6s var(--ease-reveal) 2.8s forwards;
+}
+.cold-skip {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  animation:
+    cold-fade-in 0.6s linear 0.8s forwards,
+    cold-fade-out 0.3s linear 3.5s forwards;
+}
+@keyframes cold-bar-up { to { transform: translateY(-101%); } }
+@keyframes cold-bar-down { to { transform: translateY(101%); } }
+@keyframes cold-line-draw { to { transform: scaleX(1); } }
+@keyframes cold-visor-open { to { transform: translate(-50%, -50%) scaleY(1); } }
+@keyframes cold-visor-close {
+  from { transform: translate(-50%, -50%) scaleY(1); }
+  to { transform: translate(-50%, -50%) scaleY(0); }
+}
+@keyframes cold-flicker {
+  0% { opacity: 0.6; }
+  8% { opacity: 0; }
+  16% { opacity: 0.85; }
+  22% { opacity: 0.2; }
+  30%, 100% { opacity: 1; }
+}
+@keyframes cold-type {
+  0% { opacity: 1; clip-path: inset(0 100% 0 0); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+@keyframes cold-track {
+  to { letter-spacing: -0.02em; filter: blur(0); opacity: 1; }
+}
+/* Opacity + transform only: stays on the compositor even if the main
+   thread is busy hydrating, so it can never lag behind the bars. */
+@keyframes cold-title-out {
+  to { opacity: 0; transform: scale(1.08); }
+}
+@keyframes cold-fade-in { to { opacity: 1; } }
+@keyframes cold-fade-out { to { opacity: 0; } }
 @keyframes boot-hide {
   to { visibility: hidden; }
 }
 
-/* Route transition: a lime scan line sweeps the viewport while the new
-   page rises in (components/shared/RouteTransition). */
-.route-scan {
+/* Route transition v9: a diagonal wipe with a lime leading edge
+   (components/shared/RouteTransition). */
+.route-wipe {
   position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
+  inset: 0;
   z-index: 45;
-  height: 2px;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--color-signal-lime) 20%, var(--color-signal-lime) 80%, transparent);
-  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--color-signal-lime) 45%, transparent);
-  animation: route-scan 0.75s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation: boot-hide 0s linear 0.95s forwards;
 }
-@keyframes route-scan {
-  0% { transform: translateY(4.5rem); opacity: 0; }
-  15% { opacity: 1; }
-  100% { transform: translateY(100vh); opacity: 0; }
+.route-wipe-panel {
+  position: absolute;
+  inset: 0;
+  background: #030507;
+  clip-path: polygon(0 0, 115% 0, 100% 100%, -15% 100%);
+  animation: route-wipe 0.85s var(--ease-cut) forwards;
+}
+.route-wipe-edge {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 3px;
+  background: var(--color-signal-lime);
+  box-shadow: 0 0 30px 6px color-mix(in srgb, var(--color-signal-lime) 45%, transparent);
+  transform: translateX(-5vw) skewX(-8deg);
+  animation: route-wipe-edge 0.85s var(--ease-cut) forwards;
+}
+@keyframes route-wipe {
+  from { clip-path: polygon(0 0, 115% 0, 100% 100%, -15% 100%); }
+  to { clip-path: polygon(115% 0, 115% 0, 100% 100%, 100% 100%); }
+}
+@keyframes route-wipe-edge {
+  0% { transform: translateX(-5vw) skewX(-8deg); opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(105vw) skewX(-8deg); opacity: 0; }
 }
 .route-enter {
   animation: route-enter 0.7s var(--ease-spine) both;
@@ -618,11 +725,403 @@ textarea:focus {
 
 @media (prefers-reduced-motion: reduce) {
   [data-boot="play"] .boot-overlay,
-  .route-scan,
+  .route-wipe,
   .scroll-progress {
     display: none;
   }
   .route-enter {
     animation: none;
   }
+}
+
+/* ------------------------------------------------------------------------
+   Cinema layer v9 (components/cinema): motion language, film grade, the
+   persistent 3D stage, letterbox + slates, cold open, kinetic type.
+   ------------------------------------------------------------------------ */
+:root {
+  --ease-push: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-cut: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-settle: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/* Film grain + vignette over everything (pointer-transparent). */
+.film-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.film-grain-noise {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.075;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-step 0.9s steps(6) infinite;
+}
+.film-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.28) 100%);
+}
+@keyframes grain-step {
+  0% { transform: translate(0, 0); }
+  17% { transform: translate(-6%, 4%); }
+  33% { transform: translate(5%, -7%); }
+  50% { transform: translate(-3%, 8%); }
+  67% { transform: translate(8%, 2%); }
+  83% { transform: translate(-7%, -4%); }
+  100% { transform: translate(2%, 6%); }
+}
+
+/* The persistent stage sits behind the page; main + footer stack above it. */
+.cinema-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-push);
+}
+.cinema-stage[data-state="live"] {
+  opacity: 1;
+}
+#main-content,
+body > footer,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+/* Dark sections become windows into the stage while it is live. */
+.cinema-window {
+  transition: background-color 1.2s var(--ease-push);
+}
+[data-cinema="live"] .cinema-window {
+  background-color: color-mix(in srgb, var(--color-control-black) 38%, transparent);
+}
+[data-cinema="live"] .cinema-window.cinema-window-deep {
+  background-color: color-mix(in srgb, var(--color-control-black) 62%, transparent);
+}
+/* The Observatory's disc turns to glass so the figure stands inside it. */
+[data-cinema="live"] .observatory-disc {
+  background: radial-gradient(circle at 50% 50%, rgba(18, 31, 44, 0.12) 0%, rgba(6, 9, 13, 0.05) 70%) !important;
+  box-shadow: none !important;
+}
+/* Curated still (reduced motion / no stage): the figure as a still frame. */
+.observatory-still {
+  transition: opacity 1s var(--ease-push);
+}
+[data-cinema="live"] .observatory-still,
+[data-cinema="paused"] .observatory-still {
+  opacity: 0 !important;
+}
+
+/* Sound bars in the header toggle. */
+.sound-bars > span {
+  width: 2px;
+  background: currentColor;
+  animation: sound-bar 0.9s var(--ease-push) infinite alternate;
+}
+.sound-bars > span:nth-child(1) { height: 40%; animation-delay: -0.3s; }
+.sound-bars > span:nth-child(2) { height: 90%; animation-delay: -0.6s; }
+.sound-bars > span:nth-child(3) { height: 60%; }
+@keyframes sound-bar {
+  from { transform: scaleY(0.35); }
+  to { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-grain-noise,
+  .sound-bars > span {
+    animation: none;
+  }
+}
+@media print {
+  .film-grain,
+  .cinema-stage {
+    display: none;
+  }
+}
+.observatory-core {
+  transition: opacity 1s var(--ease-push);
+}
+[data-cinema="live"] .observatory-core {
+  opacity: 0;
+}
+
+/* Kinetic hero name (components/cinema/KineticName). */
+.kinetic-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.04em 0.01em 0.06em;
+  margin: -0.04em -0.01em -0.06em;
+}
+.kinetic-letter {
+  --kw: 700;
+  --ky: 0em;
+  display: inline-block;
+  font-variation-settings: "wght" var(--kw);
+  font-weight: var(--kw);
+  transform: translateY(var(--ky));
+  transition:
+    font-variation-settings 0.5s var(--ease-settle),
+    font-weight 0.5s var(--ease-settle),
+    transform 0.5s var(--ease-settle);
+  animation: kinetic-in 1.1s var(--ease-reveal) both;
+  animation-delay: calc(0.15s + var(--i) * 0.045s);
+}
+[data-boot="play"] .kinetic-letter {
+  animation-delay: calc(3.75s + var(--i) * 0.045s);
+}
+@keyframes kinetic-in {
+  from { transform: translateY(105%) skewY(8deg); font-variation-settings: "wght" 400; font-weight: 400; }
+  to { transform: translateY(var(--ky)); font-variation-settings: "wght" var(--kw); font-weight: var(--kw); }
+}
+.kinetic-skew {
+  transform: skewY(var(--scroll-skew, 0deg));
+  transform-origin: left center;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kinetic-letter { animation: none; transition: none; }
+  .kinetic-skew { transform: none; }
+}
+
+/* Spine release run (components/spine/useReleaseRun). */
+[data-run="done"] [data-spine-node] > span:first-child,
+[data-run="live"] [data-spine-node] > span:first-child {
+  color: var(--accent);
+}
+[data-run="alert"] [data-spine-node] > span:first-child {
+  color: var(--color-signal-coral);
+}
+[data-run="alert"] {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-signal-coral) 10%, transparent), transparent 60%);
+}
+.run-chip {
+  animation: run-chip-in 0.4s var(--ease-settle) both;
+}
+@keyframes run-chip-in {
+  from { opacity: 0; transform: translate(6px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
+}
+
+/* Global letterbox (components/cinema/Letterbox). */
+.letterbox {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+}
+.letterbox-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8vh;
+  background: #000;
+  transition: transform 0.7s var(--ease-cut);
+}
+.letterbox-top {
+  top: 0;
+  transform: translateY(-101%);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 1.25rem 0.6rem;
+}
+.letterbox-bottom {
+  bottom: 0;
+  transform: translateY(101%);
+}
+.letterbox[data-on="true"] .letterbox-bar {
+  transform: none;
+}
+.letterbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--color-cloud-linen);
+}
+.letterbox-rec {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-signal-coral);
+  animation: rec-blink 1.2s steps(1) infinite;
+}
+@keyframes rec-blink {
+  50% { opacity: 0.2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .letterbox-bar { transition: none; }
+  .letterbox-rec { animation: none; }
+}
+
+/* Director-mode cut (RC-01 tours): the page snaps through a focus pull. */
+.director-cut #main-content {
+  animation: director-cut 0.6s var(--ease-cut);
+}
+@keyframes director-cut {
+  0% { filter: blur(8px) brightness(0.7); transform: scale(1.012); }
+  100% { filter: none; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .director-cut #main-content { animation: none; }
+}
+
+/* Cinematic cursor (components/shared/CustomCursor). Native cursor is only
+   hidden where the custom one actually runs: fine pointer + motion allowed. */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body,
+  body a,
+  body button,
+  body [role="button"],
+  body input[type="range"],
+  body canvas {
+    cursor: none;
+  }
+  body input:not([type="range"]),
+  body textarea {
+    cursor: text;
+  }
+}
+.cine-cursor {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.cine-cursor-dot,
+.cine-cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  will-change: transform;
+}
+.cine-cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 999px;
+  background: var(--color-signal-lime);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-signal-lime) 60%, transparent);
+  transition: opacity 0.2s, width 0.25s var(--ease-settle), height 0.25s var(--ease-settle), margin 0.25s var(--ease-settle);
+}
+.cine-cursor-dot[data-mode="link"] {
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+}
+.cine-cursor-ring {
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 1px solid color-mix(in srgb, var(--color-signal-lime) 55%, transparent);
+  border-radius: 999px;
+  mix-blend-mode: difference;
+  transition:
+    opacity 0.2s,
+    width 0.35s var(--ease-settle),
+    height 0.35s var(--ease-settle),
+    margin 0.35s var(--ease-settle),
+    border-radius 0.35s var(--ease-settle),
+    border-color 0.25s,
+    background-color 0.25s;
+}
+.cine-cursor-ring[data-mode="link"] {
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  background: color-mix(in srgb, var(--color-signal-lime) 10%, transparent);
+}
+.cine-cursor-ring[data-mode="scan"],
+.cine-cursor-ring[data-mode="drag"] {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-radius: 2px;
+  border-color: transparent;
+  mix-blend-mode: normal;
+}
+.cine-cursor-ring.is-pressed {
+  transform-origin: center;
+  border-color: var(--color-signal-lime);
+}
+.cine-cursor-bracket {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--color-signal-lime);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.cine-cursor-ring[data-mode="scan"] .cine-cursor-bracket,
+.cine-cursor-ring[data-mode="drag"] .cine-cursor-bracket {
+  opacity: 1;
+}
+.cine-cursor-bracket.tl { left: 0; top: 0; border-left-width: 1px; border-top-width: 1px; }
+.cine-cursor-bracket.tr { right: 0; top: 0; border-right-width: 1px; border-top-width: 1px; }
+.cine-cursor-bracket.bl { left: 0; bottom: 0; border-left-width: 1px; border-bottom-width: 1px; }
+.cine-cursor-bracket.br { right: 0; bottom: 0; border-right-width: 1px; border-bottom-width: 1px; }
+.cine-cursor-label {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--color-signal-lime);
+}
+[data-magnetic] {
+  transition: transform 0.45s var(--ease-settle);
+}
+
+/* Hover light on cards (pointer position via --mx/--my). */
+.project-card,
+[data-hover-light] {
+  position: relative;
+}
+.project-card::after,
+[data-hover-light]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--color-signal-lime) 9%, transparent),
+    transparent 60%
+  );
+  transition: opacity 0.4s var(--ease-push);
+}
+.project-card:hover::after,
+[data-hover-light]:hover::after {
+  opacity: 1;
+}
+
+/* End credits (components/cinema/EndCredits). */
+.end-credits {
+  height: 9.5rem;
+  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+}
+.end-credits-roll {
+  animation: credits-roll 36s linear infinite;
+}
+.end-credits:hover .end-credits-roll {
+  animation-play-state: paused;
+}
+@keyframes credits-roll {
+  from { transform: translateY(9.5rem); }
+  to { transform: translateY(-100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .end-credits { height: auto; mask-image: none; }
+  .end-credits-roll { animation: none; }
 }

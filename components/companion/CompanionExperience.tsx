@@ -62,6 +62,7 @@ import { CompanionTourPanel } from "./CompanionTourPanel";
 import { CompanionConsole } from "./CompanionConsole";
 import { CompanionChat } from "./CompanionChat";
 import { cn } from "@/lib/cn";
+import { emitCue } from "@/lib/cinema/cues";
 
 const SENTENCE_FALLBACK_MS = 3200;
 const INACTIVITY_SLEEP_MS = 3 * 60 * 1000;
@@ -717,6 +718,22 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
 
   const activeTour = activeTourId ? tours.find((t) => t.id === activeTourId) : null;
   const activeStep = activeTour?.steps[tourStepIndex];
+
+  // Phase 14 - director mode: while a tour runs, the site is framed
+  // widescreen with a slate naming the shot, and each step lands as a cut
+  // (a brief focus pull on the page) rather than a plain scroll.
+  const directorLabel = activeTour ? `${activeTour.label} · shot ${tourStepIndex + 1}/${activeTour.steps.length}` : null;
+  useEffect(() => {
+    if (!directorLabel) return;
+    emitCue({ type: "director", on: true, label: directorLabel });
+    if (!reducedMotion) {
+      const root = document.documentElement;
+      root.classList.remove("director-cut");
+      void root.offsetWidth;
+      root.classList.add("director-cut");
+    }
+    return () => emitCue({ type: "director", on: false });
+  }, [directorLabel, reducedMotion]);
 
   return (
     <div

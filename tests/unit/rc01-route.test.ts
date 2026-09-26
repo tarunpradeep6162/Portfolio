@@ -103,13 +103,31 @@ describe("/api/rc01", () => {
     delete process.env.ANTHROPIC_API_KEY;
   });
 
-  it("reports offline and refuses chat when no API key is configured", async () => {
+  it("answers from the built-in engine at zero cost when no API key is configured", async () => {
     delete process.env.ANTHROPIC_API_KEY;
     const { GET, POST } = await loadRoute();
-    expect(await (await GET()).json()).toEqual({ enabled: false });
-    const res = await POST(post(question) as never);
-    expect(res.status).toBe(503);
+    expect(await (await GET()).json()).toEqual({ enabled: true, mode: "local" });
+    const events = await readEvents(await POST(post({ ...question, messages: [{ role: "user", content: "How do I contact him?" }] }) as never));
+    const text = events.filter((e) => e.type === "text").map((e) => e.text).join("");
+    expect(text).toMatch(/@gmail\.com/);
+    expect(events.at(-1)).toEqual({ type: "done", reason: "complete" });
     expect(script.calls).toHaveLength(0);
+  });
+
+  it("can be switched off entirely", async () => {
+    process.env.RC01_DISABLED = "true";
+    const { GET, POST } = await loadRoute();
+    expect(await (await GET()).json()).toEqual({ enabled: false, mode: "off" });
+    expect((await POST(post(question) as never)).status).toBe(503);
+    delete process.env.RC01_DISABLED;
+  });
+
+  it("falls back to the built-in engine when Claude fails before answering", async () => {
+    script.throwError = new Error("network down");
+    const { POST } = await loadRoute();
+    const events = await readEvents(await POST(post(question) as never));
+    expect(events.some((e) => e.type === "text")).toBe(true);
+    expect(events.at(-1)).toEqual({ type: "done", reason: "complete" });
   });
 
   it("streams text, relays valid actions, rejects invalid ones back to the model, then finishes", async () => {
@@ -193,16 +211,6 @@ describe("/api/rc01", () => {
     const events = await readEvents(await POST(post(question) as never));
     expect(events.at(-1)).toEqual({ type: "done", reason: "refused" });
     expect(events[0].text).toMatch(/not something I can help with/);
-  });
-
-  it("turns API failures into a fallback error event, not a crash", async () => {
-    const Anthropic = (await import("@anthropic-ai/sdk")).default as unknown as {
-      RateLimitError: new (status: number, message: string) => Error;
-    };
-    script.throwError = new Anthropic.RateLimitError(429, "slow down");
-    const { POST } = await loadRoute();
-    const events = await readEvents(await POST(post(question) as never));
-    expect(events).toEqual([expect.objectContaining({ type: "error", fallback: true })]);
   });
 
   it("rejects cross-origin requests and invalid bodies before calling the model", async () => {

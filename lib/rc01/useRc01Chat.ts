@@ -17,6 +17,8 @@ export interface ChatMessage {
 /** "checking" until the GET probe answers; "offline" means use the console. */
 export type ChatAvailability = "checking" | "online" | "offline";
 export type ChatActivity = "idle" | "thinking" | "streaming";
+/** Which brain the server is using (see app/api/rc01/route.ts). */
+export type BrainMode = "claude" | "free" | "local";
 
 export interface ChatCallbacks {
   onStart?: () => void;
@@ -38,6 +40,7 @@ const id = () => `m${++nextId}`;
  */
 export function useRc01Chat(callbacks: ChatCallbacks) {
   const [availability, setAvailability] = useState<ChatAvailability>("checking");
+  const [mode, setMode] = useState<BrainMode>("local");
   const [activity, setActivity] = useState<ChatActivity>("idle");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const abortRef = useRef<AbortController | null>(null);
@@ -51,8 +54,10 @@ export function useRc01Chat(callbacks: ChatCallbacks) {
     let cancelled = false;
     fetch("/api/rc01", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { enabled: false }))
-      .then((data: { enabled?: boolean }) => {
-        if (!cancelled) setAvailability(data.enabled ? "online" : "offline");
+      .then((data: { enabled?: boolean; mode?: string }) => {
+        if (cancelled) return;
+        setAvailability(data.enabled ? "online" : "offline");
+        if (data.mode === "claude" || data.mode === "free") setMode(data.mode);
       })
       .catch(() => {
         if (!cancelled) setAvailability("offline");
@@ -198,5 +203,5 @@ export function useRc01Chat(callbacks: ChatCallbacks) {
     [messages, patchMessage],
   );
 
-  return { availability, activity, messages, send, stop, addLocalMessage };
+  return { availability, mode, activity, messages, send, stop, addLocalMessage };
 }

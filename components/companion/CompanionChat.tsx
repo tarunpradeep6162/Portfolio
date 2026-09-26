@@ -5,12 +5,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUp, Bot, Check, Copy, Mic, Square, TerminalSquare } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { parseBlocks, type RichSegment } from "@/lib/rc01/text";
-import type { ChatActivity, ChatAvailability, ChatMessage } from "@/lib/rc01/useRc01Chat";
+import type { BrainMode, ChatActivity, ChatAvailability, ChatMessage } from "@/lib/rc01/useRc01Chat";
 import type { VoiceInputState } from "@/lib/companion/useVoiceInput";
 import { LIMITS } from "@/lib/rc01/protocol";
 
 interface CompanionChatProps {
   availability: ChatAvailability;
+  mode: BrainMode;
   activity: ChatActivity;
   messages: ChatMessage[];
   suggestions: string[];
@@ -165,6 +166,7 @@ function TypingDots() {
  */
 export function CompanionChat({
   availability,
+  mode,
   activity,
   messages,
   suggestions,
@@ -268,8 +270,9 @@ export function CompanionChat({
               <Bot size={13} aria-hidden />
             </span>
             <p className="rounded-lg rounded-tl-sm bg-white/[0.06] px-2.5 py-2 text-[12px] leading-5 text-[var(--color-cloud-linen)]">
-              Hi, I&apos;m RC-01. Ask me anything - cloud, DevOps, code, careers, or Tarun&apos;s projects and
-              experience. I&apos;ll link the page whenever an answer comes from his portfolio.
+              {mode === "local"
+                ? "Hi, I'm RC-01. Ask me about Tarun's projects, skills, experience, certifications, or how to contact him - I'll link the page each answer comes from."
+                : "Hi, I'm RC-01. Ask me anything - cloud, DevOps, code, careers, or Tarun's projects and experience. I'll link the page whenever an answer comes from his portfolio."}
             </p>
           </div>
         )}
@@ -362,7 +365,7 @@ export function CompanionChat({
             }
           }}
           maxLength={LIMITS.maxMessageChars}
-          placeholder={availability === "checking" ? "Connecting…" : "Ask me anything…"}
+          placeholder={availability === "checking" ? "Connecting…" : mode === "local" ? "Ask about Tarun's work…" : "Ask me anything…"}
           disabled={availability === "checking"}
           autoComplete="off"
           className="max-h-[110px] min-w-0 flex-1 resize-none bg-transparent px-1 py-1 text-[12px] leading-5 text-[var(--color-cloud-linen)] outline-none placeholder:text-[var(--color-telemetry-steel)]/70 focus-visible:outline-none disabled:opacity-50"
@@ -418,7 +421,9 @@ export function CompanionChat({
       </form>
 
       <p className="mt-2 text-[10px] leading-4 text-[var(--color-telemetry-steel)]">
-        AI-generated answers can be wrong - portfolio facts link to their source page.
+        {mode === "local"
+          ? "Offline mode: answers come straight from Tarun's portfolio."
+          : "AI-generated answers can be wrong - portfolio facts link to their source page."}
         {memoryActive && (
           <>
             {" "}

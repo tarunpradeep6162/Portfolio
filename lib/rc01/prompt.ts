@@ -59,3 +59,12 @@ export function contextPreamble(context: VisitorContext): string {
   ].filter(Boolean);
   return `<visitor_context>\n${lines.join("\n")}\n</visitor_context>`;
 }
+
+/**
+ * Prompt for the free-tier provider path, which has no page-action tools:
+ * the same persona, rules and knowledge base, minus the tool guidance.
+ */
+export const FREE_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+  /# Acting on the page[\s\S]*?(?=# Boundaries)/,
+  "# Links\nYou can't act on the page in this mode, but you can link portfolio pages from the site map.\n\n",
+);

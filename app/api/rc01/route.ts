@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 import { parseAction } from "@/lib/rc01/actions";
-import { contextPreamble, SYSTEM_PROMPT } from "@/lib/rc01/prompt";
+import { contextPreamble, FREE_SYSTEM_PROMPT, SYSTEM_PROMPT } from "@/lib/rc01/prompt";
 import { encodeEvent, validateRequest, type Rc01StreamEvent } from "@/lib/rc01/protocol";
 import { createRateLimiter } from "@/lib/rc01/rateLimit";
 import { RC01_TOOLS } from "@/lib/rc01/tools";
+import { answerLocally } from "@/lib/rc01/localBrain";
+import { freeProviderConfig, streamFreeChat } from "@/lib/rc01/freeProvider";
+import type { ChatTurn, VisitorContext } from "@/lib/rc01/protocol";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,8 +45,21 @@ function getClient(): Anthropic {
   return client;
 }
 
-function enabled(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY) && process.env.RC01_DISABLED !== "true";
+/**
+ * Which brain answers, picked from the environment on every request:
+ * - "claude": ANTHROPIC_API_KEY set - full assistant with page actions.
+ * - "free":   GEMINI_API_KEY or GROQ_API_KEY set - free-tier general
+ *             assistant (text only, no page actions).
+ * - "local":  no key - the built-in engine answers portfolio questions at
+ *             zero cost. Always available, and the fallback for the others.
+ */
+export type BrainMode = "claude" | "free" | "local" | "off";
+
+function brainMode(): BrainMode {
+  if (process.env.RC01_DISABLED === "true") return "off";
+  if (process.env.ANTHROPIC_API_KEY) return "claude";
+  if (freeProviderConfig()) return "free";
+  return "local";
 }
 
 /** No Origin header = same-origin navigation/fetch; "null" or garbage = reject. */
@@ -62,11 +78,13 @@ function jsonError(status: number, message: string, headers: HeadersInit = {}) {
 
 /** Lets the client decide whether to offer AI chat or only the command console. */
 export async function GET() {
-  return Response.json({ enabled: enabled() }, { headers: { "Cache-Control": "no-store" } });
+  const mode = brainMode();
+  return Response.json({ enabled: mode !== "off", mode }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: NextRequest) {
-  if (!enabled()) return jsonError(503, "RC-01's conversational mode is offline.");
+  const mode = brainMode();
+  if (mode === "off") return jsonError(503, "RC-01's chat is switched off.");
 
   // Same-origin only: the endpoint is the site's own feature, not a free
   // public proxy to a paid API.
@@ -103,6 +121,8 @@ export async function POST(request: NextRequest) {
     console.warn(JSON.stringify({ event: "rc01.injection_signal", sample: latest.slice(0, 160) }));
   }
 
+  if (mode !== "claude") return streamAlternative(request, mode, turns, context);
+
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((turn, index) =>
     index === turns.length - 1
       ? {
@@ -118,7 +138,11 @@ export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (event: Rc01StreamEvent) => controller.enqueue(encoder.encode(encodeEvent(event)));
+      let sentText = false;
+      const send = (event: Rc01StreamEvent) => {
+        if (event.type === "text") sentText = true;
+        controller.enqueue(encoder.encode(encodeEvent(event)));
+      };
 
       try {
         for (let call = 1; call <= MAX_MODEL_CALLS; call++) {
@@ -190,6 +214,11 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         if (request.signal.aborted) {
           // Visitor pressed stop or navigated away - nothing to report.
+        } else if (!sentText) {
+          // Nothing reached the visitor yet: answer from the built-in engine
+          // instead of showing an error.
+          console.error(JSON.stringify({ event: "rc01.claude_fallback_local", message: String(error) }));
+          sendLocal(send, latest);
         } else if (error instanceof Anthropic.RateLimitError) {
           send({ type: "error", message: "RC-01 is at capacity right now. Try again in a moment.", fallback: true });
         } else if (error instanceof Anthropic.AuthenticationError) {
@@ -234,4 +263,73 @@ function logUsage(message: Anthropic.Beta.BetaMessage) {
       cache_creation_input_tokens: usage.cache_creation_input_tokens,
     }),
   );
+}
+
+function sendLocal(send: (event: Rc01StreamEvent) => void, question: string) {
+  const local = answerLocally(question);
+  // Word-sized chunks so the client's streaming path (typing, live speech)
+  // behaves the same as with a model.
+  for (const piece of local.text.match(/\S+\s*|\s+/g) ?? []) send({ type: "text", text: piece });
+  for (const action of local.actions) send({ type: "action", action });
+  send({ type: "done", reason: "complete" });
+}
+
+/** Free-tier provider or built-in engine, over the same NDJSON protocol. */
+function streamAlternative(
+  request: NextRequest,
+  mode: "free" | "local",
+  turns: ChatTurn[],
+  context: VisitorContext,
+): Response {
+  const latest = turns[turns.length - 1].content;
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (event: Rc01StreamEvent) => controller.enqueue(encoder.encode(encodeEvent(event)));
+      const config = mode === "free" ? freeProviderConfig() : null;
+      try {
+        if (!config) {
+          sendLocal(send, latest);
+          return;
+        }
+        const withContext: ChatTurn[] = turns.map((turn, index) =>
+          index === turns.length - 1
+            ? { role: "user", content: `${contextPreamble(context)}\n\n${turn.content}` }
+            : turn,
+        );
+        let sentText = false;
+        try {
+          for await (const text of streamFreeChat(config, {
+            system: FREE_SYSTEM_PROMPT,
+            turns: withContext,
+            maxTokens: MAX_TOKENS,
+            signal: request.signal,
+          })) {
+            sentText = true;
+            send({ type: "text", text });
+          }
+          if (!sentText) sendLocal(send, latest);
+          else send({ type: "done", reason: "complete" });
+        } catch (error) {
+          if (request.signal.aborted) return;
+          console.error(JSON.stringify({ event: "rc01.free_provider_error", provider: config.name, message: String(error) }));
+          if (!sentText) sendLocal(send, latest);
+          else send({ type: "error", message: "RC-01 lost its connection. Try again.", fallback: true });
+        }
+      } finally {
+        try {
+          controller.close();
+        } catch {
+          // Already closed by an aborted client connection.
+        }
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }

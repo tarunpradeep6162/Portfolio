@@ -1038,6 +1038,7 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
       {subpanel === "chat" && (
         <CompanionChat
           availability={chat.availability}
+          mode={chat.mode}
           activity={chat.activity}
           messages={chat.messages}
           suggestions={suggestions}

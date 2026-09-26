@@ -6,9 +6,9 @@ import { emitCue } from "@/lib/cinema/cues";
 
 export const BOOT_SESSION_KEY = "tp-boot-seen";
 /** Total runtime of the CSS timeline in globals.css (.cold-*), in ms. */
-export const BOOT_DURATION_MS = 4600;
+export const BOOT_DURATION_MS = 2630;
 /** When the letterbox starts to open and the hero copy should begin its reveal. */
-export const BOOT_REVEAL_MS = 3700;
+export const BOOT_REVEAL_MS = 2110;
 /** Fired on window when the cold open ends (naturally or skipped). */
 export const BOOT_END_EVENT = "tp:boot-end";
 
@@ -20,7 +20,7 @@ export const BOOT_END_EVENT = "tp:boot-end";
 export const bootGateScript = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem("${BOOT_SESSION_KEY}")||matchMedia("(prefers-reduced-motion: reduce)").matches||navigator.webdriver){d.dataset.boot="skip"}else{d.dataset.boot="play";sessionStorage.setItem("${BOOT_SESSION_KEY}","1")}}catch(e){document.documentElement.dataset.boot="skip"}})();`;
 
 /**
- * Phase 5 - the cold open. A ~4.5 s title sequence, once per session:
+ * Phase 5 - the cold open. A ~2.6 s title sequence, once per session:
  *
  *   black -> a lime visor line draws across the frame -> it opens into
  *   RC-01's visor, Tarun's hologram flickering on inside -> identity
@@ -49,11 +49,14 @@ export function BootSequence() {
     };
     window.addEventListener("pointerdown", skip, { once: true });
     window.addEventListener("keydown", skip, { once: true });
-    const slate = window.setTimeout(() => emitCue({ type: "slate", label: site.name }), 2300);
-    const reveal = window.setTimeout(end, BOOT_REVEAL_MS);
+    // The CSS timeline runs from first paint; schedule against page time
+    // so late hydration can't push these beyond what's on screen.
+    const at = (ms: number) => Math.max(0, ms - performance.now());
+    const slate = window.setTimeout(() => emitCue({ type: "slate", label: site.name }), at(1310));
+    const reveal = window.setTimeout(end, at(BOOT_REVEAL_MS));
     const done = window.setTimeout(() => {
       document.documentElement.dataset.boot = "done";
-    }, BOOT_DURATION_MS);
+    }, at(BOOT_DURATION_MS));
     return () => {
       window.clearTimeout(slate);
       window.clearTimeout(reveal);

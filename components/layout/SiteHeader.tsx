@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { SoundToggle } from "@/components/cinema/SoundToggle";
+import { CinemaToggle } from "@/components/cinema/CinemaToggle";
 import { cn } from "@/lib/cn";
 
 const links = [
@@ -83,6 +84,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <CinemaToggle />
           <SoundToggle />
           <MobileNav />
         </div>

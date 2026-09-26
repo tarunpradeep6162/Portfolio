@@ -6,7 +6,7 @@ import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { useWebGLSupport } from "@/lib/companion/useWebGLSupport";
 import { useCompanionPreferences } from "@/lib/companion/useCompanionPreferences";
 import { useExperienceState } from "@/lib/v6/ExperienceProvider";
-import { setStageStatus, useStage } from "@/lib/cinema/stageStore";
+import { setStageStatus, useCinemaEnabled, useStage } from "@/lib/cinema/stageStore";
 import { BOOT_END_EVENT } from "@/components/shared/BootSequence";
 
 const StageCanvas = dynamic(() => import("./StageCanvas"), { ssr: false });
@@ -50,7 +50,9 @@ export function CinemaStage() {
   const { quality, status } = useStage();
   // Quality 3 means this device couldn't hold ~45 fps even at the cheapest
   // settings: the stage retires for the session and the still takes over.
-  const eligible = !reducedMotion && webgl && !preferences.lowPowerMode && !failed && quality < 3;
+  const cinemaEnabled = useCinemaEnabled();
+  const eligible =
+    cinemaEnabled && !reducedMotion && webgl && !preferences.lowPowerMode && !failed && quality < 3;
 
   useEffect(() => {
     if (!eligible || !automationAllowed()) {

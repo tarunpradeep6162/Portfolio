@@ -29,10 +29,8 @@ export function SmoothScroll() {
     if (reducedMotion) return;
     registerGsap();
 
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    });
+    // Short, responsive inertia: the old 1.15 s glide read as lag.
+    const lenis = new Lenis({ lerp: 0.16, wheelMultiplier: 1.05 });
     window.__lenis = lenis;
 
     lenis.on("scroll", ScrollTrigger.update);

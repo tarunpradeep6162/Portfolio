@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { registerGsap } from "@/lib/motion/gsapConfig";
+import { registerGsap, shouldSkipLateReveal } from "@/lib/motion/gsapConfig";
 import { motion as motionTokens } from "@/lib/motion/tokens";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 
@@ -31,7 +31,7 @@ export function ScrollReveal({
       const items = scope.current.querySelectorAll("[data-reveal]");
       if (items.length === 0) return;
 
-      if (reducedMotion) {
+      if (reducedMotion || shouldSkipLateReveal(scope.current)) {
         gsap.set(items, { opacity: 1, y: 0 });
         return;
       }

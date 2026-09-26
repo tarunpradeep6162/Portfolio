@@ -90,3 +90,47 @@ export const MOODS: Record<TimeOfDay, { key: string; rim: string; fog: string; e
   dusk: { key: "#ffc4a1", rim: "#b06cff", fog: "#110b16", exposure: 0.98, label: "Dusk" },
   night: { key: "#c9d6ff", rim: "#748cff", fog: "#06090d", exposure: 0.92, label: "Night shift" },
 };
+
+/**
+ * The 3D stage is opt-in (header "Cinema" switch, remembered per device):
+ * visitors get a fast static site by default, and the full cinematic
+ * stage only when they ask for it. Tests can force it with ?cinema=1.
+ */
+const CINEMA_KEY = "tp-cinema";
+const prefListeners = new Set<() => void>();
+let cinemaOn: boolean | null = null;
+
+function readCinemaPref(): boolean {
+  if (cinemaOn !== null) return cinemaOn;
+  try {
+    cinemaOn =
+      new URLSearchParams(window.location.search).get("cinema") === "1" ||
+      window.localStorage.getItem(CINEMA_KEY) === "on";
+  } catch {
+    cinemaOn = false;
+  }
+  return cinemaOn;
+}
+
+export function setCinemaEnabled(next: boolean) {
+  cinemaOn = next;
+  try {
+    window.localStorage.setItem(CINEMA_KEY, next ? "on" : "off");
+  } catch {
+    // storage blocked: applies to this page view only
+  }
+  prefListeners.forEach((l) => l());
+}
+
+export function useCinemaEnabled() {
+  return useSyncExternalStore(
+    (l) => {
+      prefListeners.add(l);
+      return () => {
+        prefListeners.delete(l);
+      };
+    },
+    readCinemaPref,
+    () => false,
+  );
+}

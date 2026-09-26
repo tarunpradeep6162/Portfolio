@@ -54,3 +54,14 @@ export function registerGsap() {
   }
   registered = true;
 }
+
+/**
+ * True when an element that the server already rendered visible is on
+ * screen at hydration and hydration was slow: animating it in now would
+ * hide real content the visitor is already reading, so we don't.
+ */
+export function shouldSkipLateReveal(el: Element | null, lateAfterMs = 1500) {
+  if (!el || performance.now() < lateAfterMs) return false;
+  const r = el.getBoundingClientRect();
+  return r.top < window.innerHeight && r.bottom > 0;
+}

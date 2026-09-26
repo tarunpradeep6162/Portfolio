@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { registerGsap } from "@/lib/motion/gsapConfig";
+import { registerGsap, shouldSkipLateReveal } from "@/lib/motion/gsapConfig";
 import { useReducedMotion } from "@/lib/motion/useReducedMotion";
 import { shots } from "@/lib/motion/tokens";
 
@@ -34,7 +34,7 @@ export function SplitReveal({
       registerGsap();
       const words = ref.current?.querySelectorAll<HTMLElement>(".split-word > span");
       if (!words?.length) return;
-      if (reducedMotion) {
+      if (reducedMotion || shouldSkipLateReveal(ref.current)) {
         gsap.set(words, { yPercent: 0 });
         return;
       }

@@ -25,7 +25,7 @@ export function freeProviderConfig(env: NodeJS.ProcessEnv = process.env): FreePr
       name: "gemini",
       baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
       apiKey: env.GEMINI_API_KEY,
-      model: env.RC01_FREE_MODEL ?? "gemini-2.5-flash",
+      model: env.RC01_FREE_MODEL ?? "gemini-3.8-flash",
     };
   }
   if (env.GROQ_API_KEY) {

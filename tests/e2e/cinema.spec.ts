@@ -11,19 +11,18 @@ test.describe("Cinema layer", () => {
     expect(errors).toEqual([]);
   });
 
-  test("automation and reduced motion get the static site: no stage, the Observatory still is shown", async ({ page }) => {
+  test("automation and reduced motion get the static site: no stage, and no figure in the Observatory", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await page.waitForTimeout(1500);
     await expect(page.getByTestId("cinema-stage")).toHaveCount(0);
-    await expect(page.locator(".observatory-still")).toBeVisible();
+    await expect(page.locator("[data-stage-anchor='hero'] img")).toHaveCount(0);
   });
 
   test("the 3D stage is opt-in: off by default, the header switch turns it on and is remembered", async ({ page }) => {
     await page.goto("/");
     await page.waitForTimeout(1500);
     await expect(page.getByTestId("cinema-stage")).toHaveCount(0);
-    await expect(page.locator(".observatory-still")).toBeVisible();
     await page.getByRole("button", { name: /turn cinema mode on/i }).click();
     await expect(page.getByRole("button", { name: /turn cinema mode off/i })).toHaveAttribute("aria-pressed", "true");
     expect(await page.evaluate(() => localStorage.getItem("tp-cinema"))).toBe("on");

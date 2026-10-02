@@ -11,7 +11,7 @@ progressive: reduced motion, low-power mode, missing WebGL and automation
 | 3 Motion language | Shots: push / reveal / cut / settle / hold, as CSS `--ease-*` and GSAP `cinema.*` eases | `lib/motion/tokens.ts`, `lib/motion/gsapConfig.ts` |
 | 4 Sound | Synthesized WebAudio drone, ticks, whooshes, impacts; off by default | `lib/cinema/sound.ts`, `SoundToggle.tsx`, `SoundBridge.tsx` |
 | 5 Cold open | CSS title sequence, once per session, skippable | `components/shared/BootSequence.tsx` |
-| 6 Hero shot | RC-01 in the Observatory: volumetric beam, floor rings, dust, dolly-and-pan on scroll | `StageCanvas.tsx` (`HeroSubject`) |
+| 6 Hero shot | The Observatory lit from above: volumetric beam on its core, floor rings, precessing orbit, dust | `StageCanvas.tsx` (`HeroSubject`) |
 | 7 Kinetic type | Per-letter variable-weight name, pointer weight lens, reveal shots, scroll-velocity skew | `KineticName.tsx`, `VelocitySkew.tsx`, `SplitReveal.tsx` |
 | 8 Camera path | Anchored subjects + focus pull + push-in when framed = one continuous take | `StageCanvas.tsx` (`Director`) |
 | 9 Spine sequence | Scroll scrubs a simulated release; alert at Observe, recovery at Recover; 3D light column in sync | `components/spine/useReleaseRun.ts` |
@@ -24,7 +24,7 @@ progressive: reduced motion, low-power mode, missing WebGL and automation
 | 16 Transitions | Diagonal wipe with a lime edge + camera whip; card-to-cover shared-element morph | `RouteTransition.tsx`, `lib/cinema/flip.ts` |
 | 17 Cursor | rAF cursor with ring, scanner reticle over 3D, magnetic buttons, hover light | `components/shared/CustomCursor.tsx` |
 | 18 Reactive world | Local time-of-day lighting moods; Atlas traffic follows live GitHub activity | `stageStore.ts` (`MOODS`), `lib/cinema/useGitHubPulse.ts` |
-| 19 Performance | Idle-loaded stage (after the cold open), adaptive quality steps, no rendering when nothing shows through, curated still for no-3D visitors | `CinemaStage.tsx`, `StageCanvas.tsx` |
+| 19 Performance | Idle-loaded stage (after the cold open), adaptive quality steps, no rendering when nothing shows through | `CinemaStage.tsx`, `StageCanvas.tsx` |
 | 20 Trailer & credits | Recorded site trailer (`public/trailer/`), og:video, end-credits roll | `TrailerButton.tsx`, `EndCredits.tsx` |
 
 Re-record the trailer: build, `next start`, then script a Playwright run with

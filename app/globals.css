@@ -800,15 +800,6 @@ body > footer,
   background: radial-gradient(circle at 50% 50%, rgba(18, 31, 44, 0.12) 0%, rgba(6, 9, 13, 0.05) 70%) !important;
   box-shadow: none !important;
 }
-/* Curated still (reduced motion / no stage): the figure as a still frame. */
-.observatory-still {
-  transition: opacity 1s var(--ease-push);
-}
-[data-cinema="live"] .observatory-still,
-[data-cinema="paused"] .observatory-still {
-  opacity: 0 !important;
-}
-
 /* Sound bars in the header toggle. */
 .sound-bars > span {
   width: 2px;
@@ -834,12 +825,6 @@ body > footer,
   .cinema-stage {
     display: none;
   }
-}
-.observatory-core {
-  transition: opacity 1s var(--ease-push);
-}
-[data-cinema="live"] .observatory-core {
-  opacity: 0;
 }
 
 /* Kinetic hero name (components/cinema/KineticName). */

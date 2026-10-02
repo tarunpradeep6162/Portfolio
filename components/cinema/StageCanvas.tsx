@@ -12,8 +12,6 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { buildAvatar } from "@/lib/avatar/buildAvatar";
-import { mergeAvatarMeshes } from "@/lib/avatar/mergeAvatar";
 import { onCue } from "@/lib/cinema/cues";
 import {
   MOODS,
@@ -34,8 +32,8 @@ import {
  * layout exactly, dark sections become windows into it, and a page change
  * is a cut inside one continuous world rather than a new canvas booting.
  *
- *   hero    - Tarun's armoured double, standing in the Observatory with a
- *             volumetric key light, floor rings and drifting dust
+ *   hero    - the Observatory lit from above: a volumetric beam on its
+ *             core, floor rings, a precessing orbit and drifting dust
  *   spine   - a column of eight lights; a simulated release travels down it
  *             as the visitor scrolls the Reliability Spine
  *   contact - a wireframe globe with an orbiting packet ("route to you")
@@ -206,22 +204,10 @@ const coneMaterial = () =>
 // ----------------------------------------------------------------- subjects
 
 function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
+  // The hero is the Observatory itself (no figure): a volumetric beam falls
+  // on its core, with glowing floor rings and a slowly precessing orbit.
   const group = useRef<THREE.Group>(null);
-  const figure = useRef<THREE.Group>(null);
-  const avatar = useMemo(() => {
-    const built = buildAvatar();
-    // ~140 draw calls -> ~65: static parts baked into their joints.
-    const unmerge = mergeAvatarMeshes(built.root);
-    return {
-      ...built,
-      dispose: () => {
-        unmerge();
-        built.dispose();
-      },
-    };
-  }, []);
-  const mixer = useMemo(() => new THREE.AnimationMixer(avatar.root), [avatar]);
-  const head = useMemo(() => avatar.root.getObjectByName("head")!, [avatar]);
+  const orbit = useRef<THREE.Mesh>(null);
   const cone = useMemo(() => coneMaterial(), []);
   const ringMat = useMemo(
     () => new THREE.MeshBasicMaterial({ color: LIME, transparent: true, opacity: 0.55, toneMapped: false }),
@@ -249,34 +235,14 @@ function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
     [],
   );
 
-  useEffect(() => {
-    mixer.clipAction(avatar.clips[0]).play();
-    let texture: THREE.Texture | null = null;
-    let cancelled = false;
-    new THREE.TextureLoader().load("/rc01/face-holo.webp", (loaded) => {
-      if (cancelled) return loaded.dispose();
-      loaded.colorSpace = THREE.SRGBColorSpace;
-      texture = loaded;
-      const face = (avatar.root.getObjectByName("hologramFace") as THREE.Mesh).material as THREE.MeshStandardMaterial;
-      face.map = loaded;
-      face.emissiveMap = loaded;
-      face.emissiveIntensity = 1;
-      face.needsUpdate = true;
-    });
-    avatar.root.traverse((o) => {
-      o.castShadow = false;
-      o.receiveShadow = false;
-    });
-    return () => {
-      cancelled = true;
-      texture?.dispose();
-      mixer.stopAllAction();
-      avatar.dispose();
+  useEffect(
+    () => () => {
       cone.dispose();
       ringMat.dispose();
       floorMat.dispose();
-    };
-  }, [avatar, mixer, cone, ringMat, floorMat]);
+    },
+    [cone, ringMat, floorMat],
+  );
 
   useFrame((state, delta) => {
     const g = group.current;
@@ -292,23 +258,12 @@ function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
     g.scale.setScalar(s);
 
     const t = state.clock.elapsedTime;
-    mixer.update(delta);
-    // Dolly-and-pan: the figure turns as the hero scrolls out of frame.
-    if (figure.current) {
-      figure.current.rotation.y = THREE.MathUtils.damp(
-        figure.current.rotation.y,
-        -0.35 + state.pointer.x * 0.22 + a.travel * 0.55,
-        3,
-        delta,
-      );
+    if (orbit.current) {
+      orbit.current.rotation.z += delta * 0.12;
+      orbit.current.rotation.x = -Math.PI / 2.2 + a.travel * 0.25;
     }
-    // Head tracks the visitor's pointer on top of the idle clip.
-    head.rotateY(THREE.MathUtils.clamp(state.pointer.x, -1, 1) * 0.35);
-    head.rotateX(-THREE.MathUtils.clamp(state.pointer.y, -1, 1) * 0.15);
-
-    avatar.glow.emissiveIntensity = 0.75 + Math.sin(t * 1.6) * 0.12;
     cone.uniforms.uTime.value = t;
-    // Portrait screens stack the copy above the figure: keep the beam off the text.
+    // Portrait screens stack the copy above the Observatory: keep the beam off the text.
     cone.uniforms.uStrength.value = cam.aspect < 1 ? 0.04 : 0.1;
     cone.uniforms.uColor.value.set(mood.key);
     floorMat.uniforms.uTime.value = t;
@@ -316,10 +271,7 @@ function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
 
   return (
     <group ref={group} visible={false}>
-      <group ref={figure}>
-        <primitive object={avatar.root} />
-      </group>
-      {/* Volumetric key light falling on the figure */}
+      {/* Volumetric key light falling on the core */}
       <mesh material={cone} position={[0.05, 1.55, 0]}>
         <cylinderGeometry args={[0.18, 1.05, 3.1, 48, 1, true]} />
       </mesh>
@@ -330,7 +282,7 @@ function HeroSubject({ mood }: { mood: (typeof MOODS)[keyof typeof MOODS] }) {
       <mesh material={ringMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <torusGeometry args={[0.72, 0.006, 8, 128]} />
       </mesh>
-      <mesh material={ringMat} rotation={[-Math.PI / 2.2, 0.2, 0]} position={[0, 0.95, 0]}>
+      <mesh ref={orbit} material={ringMat} rotation={[-Math.PI / 2.2, 0.2, 0]} position={[0, 0.95, 0]}>
         <torusGeometry args={[1.02, 0.003, 8, 160]} />
       </mesh>
     </group>

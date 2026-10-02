@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Container } from "@/components/ui/Container";
+import { Logo } from "@/components/brand/Logo";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { SoundToggle } from "@/components/cinema/SoundToggle";
 import { CinemaToggle } from "@/components/cinema/CinemaToggle";
@@ -26,9 +27,10 @@ export function SiteHeader() {
           href="/"
           className="group flex items-center gap-3 text-[var(--color-cloud-linen)]"
         >
-          <span className="flex h-9 w-9 items-center justify-center border border-white/15 font-display text-sm font-bold transition-colors group-hover:border-[var(--color-signal-lime)] group-hover:text-[var(--color-signal-lime)]">
-            TP
-          </span>
+          <Logo
+            variant="compact"
+            className="h-10 w-auto text-[var(--color-signal-lime)] transition-[filter,transform] duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_10px_rgba(216,255,79,0.55)]"
+          />
           <span className="hidden sm:block">
             <span className="block font-display text-[11px] font-bold uppercase tracking-[0.13em]">
               Tarun Pradeep

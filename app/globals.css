@@ -1108,16 +1108,28 @@ body > footer,
   animation-play-state: paused;
 }
 @keyframes credits-roll {
-  from { transform: translateY(9.5rem); }
-  to { transform: translateY(-100%); }
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
 }
 @media (prefers-reduced-motion: reduce) {
   .end-credits { height: auto; mask-image: none; }
   .end-credits-roll { animation: none; }
+  .end-credits-roll > [aria-hidden] { display: none; }
 }
 
 /* Off-screen ambient animations are paused (components/shared/OffscreenAnimationPauser). */
 [data-anim-scope][data-offscreen="true"],
 [data-anim-scope][data-offscreen="true"] * {
   animation-play-state: paused !important;
+}
+
+/* Monogram in the cold-open title card: rises in just ahead of the name. */
+.cold-logo {
+  opacity: 0;
+  transform: translateY(12px) scale(0.92);
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--color-signal-lime) 45%, transparent));
+  animation: cold-logo-in 0.5s var(--ease-reveal) 1.25s forwards;
+}
+@keyframes cold-logo-in {
+  to { opacity: 1; transform: none; }
 }

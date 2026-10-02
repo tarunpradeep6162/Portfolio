@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { site, hero } from "@/content/site";
+import { LOGO_FULL } from "@/lib/brand/logo";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -55,22 +56,18 @@ export default function OpengraphImage() {
       <div
         style={{
           position: "absolute",
-          width: 150,
-          height: 150,
-          right: 145,
-          top: 237,
+          width: 340,
+          height: 340,
+          right: 50,
+          top: 142,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: "1px solid rgba(216,255,79,.55)",
-          borderRadius: 999,
-          color: "#d8ff4f",
-          fontSize: 18,
-          fontWeight: 700,
-          letterSpacing: 3,
         }}
       >
-        CORE
+        <svg viewBox={LOGO_FULL.viewBox} width={196} height={252}>
+          <path fill="#d8ff4f" fillRule="evenodd" d={LOGO_FULL.d} />
+        </svg>
       </div>
 
       <div

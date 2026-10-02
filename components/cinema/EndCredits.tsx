@@ -21,19 +21,25 @@ const CREDITS: [string, string][] = [
 export function EndCredits() {
   return (
     <div data-anim-scope className="end-credits relative mt-2 overflow-hidden border-y border-white/10" aria-label="End credits">
-      <div className="end-credits-roll py-6">
-        {CREDITS.map(([role, name]) => (
-          <p key={role} className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-4 py-1.5">
-            <span className="text-right font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
-              {role}
-            </span>
-            <span aria-hidden className="h-px w-6 bg-white/15" />
-            <span className="font-display text-sm font-semibold tracking-[-0.01em] text-[var(--color-cloud-linen)]">{name}</span>
-          </p>
+      {/* Two identical copies scroll as one strip, so the loop never shows
+          an empty gap; the second copy is hidden from assistive tech. */}
+      <div className="end-credits-roll">
+        {[0, 1].map((copy) => (
+          <div key={copy} aria-hidden={copy === 1 || undefined} className="py-6">
+            {CREDITS.map(([role, name]) => (
+              <p key={role} className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-4 py-1.5">
+                <span className="text-right font-mono text-[8px] uppercase tracking-[0.22em] text-[var(--color-telemetry-steel)]">
+                  {role}
+                </span>
+                <span aria-hidden className="h-px w-6 bg-white/15" />
+                <span className="font-display text-sm font-semibold tracking-[-0.01em] text-[var(--color-cloud-linen)]">{name}</span>
+              </p>
+            ))}
+            <p className="mt-6 text-center font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--color-signal-lime)]">
+              No systems were harmed in the making of this portfolio
+            </p>
+          </div>
         ))}
-        <p className="mt-6 text-center font-mono text-[8px] uppercase tracking-[0.3em] text-[var(--color-signal-lime)]">
-          No systems were harmed in the making of this portfolio
-        </p>
       </div>
     </div>
   );

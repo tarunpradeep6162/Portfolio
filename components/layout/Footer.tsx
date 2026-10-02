@@ -1,6 +1,7 @@
 import { site } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { ExternalLink } from "@/components/ui/ExternalLink";
+import { Logo } from "@/components/brand/Logo";
 import { EndCredits } from "@/components/cinema/EndCredits";
 import { TrailerButton } from "@/components/cinema/TrailerButton";
 
@@ -9,6 +10,7 @@ export function Footer() {
     <footer className="site-footer border-t border-white/10 bg-[var(--color-control-black)] py-8 text-[var(--color-telemetry-steel)]">
       <Container className="grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
+          <Logo className="mb-5 h-16 w-auto text-[var(--color-signal-lime)]" />
           <p className="font-display text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-cloud-linen)]">
             {site.name}
           </p>

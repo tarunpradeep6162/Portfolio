@@ -1,11 +1,11 @@
 import { ImageResponse } from "next/og";
 import { LOGO_COMPACT } from "@/lib/brand/logo";
 
-export const size = { width: 32, height: 32 };
+export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
-/** Browser-tab icon: the compact monogram (thickened strokes survive 32 px). */
-export default function Icon() {
+/** Home-screen icon (iOS adds its own rounded mask). */
+export default function AppleIcon() {
   return new ImageResponse(
     <div
       style={{
@@ -14,11 +14,10 @@ export default function Icon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#06090d",
-        borderRadius: 6,
+        background: "radial-gradient(circle at 50% 42%, #121f2c 0%, #06090d 70%)",
       }}
     >
-      <svg viewBox={LOGO_COMPACT.viewBox} width={22} height={28}>
+      <svg viewBox={LOGO_COMPACT.viewBox} width={104} height={133}>
         <path fill="#d8ff4f" fillRule="evenodd" d={LOGO_COMPACT.d} />
       </svg>
     </div>,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { site } from "@/content/site";
 import { emitCue } from "@/lib/cinema/cues";
+import { Logo } from "@/components/brand/Logo";
 
 export const BOOT_SESSION_KEY = "tp-boot-seen";
 /** Total runtime of the CSS timeline in globals.css (.cold-*), in ms. */
@@ -85,6 +86,7 @@ export function BootSequence() {
       </p>
 
       <div className="cold-title">
+        <Logo className="cold-logo mb-7 h-[clamp(4.5rem,13vh,8rem)] w-auto text-[var(--color-signal-lime)]" />
         <p className="font-display text-[clamp(2.6rem,9vw,8.5rem)] font-bold uppercase leading-[0.8] tracking-[-0.06em] text-[var(--color-cloud-linen)]">
           <span className="cold-title-word">{first}</span>{" "}
           <span className="cold-title-word text-[var(--color-signal-lime)]">{rest.join(" ")}</span>

@@ -20,8 +20,19 @@ import { education } from "@/content/education";
 import { site } from "@/content/site";
 
 const allFlagships = projects.filter((project) => project.kind === "flagship");
-// The home page shows the featured systems; every case study is on /work.
-const flagships = allFlagships.filter((project) => project.featured);
+// Every case study, featured ones first.
+const flagships = [
+  ...allFlagships.filter((project) => project.featured),
+  ...allFlagships.filter((project) => !project.featured),
+];
+
+/** Alternating 7/5 then 5/7 rows; an odd last card sits centred. */
+function cardSpan(index: number, total: number) {
+  if (total % 2 === 1 && index === total - 1) return "lg:col-span-8 lg:col-start-3";
+  const row = Math.floor(index / 2);
+  const left = index % 2 === 0;
+  return (row % 2 === 0) === left ? "lg:col-span-7" : "lg:col-span-5";
+}
 const labProjects = projects.filter((project) => project.kind === "lab");
 
 export default function Home() {
@@ -29,7 +40,7 @@ export default function Home() {
     <>
       <Hero />
 
-      <ChapterSlate chapter="Chapter 01" title="Selected systems" note="Featured systems, built and shipped" />
+      <ChapterSlate chapter="Chapter 01" title="Selected systems" note={`${allFlagships.length} systems, built and shipped`} />
 
       <section
         id="work"
@@ -44,9 +55,10 @@ export default function Home() {
             </div>
             <div className="lg:pb-2">
               <p className="max-w-[56ch] text-lead leading-8 text-[var(--ink-muted)]">
-                Featured from {allFlagships.length} documented case studies:
-                container delivery through ECR, enforced quality gates,
-                production architecture, and containerised deployment.
+                {allFlagships.length} documented case studies: container
+                delivery through ECR, enforced quality gates, Jenkins
+                automation, production architecture, and containerised
+                deployment.
               </p>
               <Link
                 href="/work"
@@ -63,9 +75,7 @@ export default function Home() {
               <div
                 key={project.slug}
                 data-reveal
-                className={
-                  index === 0 || index === 3 ? "lg:col-span-7" : "lg:col-span-5"
-                }
+                className={cardSpan(index, flagships.length)}
               >
                 <ProjectCard project={project} index={index} />
               </div>

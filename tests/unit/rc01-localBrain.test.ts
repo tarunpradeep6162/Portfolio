@@ -29,7 +29,7 @@ describe("RC-01 built-in answer engine", () => {
     ["What tools were used in Project Aurora?", /tools and services/i, "/work/project-aurora"],
     ["Explain the reliability spine", /commit/i, "/#spine"],
     ["Has he written any blog articles?", /articles/i],
-    ["Can I get his resume?", /résumé/i, "/resume"],
+    ["Can I get his resume?", /2-page PDF/i, "/resume/Tarun-Pradeep-B-Resume.pdf"],
   ];
 
   it.each(cases)("%s", (question, expected, cite) => {
@@ -42,9 +42,16 @@ describe("RC-01 built-in answer engine", () => {
   it("only ever cites pages that exist", () => {
     for (const [question] of cases) {
       for (const href of citations(answerLocally(question).text)) {
-        expect(resolveInternalHref(href), `${question} -> ${href}`).not.toBeNull();
+        expect(resolveInternalHref(href, { allowFiles: true }), `${question} -> ${href}`).not.toBeNull();
       }
     }
+  });
+
+  it("lets RC-01 cite the résumé PDF but never navigate to it", () => {
+    expect(resolveInternalHref("/resume/Tarun-Pradeep-B-Resume.pdf", { allowFiles: true })).toBe(
+      "/resume/Tarun-Pradeep-B-Resume.pdf",
+    );
+    expect(resolveInternalHref("/resume/Tarun-Pradeep-B-Resume.pdf")).toBeNull();
   });
 
   it("speaks about Tarun in the third person", () => {

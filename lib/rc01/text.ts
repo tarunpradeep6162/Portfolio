@@ -39,7 +39,7 @@ export function parseRichText(input: string): RichSegment[] {
     const [full, label, target] = match;
     const index = match.index ?? 0;
     if (index > last) segments.push(...parseInline(input.slice(last, index)));
-    const internal = target.startsWith("/") ? resolveInternalHref(target) : null;
+    const internal = target.startsWith("/") ? resolveInternalHref(target, { allowFiles: true }) : null;
     const external = internal ? null : safeExternal(target);
     segments.push(
       internal

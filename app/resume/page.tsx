@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Download } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { ExperienceTimeline } from "@/components/about/ExperienceTimeline";
@@ -78,9 +79,14 @@ export default function ResumePage() {
         <div className="grid border-x border-b border-[var(--line)] lg:grid-cols-[0.38fr_0.62fr]">
           <aside className="border-b border-[var(--line)] p-6 sm:p-10 lg:border-b-0 lg:border-r">
             {resumeFile.status === "ready" ? (
-              <Button href={resumeFile.value.href}>
-                Download résumé (PDF)
-              </Button>
+              <div className="no-print">
+                <Button href={resumeFile.value.href} download={resumeFile.value.filename}>
+                  <Download size={15} aria-hidden /> Download résumé (PDF)
+                </Button>
+                <p className="mt-4 font-mono text-[9px] uppercase leading-5 tracking-[0.08em] text-[var(--ink-muted)]">
+                  2 pages · A4 · generated from this page&apos;s content
+                </p>
+              </div>
             ) : (
               <div className="no-print">
                 <Button href={`mailto:${site.email}?subject=Résumé request`}>

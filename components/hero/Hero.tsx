@@ -1,4 +1,4 @@
-import { ArrowDownRight } from "lucide-react";
+import { ArrowDownRight, Download } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { ExternalLink } from "@/components/ui/ExternalLink";
@@ -7,7 +7,7 @@ import { InfrastructureObservatory } from "./InfrastructureObservatory";
 import { ParallaxLayers } from "./ParallaxLayers";
 import { HeroScrollScene } from "./HeroScrollScene";
 import { KineticName } from "@/components/cinema/KineticName";
-import { hero, site } from "@/content/site";
+import { hero, resumeFile, site } from "@/content/site";
 
 export function Hero() {
   return (
@@ -63,6 +63,15 @@ export function Hero() {
             >
               <ExternalLink href={site.github}>GitHub</ExternalLink>
               <ExternalLink href={site.linkedin}>LinkedIn</ExternalLink>
+              {resumeFile.status === "ready" && (
+                <a
+                  href={resumeFile.value.href}
+                  download={resumeFile.value.filename}
+                  className="inline-flex items-center gap-1.5 underline decoration-[var(--line)] underline-offset-4 hover:text-[var(--accent)] hover:decoration-[var(--accent)]"
+                >
+                  <Download size={12} aria-hidden /> Résumé PDF
+                </a>
+              )}
             </div>
           </div>
         </HeroCopyReveal>

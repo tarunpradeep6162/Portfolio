@@ -1,5 +1,6 @@
 import { projects } from "@/content/projects";
 import { blogPosts } from "@/content/blog";
+import { resumeFile } from "@/content/site";
 
 /**
  * The closed set of internal paths RC-01 may cite or navigate to. Built from
@@ -31,6 +32,12 @@ export const siteRoutes: SiteRoute[] = [
 
 export const sitePaths: readonly string[] = siteRoutes.map((route) => route.path);
 
+/**
+ * Downloadable files RC-01 may *cite* (rendered as a download chip) but
+ * never navigate to - they aren't pages.
+ */
+export const citableFiles: readonly string[] = resumeFile.status === "ready" ? [resumeFile.value.href] : [];
+
 /** Sections on the home page RC-01 can scroll to (ids already in the markup). */
 export const homeSections = ["work", "spine", "contact"] as const;
 export type HomeSection = (typeof homeSections)[number];
@@ -40,9 +47,10 @@ export type HomeSection = (typeof homeSections)[number];
  * internal href, or null for anything not in the allowlist (external URLs,
  * protocol-relative URLs, unknown paths, javascript: etc.).
  */
-export function resolveInternalHref(raw: string): string | null {
+export function resolveInternalHref(raw: string, { allowFiles = false } = {}): string | null {
   const href = raw.trim();
   if (!href.startsWith("/") || href.startsWith("//")) return null;
+  if (allowFiles && citableFiles.includes(href)) return href;
   const [path, hash] = href.split("#", 2);
   const normalised = path.length > 1 ? path.replace(/\/+$/, "") : path;
   if (!sitePaths.includes(normalised)) return null;

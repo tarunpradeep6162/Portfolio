@@ -16,7 +16,8 @@
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
     "ci:summary": "node scripts/ci/create-summary.mjs",
     "eval:rc01": "node scripts/eval-rc01.mjs",
-    "export:avatar": "node scripts/export-avatar.mjs"
+    "export:avatar": "node scripts/export-avatar.mjs",
+    "export:resume": "tsx scripts/export-resume.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
@@ -52,6 +53,7 @@
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

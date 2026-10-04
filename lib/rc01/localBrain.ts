@@ -216,7 +216,7 @@ const intents: Intent[] = [
     answer: () =>
       answer(
         isReady(resumeFile)
-          ? `You can download ${first}'s résumé from the ${link("résumé page", "/resume")}.`
+          ? `Here's ${first}'s résumé as a 2-page PDF: [download it](${resumeFile.value.href}). The ${link("résumé page", "/resume")} has the same record on the web.`
           : `The full work history is on the ${link("résumé page", "/resume")}. A downloadable PDF isn't published yet - email ${site.email} to request the latest one.`,
       ),
   },

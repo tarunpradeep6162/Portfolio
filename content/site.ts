@@ -32,7 +32,11 @@ export const about = {
     "I care about reliability, security, clear documentation, and understanding why a system works, not merely getting it to run once.",
 } as const;
 
-export const resumeFile: Field<{ href: string }> = {
-  status: "needs-input",
-  note: "No resume PDF has been supplied yet, and the only version referenced elsewhere lists an outdated employer timeline. Request the current résumé by email in the meantime.",
+/**
+ * Generated from this site's own content by `npm run export:resume`
+ * (scripts/export-resume.ts) - re-run it after editing content/*.ts.
+ */
+export const resumeFile: Field<{ href: string; filename: string }> = {
+  status: "ready",
+  value: { href: "/resume/Tarun-Pradeep-B-Resume.pdf", filename: "Tarun-Pradeep-B-Resume.pdf" },
 };

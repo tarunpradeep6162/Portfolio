@@ -37,6 +37,18 @@ function Inline({ segments }: { segments: RichSegment[] }) {
       {segments.map((segment, index) => {
         switch (segment.type) {
           case "link":
+            if (/\.pdf$/i.test(segment.href)) {
+              return (
+                <a
+                  key={index}
+                  href={segment.href}
+                  download
+                  className="mx-0.5 inline-flex items-center rounded border border-[var(--color-signal-lime)]/50 px-1.5 py-px font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--color-signal-lime)] hover:bg-[var(--color-signal-lime)]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-signal-lime)]"
+                >
+                  {segment.label} ↓
+                </a>
+              );
+            }
             return (
               <Link
                 key={index}

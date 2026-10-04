@@ -26,7 +26,8 @@ export function Button({
 }: ButtonBaseProps & {
   href: string;
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
-  const isExternal = href.startsWith("http") || href.startsWith("mailto:");
+  // Files (e.g. the résumé PDF) are plain links, not client-side routes.
+  const isExternal = href.startsWith("http") || href.startsWith("mailto:") || /\.pdf$/i.test(href);
   const classes = cn(base, variants[variant], className);
 
   if (isExternal) {

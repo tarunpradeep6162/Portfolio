@@ -1,4 +1,4 @@
-import { site } from "@/content/site";
+import { resumeFile, site } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Logo } from "@/components/brand/Logo";
@@ -25,6 +25,15 @@ export function Footer() {
           className="flex flex-wrap items-center gap-5 font-mono text-[10px] uppercase tracking-[0.12em]"
         >
           <TrailerButton />
+          {resumeFile.status === "ready" && (
+            <a
+              href={resumeFile.value.href}
+              download={resumeFile.value.filename}
+              className="underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]"
+            >
+              Résumé PDF
+            </a>
+          )}
           <ExternalLink href={site.github}>GitHub</ExternalLink>
           <ExternalLink href={site.linkedin}>LinkedIn</ExternalLink>
           <a

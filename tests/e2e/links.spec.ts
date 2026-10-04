@@ -28,18 +28,13 @@ test.describe("external identity links", () => {
     await expect(emailCta).toHaveAttribute("href", `mailto:${site.email}`);
   });
 
-  test("the résumé page offers a mailto fallback since no PDF is supplied yet", async ({
+  test("the résumé page offers the generated PDF for download", async ({
     page,
   }) => {
     await page.goto("/resume");
-    await expect(page.getByText(/no pdf export yet/i)).toBeVisible();
-    const requestLink = page.getByRole("link", {
-      name: /request a pdf by email/i,
-    });
-    await expect(requestLink).toHaveAttribute(
-      "href",
-      new RegExp(`mailto:${site.email}`),
-    );
+    const download = page.getByRole("link", { name: /download résumé \(pdf\)/i });
+    await expect(download).toHaveAttribute("href", "/resume/Tarun-Pradeep-B-Resume.pdf");
+    await expect(download).toHaveAttribute("download", "Tarun-Pradeep-B-Resume.pdf");
   });
 
   test("flagship project repository links point to real GitHub URLs", async ({

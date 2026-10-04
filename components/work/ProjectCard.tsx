@@ -25,7 +25,9 @@ export function ProjectCard({
             <img
               src={project.screenshot.value.src}
               alt={project.screenshot.value.alt}
-              className="aspect-[16/10] w-full object-cover transition-transform duration-700 ease-[var(--ease-spine)] group-hover:scale-[1.02]"
+              // contain, not cover: evidence screenshots and diagrams must show
+              // in full, framed on the dark panel, never cropped at the edges.
+              className="aspect-[16/10] w-full bg-[var(--color-control-black)] object-contain p-3 transition-transform duration-700 ease-[var(--ease-spine)] group-hover:scale-[1.02] sm:p-4"
             />
           ) : (
             <ProjectCoverArt

@@ -21,7 +21,10 @@ describe("RC-01 built-in answer engine", () => {
     ["Where does he work now?", /stackly/i, "/resume"],
     ["What projects has he built?", /project aurora/i, "/work/project-aurora"],
     ["Tell me about the Jenkins controller", /jenkins/i, "/work/distributed-jenkins-controller"],
-    ["Which tools did he use in the Jenkins project?", /tools and services: jenkins/i, "/work/distributed-jenkins-controller"],
+    // Several case studies use Jenkins: RC-01 lists them rather than guessing one.
+    ["Which tools did he use in the Jenkins project?", /case studies involve jenkins[\s\S]*tools: jenkins/i, "/work/distributed-jenkins-controller"],
+    ["What tools were used in the SonarQube quality gate project?", /tools and services:.*sonarqube/i, "/work/jenkins-sonarqube-quality-gates"],
+    ["What was hard about the ECR project?", /nocredentials/i, "/work/aws-ecr-java-delivery"],
     ["What was hard about the Node.js RDS app?", /node\.js/i, "/work/nodejs-auth-mysql-rds"],
     ["What tools were used in Project Aurora?", /tools and services/i, "/work/project-aurora"],
     ["Explain the reliability spine", /commit/i, "/#spine"],

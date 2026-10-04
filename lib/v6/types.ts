@@ -10,6 +10,11 @@ import type { ProjectCategory, SpineStageId } from "@/content/types";
  */
 
 export type ProjectSlug =
+  | "aws-ecr-java-delivery"
+  | "jenkins-sonarqube-quality-gates"
+  | "jenkins-ec2-control-multi-agent"
+  | "jenkins-build-with-parameters"
+  | "jenkins-docker-portfolio-deploy"
   | "project-aurora"
   | "distributed-jenkins-controller"
   | "secure-aws-production-architecture"

@@ -550,6 +550,11 @@ export function ProjectCoverArt({
 }
 
 const VARIANT_BY_SLUG: Record<string, CoverArtVariant> = {
+  "aws-ecr-java-delivery": "pipeline",
+  "jenkins-sonarqube-quality-gates": "flow",
+  "jenkins-ec2-control-multi-agent": "hub-spoke",
+  "jenkins-build-with-parameters": "tiered",
+  "jenkins-docker-portfolio-deploy": "pipeline",
   "project-aurora": "pipeline",
   "distributed-jenkins-controller": "hub-spoke",
   "secure-aws-production-architecture": "tiered",

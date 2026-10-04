@@ -54,6 +54,10 @@ export interface FlagshipProject {
   outcome: string;
   links: ProjectLink[];
   screenshot: Field<{ src: string; alt: string }>;
+  /** Real screenshots / diagrams from the project's own evidence report. */
+  evidence?: { src: string; alt: string; caption: string }[];
+  /** Shown in the home page's "Selected systems"; all flagships are on /work. */
+  featured?: boolean;
   labelNote?: string;
 }
 

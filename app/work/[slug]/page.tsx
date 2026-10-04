@@ -22,6 +22,7 @@ import { CaseStudyCover } from "@/components/work/film/CaseStudyCover";
 import { CountUpStats } from "@/components/work/film/CountUpStats";
 import { ChapterRail } from "@/components/work/film/ChapterRail";
 import { BeforeAfter } from "@/components/work/film/BeforeAfter";
+import { EvidenceGallery } from "@/components/work/film/EvidenceGallery";
 
 const CHAPTERS = [
   { id: "chapter-01", number: "01", title: "The constraint" },
@@ -137,7 +138,7 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                 <img
                   src={project.screenshot.value.src}
                   alt={project.screenshot.value.alt}
-                  className="aspect-[12/7] w-full object-cover"
+                  className="aspect-[12/7] w-full bg-[var(--color-control-black)] object-contain p-3 sm:p-5"
                 />
               ) : (
                 <ProjectCoverArt
@@ -187,7 +188,13 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                   </dd>
                 </div>
               </dl>
-              <ChapterRail chapters={CHAPTERS} />
+              <ChapterRail
+                chapters={
+                  project.evidence?.length
+                    ? [...CHAPTERS, { id: "chapter-06", number: "06", title: "Evidence" }]
+                    : CHAPTERS
+                }
+              />
             </div>
           </aside>
 
@@ -242,6 +249,12 @@ export default async function CaseStudyPage(props: PageProps<"/work/[slug]">) {
                 </div>
               )}
             </Chapter>
+
+            {project.evidence && project.evidence.length > 0 && (
+              <Chapter number="06" title="Evidence">
+                <EvidenceGallery items={project.evidence} />
+              </Chapter>
+            )}
 
             <ProofMode project={project} />
           </div>

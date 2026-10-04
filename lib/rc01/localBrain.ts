@@ -144,6 +144,39 @@ function findProject(q: string): FlagshipProject | undefined {
   return best && best.score >= 0.5 ? best.project : undefined;
 }
 
+/**
+ * Every project whose title shares a meaningful word with the question,
+ * plus the word that matched - for questions like "the Jenkins project"
+ * when several case studies use Jenkins. Words shared by *every* title
+ * are ignored (they identify nothing).
+ */
+function projectCandidates(q: string): { word: string; projects: FlagshipProject[] } | undefined {
+  const words = new Set(tokenize(q));
+  let best: { word: string; projects: FlagshipProject[] } | undefined;
+  for (const w of words) {
+    const freq = titleFreq.get(w) ?? 0;
+    if (freq < 2 || freq === flagships.length) continue;
+    const projects = flagships.filter((p) => titleTokens.get(p)?.has(w));
+    if (!best || projects.length < best.projects.length) best = { word: w, projects };
+  }
+  return best;
+}
+
+function ambiguousProjectAnswer(word: string, projects: FlagshipProject[], q: string): LocalAnswer {
+  const label = projects[0].title.match(new RegExp(`\\b${word}\\w*`, "i"))?.[0] ?? word;
+  const detail = (p: FlagshipProject) => {
+    if (/\b(tool|stack|tech|use[ds]?)\b/.test(q)) return `Tools: ${p.toolsAndServices.join(", ")}.`;
+    if (/\b(hard|challenge|problem|difficult)/.test(q)) return firstSentence(p.challengeAndResolution);
+    if (/\b(result|outcome|impact|shipped)/.test(q)) return firstSentence(p.outcome);
+    return firstSentence(p.summary);
+  };
+  return answer(
+    `${projects.length} case studies involve ${label} - here's each one:\n\n${projects
+      .map((p) => `- ${link(p.title, `/work/${p.slug}`)} - ${detail(p)}`)
+      .join("\n")}\n\nAsk about one by name for the full story.`,
+  );
+}
+
 const wantsToOpen = (q: string) => /\b(show|open|take me|go to|navigate|see)\b/.test(q);
 
 type Intent = { test: RegExp; answer: (q: string) => LocalAnswer };
@@ -291,6 +324,12 @@ export function answerLocally(question: string): LocalAnswer {
   // A named project beats every generic intent ("tools used in Aurora").
   const project = findProject(q);
   if (project && !/\b(contact|email)\b/.test(q)) return projectAnswer(project, q);
+
+  // Several projects share the word asked about ("the Jenkins project").
+  const candidates = projectCandidates(q);
+  if (candidates && candidates.projects.length > 1 && !/\b(contact|email)\b/.test(q)) {
+    return ambiguousProjectAnswer(candidates.word, candidates.projects, q);
+  }
 
   for (const intent of intents) {
     if (intent.test.test(q)) return intent.answer(q);

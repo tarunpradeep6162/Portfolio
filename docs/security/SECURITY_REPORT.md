@@ -145,6 +145,18 @@ updates them.
   or as response headers, and static pages stay statically cached.
 - Accessibility: unchanged (the accessibility e2e suite passes).
 
+**Production (deployed 2026-10-11 with owner approval, commit `5ccbe49`,
+deployment `dpl_5yCBVYCb78uiFtuaD5axxPGaWSLD`):**
+- Every route, the résumé PDF, the OG image, the sitemap, robots.txt and
+  security.txt return 200.
+- The new headers are live; the CSP is in Report-Only mode.
+- RC-01 answers browser requests but returns 403 to scripted and cross-site
+  POSTs; cross-site analytics returns 403; the owner and webhook endpoints
+  return 404 (unconfigured).
+- Vercel runtime logs show structured `"event":"security"` entries with
+  hashed client references. All entries so far come from these tests; no
+  real visitor has triggered a CSP violation.
+
 **Preview deployment:** `tarun-portfolio-pl84qxcxi-tarun-2f6a.vercel.app` is
 protected by Vercel Authentication. The bypass link was rejected, so I
 could not test it externally; it is reachable when you're signed in to Vercel.
@@ -153,9 +165,11 @@ could not test it externally; it is reachable when you're signed in to Vercel.
 
 Needs your approval or access:
 1. **Approve the production deploy** of `b438d1e`.
-2. **Approve the firewall rules** in `FIREWALL.md`. I can apply them through
-   the Vercel API; paid features (OWASP ruleset, extra rate-limit rules) are
-   checked against your plan first.
+2. **Firewall (approved, not yet applied):** the Vercel API returns "config
+   not found" for both create and update, because this project's firewall
+   has never been initialised. Open
+   https://vercel.com/tarun-2f6a/tarun-portfolio/firewall once (or add the rules
+   there directly from `FIREWALL.md`), then the rules can be applied by API.
 3. **Email alerts:** create a free Resend account with
    tarunpradeep2003@gmail.com and add `RESEND_API_KEY` (Sensitive) in Vercel.
    Add `SECURITY_ADMIN_TOKEN` (`openssl rand -hex 32`) and

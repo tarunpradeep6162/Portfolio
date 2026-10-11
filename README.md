@@ -74,7 +74,7 @@ then it renders code-generated architecture cover art
 `flow` string) — never a stock mockup.
 
 **Experience** — `content/experience.ts`. `achievements` is a `Field<string[]>`
-per role, for the same reason (the Stackly role currently has none supplied).
+per role, for the same reason.
 
 **Education** — `content/education.ts`, plain array, no Field<> wrapping (all
 facts are known).

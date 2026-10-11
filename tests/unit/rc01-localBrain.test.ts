@@ -18,7 +18,7 @@ describe("RC-01 built-in answer engine", () => {
     ["Which certifications does he have?", /azure administrator/i, "/resume"],
     ["Where did he study?", /information technology/i, "/resume"],
     ["Where did he graduate from?", /information technology/i, "/resume"],
-    ["Where does he work now?", /stackly/i, "/resume"],
+    ["Where does he work now?", /vaata smart/i, "/resume"],
     ["What projects has he built?", /project aurora/i, "/work/project-aurora"],
     ["Tell me about the Jenkins controller", /jenkins/i, "/work/distributed-jenkins-controller"],
     // Several case studies use Jenkins: RC-01 lists them rather than guessing one.
@@ -70,7 +70,6 @@ describe("RC-01 built-in answer engine", () => {
 
   it("never invents unpublished facts", () => {
     expect(answerLocally("What's his phone number?").text).toMatch(/isn't published/);
-    expect(answerLocally("What did he achieve at Stackly?").text).toMatch(/not published yet/);
   });
 
   it("proposes page actions only when asked to show something", () => {

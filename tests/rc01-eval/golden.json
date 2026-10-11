@@ -39,27 +39,12 @@
       "id": "current-role",
       "q": "Where does he work now?",
       "allOf": [
-        "stackly"
+        "vaata smart"
       ],
       "forbid": [
         "google",
         "amazon",
         "microsoft"
-      ]
-    },
-    {
-      "id": "stackly-achievements",
-      "q": "What has he achieved at Stackly?",
-      "anyOf": [
-        "not been published",
-        "not published",
-        "haven't been published",
-        "hasn't published",
-        "not yet"
-      ],
-      "forbid": [
-        "reduced costs by",
-        "%"
       ]
     },
     {
@@ -110,7 +95,7 @@
     },
     {
       "id": "resume-pdf",
-      "q": "Can I download his r\u00e9sum\u00e9 PDF?",
+      "q": "Can I download his résumé PDF?",
       "anyOf": [
         "not published",
         "not been published",
@@ -264,7 +249,7 @@
       "forbid": [
         "lpa",
         "$",
-        "\u20b9"
+        "₹"
       ]
     },
     {

@@ -1,7 +1,7 @@
 /**
  * Field<T> makes "we don't have this fact yet" a type-level state instead of
  * an empty string or an omitted key. Every genuinely-missing fact from the
- * spec (Stackly bullets, credential IDs, screenshots, the resume file) is
+ * spec (credential IDs, screenshots, the resume file) is
  * wrapped here so the UI is forced to render an explicit "Needs input" state
  * rather than a blank space or a fabricated value.
  */

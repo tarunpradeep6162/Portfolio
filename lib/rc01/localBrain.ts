@@ -237,7 +237,7 @@ const intents: Intent[] = [
       ),
   },
   {
-    test: /\b(experience|work(ed|s|ing)? (at|for|now)|jobs?|roles?|employ\w*|compan(y|ies)|current(ly)?|stackly|vaata|years)\b/,
+    test: /\b(experience|work(ed|s|ing)? (at|for|now)|jobs?|roles?|employ\w*|compan(y|ies)|current(ly)?|vaata|years)\b/,
     answer: () =>
       answer(
         `${experience
@@ -299,7 +299,7 @@ const intents: Intent[] = [
     test: /\b(who|introduce|summary|summari[sz]e|overview|recruiter|30 seconds|one line)\b/,
     answer: () =>
       answer(
-        `${site.name} is a ${site.description.replace(/\.$/, "")}. He's currently a ${experience[0].role} at ${experience[0].org} and has ${flagships.length} documented case studies. Start with the ${link("work page", "/work")} or the ${link("about page", "/about")}.`,
+        `${site.name} is a ${site.description.replace(/\.$/, "")}. ${/present$/i.test(experience[0].dates) ? "He's currently" : "Most recently he was"} a ${experience[0].role} at ${experience[0].org}, and he has ${flagships.length} documented case studies. Start with the ${link("work page", "/work")} or the ${link("about page", "/about")}.`,
       ),
   },
 ];

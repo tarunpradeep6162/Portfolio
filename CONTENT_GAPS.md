@@ -9,11 +9,6 @@ instead of announcing it, per the visual rebuild's Step 6.
 - No PDF supplied yet. `/resume` and the hero's secondary CTA show a
   "Request résumé" email action instead of a disabled download link.
 
-## Experience
-- Stackly (Cloud Engineer, May 2026–Present): role, company, and dates are
-  shown; detailed achievements are not yet supplied, so the achievements
-  list is simply omitted for that entry (not shown as empty or flagged).
-
 ## Certifications — missing issuer link and/or credential ID
 - Microsoft Certified: Azure Administrator Associate
 - Google IT Support Certificate

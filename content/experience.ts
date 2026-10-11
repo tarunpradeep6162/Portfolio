@@ -1,22 +1,10 @@
 import type { ExperienceRole } from "./types";
 
 /**
- * Uses the corrected timeline (Stackly, then Vaata Smart) per spec §7's
- * data-integrity note, not the outdated timeline from the source resume.
- * The Stackly role's achievements are genuinely unverified - rendered as
- * needs-input, never invented.
+ * Most recent role first. Achievements are a Field<string[]> so an
+ * unverified role can be listed as needs-input, never invented.
  */
 export const experience: ExperienceRole[] = [
-  {
-    role: "Cloud Engineer",
-    org: "Stackly",
-    dates: "May 2026 - Present",
-    location: "Chennai",
-    achievements: {
-      status: "needs-input",
-      note: "Detailed responsibilities and verified achievements for this role have not been supplied yet.",
-    },
-  },
   {
     role: "Cloud Engineer / System Administrator",
     org: "Vaata Smart Private Limited",

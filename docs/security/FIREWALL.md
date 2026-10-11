@@ -7,6 +7,18 @@ Project `tarun-portfolio` (`prj_rmv8uMy0bNlFvoKX4KUN0jCNi70S`), team `tarun-2f6a
 Only Vercel's always-on platform DDoS mitigation is active. Rolling back
 therefore means deleting the rules below, or switching each one to `log`.
 
+## Status (2026-10-11)
+
+- **Published by the owner in the Vercel dashboard** (the REST API returned
+  "config not found" for read, create and update, so it could not be applied
+  or read back by API).
+- **Rate limits not externally confirmed:** test traffic from the
+  verification environment exits through rotating IPs (95 requests spread
+  over 17 IPs, max 19 per IP per minute), so the 20/min per-IP limit could
+  not be tripped. Confirm in Firewall → Traffic, where each rule shows its
+  matches.
+- The site served visitors normally (HTTP 200) throughout testing.
+
 ## Rules
 
 Monitoring first: every rule that could catch real visitors starts in `log`

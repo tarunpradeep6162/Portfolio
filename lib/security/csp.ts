@@ -16,12 +16,15 @@
  * - No framing anywhere (frame-ancestors 'none'), no plugins, no <base>
  *   hijacking, forms may only post to this origin.
  *
+ * upgrade-insecure-requests is only sent when the policy is enforced:
+ * browsers ignore it in Report-Only mode and log an error saying so.
+ *
  * Preview deployments additionally allow vercel.live so Vercel's preview
  * toolbar keeps working; production does not.
  */
 export const CSP_REPORT_PATH = "/api/security/csp-report";
 
-export function buildCsp({ preview = false }: { preview?: boolean } = {}): string {
+export function buildCsp({ preview = false, enforce = false }: { preview?: boolean; enforce?: boolean } = {}): string {
   const vercelLive = preview ? ["https://vercel.live"] : [];
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -44,7 +47,8 @@ export function buildCsp({ preview = false }: { preview?: boolean } = {}): strin
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
-    "upgrade-insecure-requests": [],
+    // Browsers reject this directive (with a console error) in Report-Only.
+    ...(enforce ? { "upgrade-insecure-requests": [] } : {}),
     "report-uri": [CSP_REPORT_PATH],
     "report-to": ["csp-endpoint"],
   };

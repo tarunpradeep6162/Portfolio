@@ -193,6 +193,9 @@ describe("content policy", () => {
     expect(csp).toMatch(/script-src 'self' 'unsafe-inline'(;|$)/);
     expect(csp).not.toContain("vercel.live");
     expect(buildCsp({ preview: true })).toContain("https://vercel.live");
+    // Report-Only must not carry a directive browsers reject in that mode.
+    expect(buildCsp()).not.toContain("upgrade-insecure-requests");
+    expect(buildCsp({ enforce: true })).toContain("upgrade-insecure-requests");
   });
 
   it("robots.txt opts AI-training crawlers out and keeps search crawling open", () => {

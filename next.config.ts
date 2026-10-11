@@ -6,7 +6,8 @@ import { buildCsp, CSP_REPORT_PATH } from "./lib/security/csp";
  * environment (then redeploy). Violations are logged either way via
  * /api/security/csp-report, so the enforce switch is evidence-based.
  */
-const cspHeader = process.env.CSP_ENFORCE === "true" ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only";
+const cspEnforced = process.env.CSP_ENFORCE === "true";
+const cspHeader = cspEnforced ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only";
 const isPreview = process.env.VERCEL_ENV === "preview";
 
 const securityHeaders = [
@@ -33,7 +34,7 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   // Isolates the browsing context from cross-origin windows it opens.
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-  { key: cspHeader, value: buildCsp({ preview: isPreview }) },
+  { key: cspHeader, value: buildCsp({ preview: isPreview, enforce: cspEnforced }) },
   { key: "Reporting-Endpoints", value: `csp-endpoint="${CSP_REPORT_PATH}"` },
 ];
 

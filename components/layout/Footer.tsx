@@ -3,7 +3,6 @@ import { Container } from "@/components/ui/Container";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Logo } from "@/components/brand/Logo";
 import { EndCredits } from "@/components/cinema/EndCredits";
-import { TrailerButton } from "@/components/cinema/TrailerButton";
 
 export function Footer() {
   return (
@@ -24,7 +23,6 @@ export function Footer() {
           aria-label="Footer"
           className="flex flex-wrap items-center gap-5 font-mono text-[10px] uppercase tracking-[0.12em]"
         >
-          <TrailerButton />
           {resumeFile.status === "ready" && (
             <a
               href={resumeFile.value.href}

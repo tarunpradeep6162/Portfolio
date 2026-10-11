@@ -25,7 +25,5 @@ progressive: reduced motion, low-power mode, missing WebGL and automation
 | 17 Cursor | rAF cursor with ring, scanner reticle over 3D, magnetic buttons, hover light | `components/shared/CustomCursor.tsx` |
 | 18 Reactive world | Local time-of-day lighting moods; Atlas traffic follows live GitHub activity | `stageStore.ts` (`MOODS`), `lib/cinema/useGitHubPulse.ts` |
 | 19 Performance | Idle-loaded stage (after the cold open), adaptive quality steps, no rendering when nothing shows through | `CinemaStage.tsx`, `StageCanvas.tsx` |
-| 20 Trailer & credits | Recorded site trailer (`public/trailer/`), og:video, end-credits roll | `TrailerButton.tsx`, `EndCredits.tsx` |
+| 20 Credits | End-credits roll (the recorded site trailer was removed in October 2026) | `EndCredits.tsx` |
 
-Re-record the trailer: build, `next start`, then script a Playwright run with
-`recordVideo` (see git history of this file's commit for the script).

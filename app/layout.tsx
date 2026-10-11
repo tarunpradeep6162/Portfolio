@@ -37,7 +37,6 @@ export const metadata: Metadata = {
     url: site.url,
     siteName: site.name,
     type: "website",
-    videos: [{ url: new URL("/trailer/tarun-portfolio-trailer.webm", site.url).toString(), type: "video/webm", width: 1280, height: 720 }],
   },
   twitter: {
     card: "summary_large_image",

@@ -8,6 +8,9 @@ import { RC01_TOOLS } from "@/lib/rc01/tools";
 import { answerLocally } from "@/lib/rc01/localBrain";
 import { freeProviderConfig, streamFreeChat } from "@/lib/rc01/freeProvider";
 import type { ChatTurn, VisitorContext } from "@/lib/rc01/protocol";
+import { inBackground } from "@/lib/security/background";
+import { recordSecurityEvent } from "@/lib/security/events";
+import { clientIp, isSameOriginRequest, readJsonBody } from "@/lib/security/request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,15 +65,8 @@ function brainMode(): BrainMode {
   return "local";
 }
 
-/** No Origin header = same-origin navigation/fetch; "null" or garbage = reject. */
-function isSameOrigin(origin: string | null, host: string | null): boolean {
-  if (!origin) return true;
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
-  }
-}
+/** 12 turns of capped text plus context fits comfortably; anything bigger is not the site's client. */
+const MAX_BODY_BYTES = 64 * 1024;
 
 function jsonError(status: number, message: string, headers: HeadersInit = {}) {
   return Response.json({ error: message, fallback: true }, { status, headers });
@@ -86,18 +82,38 @@ export async function POST(request: NextRequest) {
   const mode = brainMode();
   if (mode === "off") return jsonError(503, "RC-01's chat is switched off.");
 
-  // Same-origin only: the endpoint is the site's own feature, not a free
-  // public proxy to a paid API.
-  if (!isSameOrigin(request.headers.get("origin"), request.headers.get("host"))) {
+  const visitorKey = clientIp(request.headers);
+
+  // Same-origin browser requests only: the endpoint is the site's own
+  // feature, not a public proxy to a paid (or quota-limited) model API.
+  if (!isSameOriginRequest(request.headers)) {
+    inBackground(() =>
+      recordSecurityEvent({
+        category: "api_cross_origin",
+        severity: "low",
+        route: "/api/rc01",
+        reason: "Request without a same-origin browser context",
+        action: "Rejected (403)",
+        ip: visitorKey,
+        escalate: { count: 30, windowMs: 10 * 60 * 1000, to: "high", nextStep: "Likely scripted abuse of RC-01; confirm the firewall rate limit is active." },
+      }),
+    );
     return jsonError(403, "Cross-origin requests are not allowed.");
   }
 
-  const visitorKey =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
   const visitorCheck = perVisitor.check(visitorKey);
   if (!visitorCheck.allowed) {
+    inBackground(() =>
+      recordSecurityEvent({
+        category: "api_rate_limited",
+        severity: "low",
+        route: "/api/rc01",
+        reason: "Per-visitor RC-01 rate limit exceeded",
+        action: "Rejected (429)",
+        ip: visitorKey,
+        escalate: { count: 20, windowMs: 10 * 60 * 1000, to: "high", nextStep: "Sustained RC-01 abuse from one client; consider a firewall deny rule for it." },
+      }),
+    );
     return jsonError(429, "You've asked a lot of questions in a short time - give me a minute.", {
       "Retry-After": String(visitorCheck.retryAfterSeconds),
     });
@@ -106,13 +122,9 @@ export async function POST(request: NextRequest) {
     return jsonError(429, "RC-01 is very busy right now. Try again shortly.");
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonError(400, "Invalid JSON.");
-  }
-  const parsed = validateRequest(body);
+  const body = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!body.ok) return jsonError(body.status, body.error);
+  const parsed = validateRequest(body.value);
   if (!parsed.ok) return jsonError(400, parsed.error);
   const { messages: turns, context } = parsed.value;
 

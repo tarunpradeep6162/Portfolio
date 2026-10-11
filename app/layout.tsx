@@ -22,6 +22,7 @@ import "@fontsource-variable/manrope";
 import "@fontsource/ibm-plex-mono/latin-400.css";
 import "@fontsource/ibm-plex-mono/latin-700.css";
 import "./globals.css";
+import { jsonLdScript } from "@/lib/seo/jsonLd";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -54,7 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BootSequence />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(personJsonLd) }}
         />
         <SmoothScroll />
         <CustomCursor />

@@ -69,7 +69,14 @@ async function loadRoute() {
 function post(body: unknown, headers: Record<string, string> = {}) {
   return new Request("http://localhost/api/rc01", {
     method: "POST",
-    headers: { "content-type": "application/json", host: "localhost", ...headers },
+    // What a browser sends for the site's own fetch() calls.
+    headers: {
+      "content-type": "application/json",
+      host: "localhost",
+      origin: "http://localhost",
+      "sec-fetch-site": "same-origin",
+      ...headers,
+    },
     body: JSON.stringify(body),
   });
 }

@@ -10,6 +10,7 @@ import { ArticleBody, articleBlocks, tableOfContents } from "@/components/blog/A
 import { ArticleToc } from "@/components/blog/ArticleToc";
 import { blogPosts } from "@/content/blog";
 import { site } from "@/content/site";
+import { jsonLdScript } from "@/lib/seo/jsonLd";
 
 function getPost(slug: string) {
   return blogPosts.find((post) => post.slug === slug);
@@ -57,7 +58,7 @@ export default async function BlogPostPage(props: PageProps<"/blog/[slug]">) {
 
   return (
     <article>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       <header className="control-grid border-b border-[var(--line)] bg-[var(--color-control-black)] py-16 sm:py-24">
         <Container>
           <Link

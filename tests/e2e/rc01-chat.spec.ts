@@ -25,8 +25,11 @@ async function mockRc01(page: Page, { enabled, events }: { enabled: boolean; eve
 }
 
 async function openAsk(page: Page) {
-  await page.goto("/");
+  // Wait for hydration: a click on the server-rendered Activate button
+  // before React attaches its handler is silently dropped.
+  await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /activate rc-01/i }).click();
+  await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor();
   // Chat is RC-01's default surface on the desktop dock.
   await expect(page.getByRole("button", { name: /^chat$/i })).toHaveAttribute("aria-pressed", "true");
 }

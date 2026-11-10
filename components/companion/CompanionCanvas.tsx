@@ -1,7 +1,7 @@
 "use client";
 
 import { Component, type ReactNode, useEffect, useRef, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { RC01Model } from "./RC01Model";
 import type { CompanionState, QualitySettings } from "@/lib/companion/state";
 
@@ -31,6 +31,41 @@ interface CompanionCanvasProps {
   /** Project-specific visor accent during a project briefing (v5.1), null otherwise. */
   accentColor?: string | null;
   onError: () => void;
+  /** Called once if the device cannot render the model smoothly. */
+  onSlow?: () => void;
+}
+
+/** Below this sustained frame rate the 3D model makes the whole page sluggish. */
+const MIN_FPS = 20;
+const WARM_UP_S = 2.5;
+const SAMPLE_S = 2;
+
+/**
+ * Frame-rate guard (same idea as the cinema stage's adaptive cutoff): after a
+ * warm-up for shader compiles, average real frame times over a short window
+ * and report once if the device sustains less than MIN_FPS. On devices
+ * without fast graphics the model otherwise pins the main thread, so clicks
+ * and scrolling lag across the entire page, not just in the panel.
+ */
+function FrameRateGuard({ onSlow }: { onSlow: () => void }) {
+  const sample = useRef({ elapsed: 0, frames: 0, time: 0, reported: false });
+  useFrame((_, delta) => {
+    const s = sample.current;
+    if (s.reported) return;
+    s.elapsed += delta;
+    if (s.elapsed < WARM_UP_S) return;
+    s.frames += 1;
+    s.time += delta;
+    if (s.time < SAMPLE_S) return;
+    if (s.frames / s.time < MIN_FPS) {
+      s.reported = true;
+      onSlow();
+    } else {
+      s.frames = 0;
+      s.time = 0;
+    }
+  });
+  return null;
 }
 
 /**
@@ -41,8 +76,19 @@ interface CompanionCanvasProps {
  * to the parent, which swaps in the static CompanionPortrait - never a
  * blank canvas.
  */
-export function CompanionCanvas({ state, quality, accentColor, onError }: CompanionCanvasProps) {
+export function CompanionCanvas({ state, quality, accentColor, onError, onSlow }: CompanionCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  // react-three-fiber calls forceContextLoss() when the Canvas unmounts, which
+  // fires "webglcontextlost". That is a deliberate teardown, not a crash, so
+  // it must not mark the canvas as failed (which would keep the portrait up
+  // after low-power is turned off or "Show 3D anyway" is pressed).
+  const unmounting = useRef(false);
+  useEffect(
+    () => () => {
+      unmounting.current = true;
+    },
+    [],
+  );
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
 
@@ -79,6 +125,7 @@ export function CompanionCanvas({ state, quality, accentColor, onError }: Compan
             gl.domElement.addEventListener(
               "webglcontextlost",
               (event) => {
+                if (unmounting.current) return;
                 event.preventDefault();
                 onError();
               },
@@ -91,6 +138,7 @@ export function CompanionCanvas({ state, quality, accentColor, onError }: Compan
             fullEmissiveDetail={quality.fullEmissiveDetail}
             accentColor={accentColor ?? undefined}
           />
+          {onSlow && <FrameRateGuard onSlow={onSlow} />}
         </Canvas>
       </CanvasErrorBoundary>
     </div>

@@ -44,6 +44,15 @@ async function installFakeSpeech(page: Page) {
   });
 }
 
+/**
+ * Tests about the 3D canvas itself opt out of the slow-device fallback (as a
+ * visitor does with "Show 3D anyway"): CI renders WebGL in software, slowly
+ * enough that the fallback would otherwise remove the canvas mid-test.
+ */
+async function keep3D(page: Page) {
+  await page.addInitScript(() => sessionStorage.setItem("rc01-keep-3d", "1"));
+}
+
 async function activate(page: Page) {
   await page.getByRole("button", { name: /activate rc-01/i }).click();
   await page.getByRole("region", { name: /RC-01 Reliability Companion panel/i }).waitFor();
@@ -158,6 +167,7 @@ test.describe("RC-01 Reliability Companion", () => {
   });
 
   test("low-power mode toggle skips the 3D canvas", async ({ page }) => {
+    await keep3D(page);
     await page.goto("/");
     await activate(page);
     await page.waitForTimeout(800);
@@ -168,6 +178,7 @@ test.describe("RC-01 Reliability Companion", () => {
   });
 
   test("a lost WebGL context recovers to the portrait instead of crashing", async ({ page }) => {
+    await keep3D(page);
     const pageErrors: string[] = [];
     page.on("pageerror", (err) => pageErrors.push(String(err)));
     await page.goto("/");
@@ -377,17 +388,44 @@ test.describe("RC-01 Reliability Companion", () => {
     await page.goto("/");
     await activate(page);
     const panel = page.getByRole("region", { name: /RC-01 Reliability Companion panel/i });
-    const buttons = await panel.getByRole("button").all();
-    for (const button of buttons) {
-      const name = await button.evaluate((el) => {
-        return (
-          el.getAttribute("aria-label") ||
-          el.textContent?.trim() ||
-          ""
-        );
-      });
-      expect(name.length).toBeGreaterThan(0);
-    }
+    // One atomic read: the suggested-question chips re-render on their own,
+    // so iterating element handles one by one can race a re-render.
+    const unnamed = await panel.evaluate((root) =>
+      [...root.querySelectorAll("button")]
+        .filter((el) => !(el.getAttribute("aria-label") || el.textContent?.trim()))
+        .map((el) => el.outerHTML.slice(0, 120)),
+    );
+    expect(unnamed).toEqual([]);
+    expect(await panel.getByRole("button").count()).toBeGreaterThan(5);
+  });
+
+  test("a device that renders the 3D model too slowly falls back to the portrait, and the visitor can override", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await page.goto("/");
+    // Simulate a weak device: 6x slower CPU for the page's main thread.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+    await activate(page);
+    const fallback = page.getByText(/the 3D model was slowing this device/i);
+    await expect(fallback).toBeVisible({ timeout: 45_000 });
+    await expect(page.locator("canvas")).toHaveCount(0);
+    // The visitor's saved low-power preference is untouched.
+    await expect(page.getByRole("button", { name: /turn on low-power mode/i })).toBeVisible();
+
+    // Back to normal speed; the override itself is what's under test now.
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    await page.getByRole("button", { name: /show 3d anyway/i }).click();
+    await expect(page.locator("canvas")).toHaveCount(1, { timeout: 15_000 });
+    // Their choice sticks: no second automatic fallback.
+    await page.waitForTimeout(8000);
+    await expect(page.locator("canvas")).toHaveCount(1);
+    // ...including across a reload in the same tab.
+    await page.reload();
+    await activate(page);
+    await page.waitForTimeout(8000);
+    await expect(page.locator("canvas")).toHaveCount(1);
   });
 
   test("v5.1: the panel never extends above the sticky header, even with a tour and captions open", async ({

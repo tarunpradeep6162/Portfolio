@@ -84,6 +84,9 @@ interface CompanionExperienceProps {
   onDeactivate: () => void;
 }
 
+/** sessionStorage key: the visitor chose the 3D model despite a slow device. */
+export const KEEP_3D_KEY = "rc01-keep-3d";
+
 export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) {
   const reducedMotion = useReducedMotion();
   const webglSupported = useWebGLSupport();
@@ -105,6 +108,17 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   const [currentScript, setCurrentScript] = useState<CompanionScript | null>(null);
   const [fallbackCaptionIndex, setFallbackCaptionIndex] = useState(-1);
   const [canvasErrored, setCanvasErrored] = useState(false);
+  // Set when this device rendered the 3D model too slowly; session-only, so
+  // the visitor's saved low-power preference is never changed behind their back.
+  const [canvasTooSlow, setCanvasTooSlow] = useState(false);
+  // "Show 3D anyway" lasts for the browser session (per-tab, not persisted).
+  const [keep3D, setKeep3D] = useState(() => {
+    try {
+      return typeof window !== "undefined" && sessionStorage.getItem(KEEP_3D_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [announcement, setAnnouncement] = useState("RC-01 activated.");
   const [paused, setPaused] = useState(false);
   // Collapsed peek is the required default state on activation below the
@@ -703,7 +717,11 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
   }, []);
 
   const show3D =
-    webglSupported === true && !reducedMotion && !preferences.lowPowerMode && !canvasErrored;
+    webglSupported === true &&
+    !reducedMotion &&
+    !preferences.lowPowerMode &&
+    !canvasErrored &&
+    !canvasTooSlow;
   const qualityTier = resolveQualityTier(preferences.lowPowerMode);
   // v5.1: project briefings use a project-specific accent color (by real
   // category, see PROJECT_ACCENT_BY_CATEGORY) instead of the standard lime
@@ -847,10 +865,38 @@ export function CompanionExperience({ onDeactivate }: CompanionExperienceProps) 
             quality={qualityPresets[qualityTier]}
             accentColor={projectAccent}
             onError={() => setCanvasErrored(true)}
+            onSlow={
+              keep3D
+                ? undefined
+                : () => {
+                    setCanvasTooSlow(true);
+                    setAnnouncement("Switched RC-01 to a lightweight portrait to keep the page responsive.");
+                  }
+            }
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-full flex-col items-center justify-center gap-2">
             <CompanionPortrait variant={portraitVariant} className="h-32 w-32" />
+            {canvasTooSlow && !preferences.lowPowerMode && (
+              <p className="px-3 text-center font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--color-telemetry-steel)]">
+                Lightweight portrait — the 3D model was slowing this device.{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKeep3D(true);
+                    setCanvasTooSlow(false);
+                    try {
+                      sessionStorage.setItem(KEEP_3D_KEY, "1");
+                    } catch {
+                      // Storage blocked: the choice still holds for this page view.
+                    }
+                  }}
+                  className="underline underline-offset-2 hover:text-[var(--color-signal-lime)]"
+                >
+                  Show 3D anyway
+                </button>
+              </p>
+            )}
           </div>
         )}
         <span className="sr-only">RC-01 is currently in the {companionState} state.</span>

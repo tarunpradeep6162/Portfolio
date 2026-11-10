@@ -21,8 +21,7 @@ import type { FlagshipProject } from "../content/types";
 
 const ROOT = process.cwd();
 const OUT = join(ROOT, "public/resume/Tarun-Pradeep-B-Resume.pdf");
-/** The live portfolio address (site.url is a placeholder domain until one is connected). */
-const PORTFOLIO = process.env.RESUME_PORTFOLIO_URL ?? "https://portfolio-tarun-dun.vercel.app";
+const PORTFOLIO = process.env.RESUME_PORTFOLIO_URL ?? site.url;
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const firstSentence = (t: string) => (t.match(/^.*?[.!?](\s|$)/)?.[0] ?? t).trim();

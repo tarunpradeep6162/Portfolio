@@ -68,7 +68,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
+      # Generates Next's PageProps/LayoutProps types first (a fresh checkout has none).
+      - run: npm run typecheck
       - run: npx vitest run tests/unit/security.test.ts tests/unit/rc01-route.test.ts
       # Build with the CSP enforced so any violation fails the sweep, not just reports.
       - run: npm run build

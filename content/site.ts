@@ -5,8 +5,10 @@ export const site = {
   title: "Tarun Pradeep B | Cloud Engineer & DevOps Professional",
   description:
     "Cloud Engineer and DevOps professional in Chennai building reliable AWS, Azure, Linux, Docker, Jenkins, CI/CD, networking, and infrastructure solutions.",
-  // Placeholder until a real deployment domain exists; updated at deploy time (spec §21).
-  url: "https://tarunpradeep.dev",
+  // The live production address. Canonical URLs, the sitemap, robots.txt and
+  // link-preview images are built from it, so it must be a domain that
+  // actually serves the site (change it when a custom domain is attached).
+  url: "https://portfolio-tarun-dun.vercel.app",
   location: "Chennai, Tamil Nadu, India",
   email: "tarunpradeep2003@gmail.com",
   github: "https://github.com/tarunpradeep6162",
